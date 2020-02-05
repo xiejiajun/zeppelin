@@ -139,6 +139,20 @@ public class RemoteInterpreter extends Interpreter {
         interpreterProcess.callRemoteFunction(new RemoteInterpreterProcess.RemoteFunction<Void>() {
           @Override
           public Void call(Client client) throws Exception {
+            /**
+             * TODO 看这段日志，无需跑起来debug就能知道RemoteInterpreter是用于连接各个具体解释器的RPC代理：
+             *  INFO [2020-02-05 13:19:30,857] ({pool-2-thread-24} ManagedInterpreterGroup.java[getOrCreateInterpreterProcess]:61) - Create InterpreterProcess for InterpreterGroup: sh:shared_process
+             *  INFO [2020-02-05 13:19:30,857] ({pool-2-thread-24} ShellScriptLauncher.java[launch]:48) - Launching Interpreter: sh
+             *  INFO [2020-02-05 13:19:30,859] ({pool-2-thread-24} RemoteInterpreterManagedProcess.java[start]:115) - Thrift server for callback will start. Port: 43637
+             *  INFO [2020-02-05 13:19:31,360] ({pool-2-thread-24} RemoteInterpreterManagedProcess.java[start]:190) - Run interpreter process [/usr/lib/zeppelin/bin/interpreter.sh, -d, /usr/lib/zeppelin/interpreter/sh, -c, 172.31.31.13, -p, 43637, -r, :, -l, /usr/lib/zeppelin/local-repo/sh, -g, sh]
+             *  INFO [2020-02-05 13:19:32,839] ({pool-18-thread-1} RemoteInterpreterManagedProcess.java[callback]:123) - RemoteInterpreterServer Registered: CallbackInfo(host:172.31.31.13, port:35431)
+             *  INFO [2020-02-05 13:19:32,839] ({pool-2-thread-24} TimeoutLifecycleManager.java[onInterpreterProcessStarted]:68) - Process of InterpreterGroup sh:shared_process is started
+             *  INFO [2020-02-05 13:19:32,841] ({pool-2-thread-24} RemoteInterpreter.java[call]:172) - Create RemoteInterpreter org.apache.zeppelin.shell.ShellInterpreter
+             *  INFO [2020-02-05 13:19:32,951] ({pool-2-thread-24} RemoteInterpreter.java[call]:146) - Open RemoteInterpreter org.apache.zeppelin.shell.ShellInterpreter
+             *  INFO [2020-02-05 13:19:32,951] ({pool-2-thread-24} RemoteInterpreter.java[pushAngularObjectRegistryToRemote]:449) - Push local angular object registry from ZeppelinServer to remote interpreter group sh:shared_process
+             *  INFO [2020-02-05 13:19:34,365] ({pool-2-thread-24} NotebookServer.java[afterStatusChange]:2314) - Job 20200205-074503_1029817251 is finished successfully, status: FINISHED
+             */
+
             LOGGER.info("Open RemoteInterpreter {}", getClassName());
             // open interpreter here instead of in the jobRun method in RemoteInterpreterServer
             // client.open(sessionId, className);

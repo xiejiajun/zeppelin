@@ -61,6 +61,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
       LOGGER.info("Create InterpreterProcess for InterpreterGroup: " + getId());
       remoteInterpreterProcess = interpreterSetting.createInterpreterProcess(id, userName,
           properties);
+      // TODO 启动解释器
       remoteInterpreterProcess.start(userName);
       interpreterSetting.getLifecycleManager().onInterpreterProcessStarted(this);
       remoteInterpreterProcess.getRemoteInterpreterEventPoller()

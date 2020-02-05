@@ -101,6 +101,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
   @Override
   public void start(String userName) {
     // start server process
+    // TODO 启动解释器
     final String callbackHost;
     final int callbackPort;
     TServerSocket tSocket = null;

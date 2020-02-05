@@ -81,6 +81,7 @@ public class ShellScriptLauncher extends InterpreterLauncher {
       String localRepoPath = zConf.getInterpreterLocalRepoPath() + "/"
           + context.getInterpreterSettingId();
       return new RemoteInterpreterManagedProcess(
+              // TODO 用于启动解释器的脚本路径
           runner != null ? runner.getPath() : zConf.getInterpreterRemoteRunnerPath(),
           zConf.getCallbackPortRange(), zConf.getInterpreterPortRange(),
           zConf.getInterpreterDir() + "/" + groupName, localRepoPath,

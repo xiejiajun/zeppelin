@@ -833,6 +833,7 @@ public class OldSparkInterpreter extends AbstractSparkInterpreter {
       }
     }
 
+    // TODO 加载DepInterpreter引入的依赖
     // add jar from DepInterpreter
     if (depInterpreter != null) {
       SparkDependencyContext depc = depInterpreter.getDependencyContext();

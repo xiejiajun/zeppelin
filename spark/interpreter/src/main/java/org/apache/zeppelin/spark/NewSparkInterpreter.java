@@ -95,6 +95,8 @@ public class NewSparkInterpreter extends AbstractSparkInterpreter {
 
       String innerIntpClassName = innerInterpreterClassMap.get(scalaVersion);
       Class clazz = Class.forName(innerIntpClassName);
+      // TODO 构建Spark解释器,将%spark.dep动态引入且不是local的依赖和默认本地仓库、远程仓库的依赖作为构造参数传入，
+      //  BaseSparkScalaInterpreter在构造sc时会将依赖通过addFile的方式分发非jar后缀的文件（这会导致 动态引入的jar包依赖不被引入  是个bug)
       this.innerInterpreter = (BaseSparkScalaInterpreter)
           clazz.getConstructor(SparkConf.class, List.class, Boolean.class)
               .newInstance(conf, getDependencyFiles(),
@@ -248,6 +250,7 @@ public class NewSparkInterpreter extends AbstractSparkInterpreter {
     // add jar from DepInterpreter
     DepInterpreter depInterpreter = getDepInterpreter();
     if (depInterpreter != null) {
+      // TODO Spark解释器读取%spark.dep动态引入的依赖
       SparkDependencyContext depc = depInterpreter.getDependencyContext();
       if (depc != null) {
         List<File> files = depc.getFilesDist();

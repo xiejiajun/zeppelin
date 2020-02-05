@@ -190,6 +190,7 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
     if (!isTest) {
       interpreterOutput.write("Created SparkContext.\n".getBytes())
     }
+    // TODO 创建sparkContext时引入非jar后缀的文件
     getUserFiles().foreach(file => sc.addFile(file))
 
     sc.getClass.getMethod("ui").invoke(sc).asInstanceOf[Option[_]] match {
@@ -274,6 +275,7 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
 
     sc = sparkSession.getClass.getMethod("sparkContext").invoke(sparkSession)
       .asInstanceOf[SparkContext]
+    // TODO 创建sparkContext时引入非jar后缀的文件
     getUserFiles().foreach(file => sc.addFile(file))
     sqlContext = sparkSession.getClass.getMethod("sqlContext").invoke(sparkSession)
       .asInstanceOf[SQLContext]

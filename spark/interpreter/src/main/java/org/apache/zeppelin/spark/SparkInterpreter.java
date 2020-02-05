@@ -45,6 +45,7 @@ public class SparkInterpreter extends AbstractSparkInterpreter {
 
   public SparkInterpreter(Properties properties) {
     super(properties);
+    // TODO 这里配置选用哪个Spark解释器实现
     if (Boolean.parseBoolean(properties.getProperty("zeppelin.spark.useNew", "false"))) {
       delegation = new NewSparkInterpreter(properties);
     } else {

@@ -153,7 +153,7 @@ public class RemoteInterpreter extends Interpreter {
              *  INFO [2020-02-05 13:19:34,365] ({pool-2-thread-24} NotebookServer.java[afterStatusChange]:2314) - Job 20200205-074503_1029817251 is finished successfully, status: FINISHED
              */
 
-              // TODO 而且可以根据下面这行日志判断执行某个段落的是哪个解释器，
+              // TODO 而且可以根据下面这行日志判断执行某个段落的是哪个解释器:这个地方对于通过日志查询执行指定段落用到的解释器非常有用，找到对应解释器后就方便定位Zeppelin服务的问题了
               //  例如：RemoteInterpreter.java[call]:146) - Open RemoteInterpreter org.apache.zeppelin.spark.DepInterpreter
               //       根据上面这行日志，定位到执行%spark.dep段落的是DepInterpreter(0.8分支有该解释器，新分支还未细跟换成了哪个)
 

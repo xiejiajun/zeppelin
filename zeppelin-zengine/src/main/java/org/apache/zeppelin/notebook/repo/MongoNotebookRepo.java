@@ -104,6 +104,7 @@ public class MongoNotebookRepo implements NotebookRepo {
 
   @Override
   public List<NoteInfo> list(AuthenticationInfo subject) throws IOException {
+    // TODO 获取列表
     syncId();
 
     List<NoteInfo> infos = new LinkedList<>();
@@ -178,6 +179,7 @@ public class MongoNotebookRepo implements NotebookRepo {
 
   @Override
   public Note get(String noteId, AuthenticationInfo subject) throws IOException {
+    //TODO 获取内容
     Document doc = coll.find(eq("_id", noteId)).first();
 
     if (doc == null) {
@@ -189,12 +191,14 @@ public class MongoNotebookRepo implements NotebookRepo {
 
   @Override
   public void save(Note note, AuthenticationInfo subject) throws IOException {
+    // TODO 保存notebook
     Document doc = noteToDocument(note);
     coll.replaceOne(eq("_id", note.getId()), doc, new UpdateOptions().upsert(true));
   }
 
   @Override
   public void remove(String noteId, AuthenticationInfo subject) throws IOException {
+    // TODO 删除notebook
     coll.deleteOne(eq("_id", noteId));
   }
 

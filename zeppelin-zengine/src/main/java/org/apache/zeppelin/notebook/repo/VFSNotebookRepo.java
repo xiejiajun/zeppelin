@@ -57,6 +57,7 @@ public class VFSNotebookRepo implements NotebookRepo {
 
   public VFSNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     this.conf = conf;
+    // TODO 配置本地notebook存储根目录
     setNotebookDirectory(conf.getNotebookDir());
   }
 
@@ -65,6 +66,7 @@ public class VFSNotebookRepo implements NotebookRepo {
       if (conf.isWindowsPath(notebookDirPath)) {
         filesystemRoot = new File(notebookDirPath).toURI();
       } else {
+        // TODO 配置本地notebook存储根目录
         filesystemRoot = new URI(notebookDirPath);
       }
     } catch (URISyntaxException e1) {
@@ -193,6 +195,7 @@ public class VFSNotebookRepo implements NotebookRepo {
 
   @Override
   public synchronized void save(Note note, AuthenticationInfo subject) throws IOException {
+    // TODO
     LOG.info("Saving note:" + note.getId());
     String json = note.toJson();
 

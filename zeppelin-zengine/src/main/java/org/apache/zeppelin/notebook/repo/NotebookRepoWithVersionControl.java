@@ -33,6 +33,7 @@ import java.util.Map;
 public interface NotebookRepoWithVersionControl extends NotebookRepo {
 
   /**
+   * TODO 用于版本管理
    * chekpoint (set revision) for notebook.
    * @param noteId Id of the Notebook
    * @param checkpointMsg message description of the checkpoint

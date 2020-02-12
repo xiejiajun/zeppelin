@@ -33,6 +33,9 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 /**
+ * TODO GitHubNotebookRepo是GitNotebookRepo的子类，只重写了用于做版本管理的checkpoint方法，所以zeppelin上新建的notebook只有
+ *  手动commit后git仓库才看得到
+ *  由于没有重写remove方法，所以删除操作只是删除本地的文件 并没有同步删掉git上的
  * GitHub integration to store notebooks in a GitHub repository.
  * It uses the same simple logic implemented in @see
  * {@link org.apache.zeppelin.notebook.repo.GitNotebookRepo}

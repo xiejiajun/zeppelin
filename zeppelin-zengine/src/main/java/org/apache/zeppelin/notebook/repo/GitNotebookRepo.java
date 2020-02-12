@@ -72,6 +72,7 @@ class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWithVersion
 
   @Override
   public synchronized void save(Note note, AuthenticationInfo subject) throws IOException {
+    // TODO 新建的notebook调用父类VFSNotebookRepo的save方法保存到指定的本地文件系统notebook存储目录
     super.save(note, subject);
   }
 
@@ -83,6 +84,7 @@ class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWithVersion
    */
   @Override
   public Revision checkpoint(String pattern, String commitMessage, AuthenticationInfo subject) {
+    // TODO 对应于Git的commit操作并且pull最新的到本地
     Revision revision = Revision.EMPTY;
     try {
       List<DiffEntry> gitDiff = git.diff().call();

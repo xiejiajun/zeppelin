@@ -394,6 +394,7 @@ public class Notebook implements NoteEventListener {
   public Revision checkpointNote(String noteId, String checkpointMessage,
       AuthenticationInfo subject) throws IOException {
     if (((NotebookRepoSync) notebookRepo).isRevisionSupportedInDefaultRepo()) {
+      // TODO 若当前Repo支持版本管理，便执行checkpoint
       return ((NotebookRepoWithVersionControl) notebookRepo)
           .checkpoint(noteId, checkpointMessage, subject);
     } else {
@@ -404,6 +405,7 @@ public class Notebook implements NoteEventListener {
 
   public List<Revision> listRevisionHistory(String noteId, AuthenticationInfo subject) {
     if (((NotebookRepoSync) notebookRepo).isRevisionSupportedInDefaultRepo()) {
+      // TODO 若当前Repo支持版本管理，便列出版本列表
       return ((NotebookRepoWithVersionControl) notebookRepo).revisionHistory(noteId, subject);
     } else {
       return null;
@@ -413,6 +415,7 @@ public class Notebook implements NoteEventListener {
   public Note setNoteRevision(String noteId, String revisionId, AuthenticationInfo subject)
       throws IOException {
     if (((NotebookRepoSync) notebookRepo).isRevisionSupportedInDefaultRepo()) {
+      // TODO 若当前Repo支持版本管理，便设置版本
       return ((NotebookRepoWithVersionControl) notebookRepo)
           .setNoteRevision(noteId, revisionId, subject);
     } else {
@@ -423,6 +426,7 @@ public class Notebook implements NoteEventListener {
   public Note getNoteByRevision(String noteId, String revisionId, AuthenticationInfo subject)
       throws IOException {
     if (((NotebookRepoSync) notebookRepo).isRevisionSupportedInDefaultRepo()) {
+      // TODO 若当前Repo支持版本管理，返回当前版本对应的note
       return ((NotebookRepoWithVersionControl) notebookRepo).get(noteId, revisionId, subject);
     } else {
       return null;
@@ -430,6 +434,7 @@ public class Notebook implements NoteEventListener {
   }
 
   public void convertFromSingleResultToMultipleResultsFormat(Note note) {
+    // TODO 将json转换成Note
     for (Paragraph p : note.paragraphs) {
       Object ret = p.getPreviousResultFormat();
       if (ret != null && p.results != null) {

@@ -32,6 +32,7 @@ import org.apache.zeppelin.user.AuthenticationInfo;
  */
 public interface NotebookRepo {
   /**
+   * TODO 获取notebook列表
    * Lists notebook information about all notebooks in storage.
    * @param subject contains user information.
    * @return
@@ -40,6 +41,7 @@ public interface NotebookRepo {
   @ZeppelinApi public List<NoteInfo> list(AuthenticationInfo subject) throws IOException;
 
   /**
+   * TODO 获取指定Notebook段落内容
    * Get the notebook with the given id.
    * @param noteId is note id.
    * @param subject contains user information.
@@ -49,6 +51,7 @@ public interface NotebookRepo {
   @ZeppelinApi public Note get(String noteId, AuthenticationInfo subject) throws IOException;
 
   /**
+   * TODO 保存notebook
    * Save given note in storage
    * @param note is the note itself.
    * @param subject contains user information.
@@ -57,6 +60,7 @@ public interface NotebookRepo {
   @ZeppelinApi public void save(Note note, AuthenticationInfo subject) throws IOException;
 
   /**
+   * TODO 删除notebook
    * Remove note with given id.
    * @param noteId is the note id.
    * @param subject contains user information.
@@ -65,6 +69,7 @@ public interface NotebookRepo {
   @ZeppelinApi public void remove(String noteId, AuthenticationInfo subject) throws IOException;
 
   /**
+   * TODO 清理Repo管理notebook的资源
    * Release any underlying resources
    */
   @ZeppelinApi public void close();

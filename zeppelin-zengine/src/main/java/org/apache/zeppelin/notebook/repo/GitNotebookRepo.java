@@ -90,8 +90,10 @@ class GitNotebookRepo extends VFSNotebookRepo implements NotebookRepoWithVersion
       List<DiffEntry> gitDiff = git.diff().call();
       if (!gitDiff.isEmpty()) {
         LOG.debug("Changes found for pattern '{}': {}", pattern, gitDiff);
+        // TODO git add命令
         DirCache added = git.add().addFilepattern(pattern).call();
         LOG.debug("{} changes are about to be commited", added.getEntryCount());
+        // TODO git commit命令
         RevCommit commit = git.commit().setMessage(commitMessage).call();
         revision = new Revision(commit.getName(), commit.getShortMessage(), commit.getCommitTime());
       } else {

@@ -31,6 +31,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * TODO GitHubNotebookRepo是GitNotebookRepo的子类，只重写了用于做版本管理的checkpoint方法，所以zeppelin上新建的notebook只有
@@ -59,11 +63,23 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   private ZeppelinConfiguration zeppelinConfiguration;
   private Git git;
 
+  private AtomicInteger removedNotebookCnt = new AtomicInteger(0);
+  private AtomicInteger saveNotebookCnt =  new AtomicInteger(0);
+
+  private Integer batchSaveThreshold = 10;
+  private Integer batchRemoveThreshold = 50;
+  private volatile Long lastSaveTime;
+  private volatile  Long lastRMTime;
+
+  private SystemTimeProvider systemTimeProvider;
+
   public GitHubNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     super(conf);
 
     this.git = super.getGit();
     this.zeppelinConfiguration = conf;
+
+    this.systemTimeProvider = new SystemTimeProvider();
 
     configureRemoteStream();
     pullFromRemoteStream();
@@ -139,7 +155,8 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   public synchronized void save(Note note, AuthenticationInfo subject) throws IOException {
     LOG.info("save note {} to git origin repo",note.getId());
     super.save(note, subject);
-    updateRemoteRepo(note.getId());
+//    updateRemoteRepo(note.getId());
+    batchSaveNoteToRemoteRepo(note.getId());
   }
 
   @Override
@@ -147,27 +164,29 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
     LOG.info("remove note {} from git origin repo",noteId);
     super.remove(noteId,subject);
     try {
-      deleteFileFromRemoteRepo(noteId);
+//      deleteFileFromRemoteRepo(noteId);
+      batchRemoveNoteFromRemoteRepo(noteId);
     } catch (GitAPIException e) {
       LOG.error(e.getMessage(),e);
     }
   }
 
+  @Override
+  public void close() {
+    super.close();
+    systemTimeProvider.close();
+  }
 
-  /**
-   * 将本地改动更新到远程仓库
-   * @param noteId
-   */
+
+
+    /**
+     * 将本地改动更新到远程仓库
+     * @param noteId
+     */
   private void updateRemoteRepo(String noteId){
     LOG.debug("git add {}", noteId);
     try {
-      // TODO git add命令
-      DirCache added = git.add().addFilepattern(noteId).call();
-      Status status = git.status().call();
-      status.getUntracked().forEach(f -> LOG.debug("{} is untracked",f));
-      status.getRemoved().forEach(f -> LOG.debug("{} is remove",f));
-      String commitMessage = String.format("sync notebook %s to origin",noteId);
-      LOG.debug("git commit -m '{}' :{} changes are about to be commited", commitMessage, added.getEntryCount());
+      String commitMessage = add(noteId);
       // TODO git commit命令
       git.commit().setMessage(commitMessage).call();
       // TODO push到远程仓库
@@ -178,6 +197,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   }
 
   /**
+   * TODO 考虑换成batch方式进行批量删除，不然效率太低，git服务也扛不住
    * 确保能完全删除远程仓库上对应文件
    * @param noteId
    */
@@ -186,6 +206,117 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
       git.rm().addFilepattern(noteId).call();
     }
     updateRemoteRepo(noteId);
+  }
+
+  /**
+   * 添加改动
+   * @param noteId
+   * @return
+   */
+  private String add(String noteId) throws GitAPIException {
+    if (StringUtils.isBlank(noteId)){
+      return  "no change";
+    }
+    // TODO git add命令
+    DirCache added = git.add().addFilepattern(noteId).call();
+    Status status = git.status().call();
+    status.getUntracked().forEach(f -> LOG.debug("{} is untracked",f));
+    status.getRemoved().forEach(f -> LOG.debug("{} is remove",f));
+    String commitMessage = String.format("sync notebook %s to origin",noteId);
+    LOG.debug("git commit -m '{}' :{} changes are about to be commited", commitMessage, added.getEntryCount());
+    return commitMessage;
+
+  }
+
+
+  /**
+   * 批量更新远程仓库
+   * @param
+   */
+  private void batchUpdateRemoteRepo(){
+    try {
+      // TODO git commit命令
+      git.commit().setMessage("zeppelin batch sync ... ").call();
+      // TODO push到远程仓库
+      pushToRemoteSteam();
+    } catch (GitAPIException e) {
+      LOG.error(e.getMessage(),e);
+    }
+  }
+
+  /**
+   * 确保最近一次推送时间不为空
+   */
+  private void checkLastPushTime(){
+    if (lastRMTime == null){
+      lastRMTime = systemTimeProvider.currentTime;
+    }
+    if (lastSaveTime == null){
+      lastSaveTime = systemTimeProvider.currentTime;
+    }
+  }
+
+  /**
+   * 批量触发保存note方法实现
+   * @param noteId
+   */
+  private void batchSaveNoteToRemoteRepo(String noteId){
+    try {
+      add(noteId);
+      checkLastPushTime();
+      Long currentTime = systemTimeProvider.currentTime;
+      // 每5分钟或者批次到达batchSaveThreshold时触发一次提交
+      int addSize = saveNotebookCnt.incrementAndGet();
+      if ( addSize >= batchSaveThreshold ||
+              currentTime - lastSaveTime > 5 * 60 * 1000){
+        batchUpdateRemoteRepo();
+        this.lastSaveTime = currentTime;
+        saveNotebookCnt.addAndGet(-1 * addSize);
+      }
+    } catch (GitAPIException e) {
+      LOG.error(e.getMessage(),e);
+    }
+  }
+
+  /**
+   * 批量从远程仓库删除note
+   * @param noteId
+   */
+  private void batchRemoveNoteFromRemoteRepo(String noteId) throws GitAPIException {
+    if (StringUtils.isNotBlank(noteId) && !noteId.contains(POINT) && !noteId.contains(ASTERISK)){
+      git.rm().addFilepattern(noteId).call();
+    }
+    add(noteId);
+    checkLastPushTime();
+    Long currentTime = systemTimeProvider.currentTime;
+    int removeSize = removedNotebookCnt.incrementAndGet();
+    if ( removeSize >= batchRemoveThreshold ||
+            currentTime - lastRMTime > 5 * 60 * 1000){
+      batchUpdateRemoteRepo();
+      this.lastRMTime = currentTime;
+      removedNotebookCnt.addAndGet(-1 * removeSize);
+    }
+
+  }
+
+
+  static class SystemTimeProvider{
+
+    volatile Long currentTime = System.currentTimeMillis();
+
+    private ScheduledExecutorService executors;
+
+    SystemTimeProvider(){
+      executors = Executors.newSingleThreadScheduledExecutor();
+      // TODO 一秒更新一次时间
+      executors.schedule(()->{
+          currentTime = System.currentTimeMillis();
+      },1, TimeUnit.SECONDS);
+    }
+
+    public void close(){
+      executors.shutdownNow();
+    }
   }
 
 }

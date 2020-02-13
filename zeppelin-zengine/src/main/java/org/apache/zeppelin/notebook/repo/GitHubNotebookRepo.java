@@ -287,6 +287,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
     int removeSize = removedNotebookCnt.get();
     int saveSize = saveNotebookCnt.get();
     if ( removeSize > 0 ||  saveSize > 0){
+      LOG.info("正在定时刷新本地改动到远程仓库...");
       this.batchUpdateRemoteRepo("定时推送");
       if (removeSize > 0){
         removedNotebookCnt.addAndGet(-1 * removeSize);

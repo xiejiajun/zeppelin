@@ -308,10 +308,10 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
 
     SystemTimeProvider(){
       executors = Executors.newSingleThreadScheduledExecutor();
-      // TODO 一秒更新一次时间
-      executors.schedule(()->{
+      // TODO 2秒更新一次时间
+      executors.scheduleWithFixedDelay(()->{
           currentTime = System.currentTimeMillis();
-      },1, TimeUnit.SECONDS);
+      },1, 2,TimeUnit.SECONDS);
     }
 
     public void close(){

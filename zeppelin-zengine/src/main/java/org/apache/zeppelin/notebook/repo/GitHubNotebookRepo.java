@@ -232,15 +232,13 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
    */
   private void batchUpdateRemoteRepo(String commitMsg){
     try {
-      Status status = git.status().call();
-      if (CollectionUtils.isNotEmpty(status.getChanged())
-              || CollectionUtils.isNotEmpty(status.getAdded())
-              || CollectionUtils.isNotEmpty(status.getRemoved())) {
-        // TODO git commit命令
-        git.commit().setMessage(commitMsg).call();
-        // TODO push到远程仓库
-        pushToRemoteSteam();
-      }
+//      Status status = git.status().call();
+//      if (CollectionUtils.isNotEmpty(status.getChanged())
+//              || CollectionUtils.isNotEmpty(status.getAdded())
+//              || CollectionUtils.isNotEmpty(status.getRemoved())) {
+      git.commit().setMessage(commitMsg).call();
+      pushToRemoteSteam();
+//      }
     } catch (GitAPIException e) {
       LOG.error(e.getMessage(),e);
     }
@@ -283,13 +281,28 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   }
 
   /**
+   * 自动推送逻辑
+   */
+  private void autoPushNotebooksToRemote(){
+    int removeSize = removedNotebookCnt.get();
+    int saveSize = saveNotebookCnt.get();
+    if ( removeSize > 0 ||  saveSize > 0){
+      this.batchUpdateRemoteRepo("定时推送");
+      if (removeSize > 0){
+        removedNotebookCnt.addAndGet(-1 * removeSize);
+      }
+      if (saveSize > 0){
+        saveNotebookCnt.addAndGet(-1 * saveSize);
+      }
+    }
+  }
+
+  /**
    * 定时推送本地仓库变动到远程仓库线程启动
    */
   private void remoteRepoRefresher(){
     // TODO 5分钟尝试往远程仓库推一次代码
-    this.executors.scheduleWithFixedDelay(()->{
-      this.batchUpdateRemoteRepo("定时推送");
-    },5, 5,TimeUnit.MINUTES);
+    this.executors.scheduleWithFixedDelay(this::autoPushNotebooksToRemote,5, 5,TimeUnit.MINUTES);
   }
 
 }

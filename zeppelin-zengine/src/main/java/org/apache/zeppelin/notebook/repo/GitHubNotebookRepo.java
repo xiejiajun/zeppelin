@@ -66,7 +66,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   private AtomicInteger removedNotebookCnt = new AtomicInteger(0);
   private AtomicInteger saveNotebookCnt =  new AtomicInteger(0);
 
-  private Integer batchSaveThreshold = 10;
+  private Integer batchSaveThreshold = 10 * 2;
   private Integer batchRemoveThreshold = 50;
   private volatile Long lastSaveTime;
   private volatile  Long lastRMTime;

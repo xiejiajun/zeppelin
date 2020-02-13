@@ -17,6 +17,7 @@
 
 package org.apache.zeppelin.notebook.repo;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
@@ -68,10 +69,8 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
 
   private Integer batchSaveThreshold = 10 * 2;
   private Integer batchRemoveThreshold = 50;
-  private volatile Long lastSaveTime;
-  private volatile  Long lastRMTime;
 
-  private SystemTimeProvider systemTimeProvider;
+  private RemoteRepoRefresher remoteRepoRefresher;
 
   public GitHubNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     super(conf);
@@ -79,7 +78,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
     this.git = super.getGit();
     this.zeppelinConfiguration = conf;
 
-    this.systemTimeProvider = new SystemTimeProvider();
+    this.remoteRepoRefresher = new RemoteRepoRefresher(this);
 
     configureRemoteStream();
     pullFromRemoteStream();
@@ -174,7 +173,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   @Override
   public void close() {
     super.close();
-    systemTimeProvider.close();
+    remoteRepoRefresher.close();
   }
 
 
@@ -219,9 +218,6 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
     }
     // TODO git add命令
     DirCache added = git.add().addFilepattern(noteId).call();
-    Status status = git.status().call();
-    status.getUntracked().forEach(f -> LOG.debug("{} is untracked",f));
-    status.getRemoved().forEach(f -> LOG.debug("{} is remove",f));
     String commitMessage = String.format("sync notebook %s to origin",noteId);
     LOG.debug("git commit -m '{}' :{} changes are about to be commited", commitMessage, added.getEntryCount());
     return commitMessage;
@@ -231,30 +227,24 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
 
   /**
    * 批量更新远程仓库
-   * @param
+   * @param commitMsg
    */
-  private void batchUpdateRemoteRepo(){
+  private void batchUpdateRemoteRepo(String commitMsg){
     try {
-      // TODO git commit命令
-      git.commit().setMessage("zeppelin batch sync ... ").call();
-      // TODO push到远程仓库
-      pushToRemoteSteam();
+      Status status = git.status().call();
+      if (CollectionUtils.isNotEmpty(status.getChanged())
+              || CollectionUtils.isNotEmpty(status.getAdded())
+              || CollectionUtils.isNotEmpty(status.getRemoved())) {
+        // TODO git commit命令
+        git.commit().setMessage(commitMsg).call();
+        // TODO push到远程仓库
+        pushToRemoteSteam();
+      }
     } catch (GitAPIException e) {
       LOG.error(e.getMessage(),e);
     }
   }
 
-  /**
-   * 确保最近一次推送时间不为空
-   */
-  private void checkLastPushTime(){
-    if (lastRMTime == null){
-      lastRMTime = systemTimeProvider.currentTime;
-    }
-    if (lastSaveTime == null){
-      lastSaveTime = systemTimeProvider.currentTime;
-    }
-  }
 
   /**
    * 批量触发保存note方法实现
@@ -263,14 +253,10 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   private void batchSaveNoteToRemoteRepo(String noteId){
     try {
       add(noteId);
-      checkLastPushTime();
-      Long currentTime = systemTimeProvider.currentTime;
       // 每5分钟或者批次到达batchSaveThreshold时触发一次提交
       int addSize = saveNotebookCnt.incrementAndGet();
-      if ( addSize >= batchSaveThreshold ||
-              currentTime - lastSaveTime > 5 * 60 * 1000){
-        batchUpdateRemoteRepo();
-        this.lastSaveTime = currentTime;
+      if ( addSize >= batchSaveThreshold){
+        batchUpdateRemoteRepo("batch save notebook to origin");
         saveNotebookCnt.addAndGet(-1 * addSize);
       }
     } catch (GitAPIException e) {
@@ -287,31 +273,25 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
       git.rm().addFilepattern(noteId).call();
     }
     add(noteId);
-    checkLastPushTime();
-    Long currentTime = systemTimeProvider.currentTime;
     int removeSize = removedNotebookCnt.incrementAndGet();
-    if ( removeSize >= batchRemoveThreshold ||
-            currentTime - lastRMTime > 5 * 60 * 1000){
-      batchUpdateRemoteRepo();
-      this.lastRMTime = currentTime;
+    if ( removeSize >= batchRemoveThreshold){
+      batchUpdateRemoteRepo("batch remove notebook from origin");
       removedNotebookCnt.addAndGet(-1 * removeSize);
     }
 
   }
 
 
-  static class SystemTimeProvider{
-
-    volatile Long currentTime = System.currentTimeMillis();
+  static class RemoteRepoRefresher {
 
     private ScheduledExecutorService executors;
 
-    SystemTimeProvider(){
-      executors = Executors.newSingleThreadScheduledExecutor();
-      // TODO 2秒更新一次时间
-      executors.scheduleWithFixedDelay(()->{
-          currentTime = System.currentTimeMillis();
-      },1, 2,TimeUnit.SECONDS);
+    RemoteRepoRefresher(final GitHubNotebookRepo gitHubNotebookRepo){
+      this.executors = Executors.newSingleThreadScheduledExecutor();
+      // TODO 5分钟尝试往远程仓库推一次代码
+      this.executors.scheduleWithFixedDelay(()->{
+          gitHubNotebookRepo.batchUpdateRemoteRepo("定时推送");
+      },5, 5,TimeUnit.MINUTES);
     }
 
     public void close(){

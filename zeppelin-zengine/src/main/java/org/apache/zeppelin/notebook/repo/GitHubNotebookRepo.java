@@ -70,7 +70,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   private Integer batchSaveThreshold = 10 * 2;
   private Integer batchRemoveThreshold = 50;
 
-  private RemoteRepoRefresher remoteRepoRefresher;
+  private ScheduledExecutorService executors;
 
   public GitHubNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     super(conf);
@@ -78,7 +78,8 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
     this.git = super.getGit();
     this.zeppelinConfiguration = conf;
 
-    this.remoteRepoRefresher = new RemoteRepoRefresher(this);
+    this.executors = Executors.newSingleThreadScheduledExecutor();
+    remoteRepoRefresher();
 
     configureRemoteStream();
     pullFromRemoteStream();
@@ -173,7 +174,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   @Override
   public void close() {
     super.close();
-    remoteRepoRefresher.close();
+    this.executors.shutdownNow();
   }
 
 
@@ -281,22 +282,15 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
 
   }
 
-
-  static class RemoteRepoRefresher {
-
-    private ScheduledExecutorService executors;
-
-    RemoteRepoRefresher(final GitHubNotebookRepo gitHubNotebookRepo){
-      this.executors = Executors.newSingleThreadScheduledExecutor();
-      // TODO 5分钟尝试往远程仓库推一次代码
-      this.executors.scheduleWithFixedDelay(()->{
-          gitHubNotebookRepo.batchUpdateRemoteRepo("定时推送");
-      },5, 5,TimeUnit.MINUTES);
-    }
-
-    public void close(){
-      executors.shutdownNow();
-    }
+  /**
+   * 定时推送本地仓库变动到远程仓库线程启动
+   */
+  private void remoteRepoRefresher(){
+    // TODO 5分钟尝试往远程仓库推一次代码
+    this.executors.scheduleWithFixedDelay(()->{
+      this.batchUpdateRemoteRepo("定时推送");
+    },5, 5,TimeUnit.MINUTES);
   }
 
 }
+

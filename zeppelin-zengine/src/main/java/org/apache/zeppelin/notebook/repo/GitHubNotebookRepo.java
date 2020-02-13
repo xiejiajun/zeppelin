@@ -17,6 +17,7 @@
 
 package org.apache.zeppelin.notebook.repo;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.user.AuthenticationInfo;
@@ -49,6 +50,11 @@ import java.net.URISyntaxException;
  * - When commit the changes (saving the notebook)
  */
 public class GitHubNotebookRepo extends GitNotebookRepo {
+
+  private final String ASTERISK = "*";
+
+  private final String POINT = ".";
+
   private static final Logger LOG = LoggerFactory.getLogger(GitNotebookRepo.class);
   private ZeppelinConfiguration zeppelinConfiguration;
   private Git git;
@@ -133,14 +139,18 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   public synchronized void save(Note note, AuthenticationInfo subject) throws IOException {
     LOG.info("save note {} to git origin repo",note.getId());
     super.save(note, subject);
-    updateRemoteRepo(note.getId(),note.getId());
+    updateRemoteRepo(note.getId());
   }
 
   @Override
   public void remove(String noteId, AuthenticationInfo subject) throws IOException {
     LOG.info("remove note {} from git origin repo",noteId);
     super.remove(noteId,subject);
-    updateRemoteRepo(noteId,noteId);
+    try {
+      deleteFileFromRemoteRepo(noteId);
+    } catch (GitAPIException e) {
+      LOG.error(e.getMessage(),e);
+    }
   }
 
 
@@ -148,11 +158,11 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
    * 将本地改动更新到远程仓库
    * @param noteId
    */
-  private void updateRemoteRepo(String commitFile,String noteId){
-    LOG.debug("git add {}", commitFile);
+  private void updateRemoteRepo(String noteId){
+    LOG.debug("git add {}", noteId);
     try {
       // TODO git add命令
-      DirCache added = git.add().addFilepattern(commitFile).call();
+      DirCache added = git.add().addFilepattern(noteId).call();
       Status status = git.status().call();
       status.getUntracked().forEach(f -> LOG.debug("{} is untracked",f));
       status.getRemoved().forEach(f -> LOG.debug("{} is remove",f));
@@ -166,4 +176,16 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
       LOG.error(e.getMessage(),e);
     }
   }
+
+  /**
+   * 确保能完全删除远程仓库上对应文件
+   * @param noteId
+   */
+  private void deleteFileFromRemoteRepo(String noteId) throws GitAPIException {
+    if (StringUtils.isNotBlank(noteId) && !noteId.contains(POINT) && !noteId.contains(ASTERISK)){
+      git.rm().addFilepattern(noteId).call();
+    }
+    updateRemoteRepo(noteId);
+  }
+
 }

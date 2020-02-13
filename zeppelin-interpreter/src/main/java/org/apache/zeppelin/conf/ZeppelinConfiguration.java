@@ -396,6 +396,32 @@ public class ZeppelinConfiguration extends XMLConfiguration {
     return getString(ConfVars.ZEPPELIN_NOTEBOOK_S3_SIGNEROVERRIDE);
   }
 
+  public String getOSSUser() {
+    return getString(ConfVars.ZEPPELIN_NOTEBOOK_OSS_USER);
+  }
+
+  public String getOSSBucketName() {
+    return getString(ConfVars.ZEPPELIN_NOTEBOOK_OSS_BUCKET);
+  }
+
+  public String getOSSEndpoint() {
+    return getString(ConfVars.ZEPPELIN_NOTEBOOK_OSS_ENDPOINT);
+  }
+
+  public String getOSSAccessKeyId(){
+    return getString(ConfVars.ZEPPELIN_NOTEBOOK_OSS_ACCESS_KEY_ID);
+  }
+
+  public String getOSSAccessKeySecret(){
+    return getString(ConfVars.ZEPPELIN_NOTEBOOK_OSS_ACCESS_KEY_SECRET);
+  }
+
+  public String getOssStsToken(){
+    return getString(ConfVars.ZEPPELIN_NOTEBOOK_OSS_STS_TOKEN);
+  }
+
+
+
   public String getMongoUri() {
     return getString(ConfVars.ZEPPELIN_NOTEBOOK_MONGO_URI);
   }
@@ -731,6 +757,14 @@ public class ZeppelinConfiguration extends XMLConfiguration {
     ZEPPELIN_NOTEBOOK_S3_KMS_KEY_REGION("zeppelin.notebook.s3.kmsKeyRegion", null),
     ZEPPELIN_NOTEBOOK_S3_SSE("zeppelin.notebook.s3.sse", false),
     ZEPPELIN_NOTEBOOK_S3_SIGNEROVERRIDE("zeppelin.notebook.s3.signerOverride", null),
+
+    ZEPPELIN_NOTEBOOK_OSS_BUCKET("zeppelin.notebook.oss.bucket", "zeppelin"),
+    ZEPPELIN_NOTEBOOK_OSS_ENDPOINT("zeppelin.notebook.oss.endpoint", "http://oss.aliyuncs.com"),
+    ZEPPELIN_NOTEBOOK_OSS_USER("zeppelin.notebook.oss.user", "zeppelin"),
+    ZEPPELIN_NOTEBOOK_OSS_ACCESS_KEY_ID("zeppelin.notebook.oss.access-key-id", null),
+    ZEPPELIN_NOTEBOOK_OSS_ACCESS_KEY_SECRET("zeppelin.notebook.oss.access-key-secret", null),
+    ZEPPELIN_NOTEBOOK_OSS_STS_TOKEN("zeppelin.notebook.oss.securityToken", null),
+
     ZEPPELIN_NOTEBOOK_AZURE_CONNECTION_STRING("zeppelin.notebook.azure.connectionString", null),
     ZEPPELIN_NOTEBOOK_AZURE_SHARE("zeppelin.notebook.azure.share", "zeppelin"),
     ZEPPELIN_NOTEBOOK_AZURE_USER("zeppelin.notebook.azure.user", "user"),

@@ -226,9 +226,11 @@ public class NotebookServer extends WebSocketServlet
           createNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case DEL_NOTE:
+          // TODO 删除Note
           removeNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case REMOVE_FOLDER:
+          // TODO 删除文件夹
           removeFolder(conn, userAndRoles, notebook, messagereceived);
           break;
         case MOVE_NOTE_TO_TRASH:
@@ -1088,6 +1090,7 @@ public class NotebookServer extends WebSocketServlet
     }
 
     AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    // TODO 删除Note
     notebook.removeNote(noteId, subject);
     removeNote(noteId);
     broadcastNoteList(subject, userAndRoles);
@@ -1112,6 +1115,7 @@ public class NotebookServer extends WebSocketServlet
     }
 
     AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    // TODO 删除文件夹时批量删除Note
     for (Note note : notes) {
       notebook.removeNote(note.getId(), subject);
       removeNote(note.getId());

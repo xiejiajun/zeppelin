@@ -20,10 +20,7 @@ package org.apache.zeppelin.notebook.repo;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.user.AuthenticationInfo;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PullCommand;
-import org.eclipse.jgit.api.PushCommand;
-import org.eclipse.jgit.api.RemoteAddCommand;
+import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.transport.URIish;
@@ -134,14 +131,16 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
 
   @Override
   public synchronized void save(Note note, AuthenticationInfo subject) throws IOException {
+    LOG.info("save note {} to git origin repo",note.getId());
     super.save(note, subject);
-    updateRemoteRepo(note.getId());
+    updateRemoteRepo(note.getId(),note.getId());
   }
 
   @Override
   public void remove(String noteId, AuthenticationInfo subject) throws IOException {
+    LOG.info("remove note {} from git origin repo",noteId);
     super.remove(noteId,subject);
-    updateRemoteRepo(noteId);
+    updateRemoteRepo(".",noteId);
   }
 
 
@@ -149,11 +148,14 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
    * 将本地改动更新到远程仓库
    * @param noteId
    */
-  private void updateRemoteRepo(String noteId){
-    LOG.debug("git add {}", noteId);
+  private void updateRemoteRepo(String commitFile,String noteId){
+    LOG.debug("git add {}", commitFile);
     try {
       // TODO git add命令
-      DirCache added = git.add().addFilepattern(noteId).call();
+      DirCache added = git.add().addFilepattern(commitFile).call();
+      Status status = git.status().call();
+      status.getUntracked().forEach(f -> LOG.debug("{} is untracked",f));
+      status.getRemoved().forEach(f -> LOG.debug("{} is remove",f));
       String commitMessage = String.format("sync notebook %s to origin",noteId);
       LOG.debug("git commit -m '{}' :{} changes are about to be commited", commitMessage, added.getEntryCount());
       // TODO git commit命令

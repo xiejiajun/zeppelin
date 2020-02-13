@@ -385,6 +385,7 @@ public class Notebook implements NoteEventListener {
     fireNoteRemoveEvent(note);
 
     try {
+      // TODO 删除note
       note.unpersist(subject);
     } catch (IOException e) {
       logger.error(e.toString(), e);

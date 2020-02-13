@@ -140,7 +140,7 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
   public void remove(String noteId, AuthenticationInfo subject) throws IOException {
     LOG.info("remove note {} from git origin repo",noteId);
     super.remove(noteId,subject);
-    updateRemoteRepo(".",noteId);
+    updateRemoteRepo(noteId,noteId);
   }
 
 

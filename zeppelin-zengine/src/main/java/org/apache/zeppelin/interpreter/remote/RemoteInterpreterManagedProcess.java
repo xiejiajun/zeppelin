@@ -156,6 +156,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
       logger.warn("", e);
     }
 
+    // TODO interpreterRunner为解释器集群脚本bin/interpreter.sh
     CommandLine cmdLine = CommandLine.parse(interpreterRunner);
     cmdLine.addArgument("-d", false);
     cmdLine.addArgument(interpreterDir, false);

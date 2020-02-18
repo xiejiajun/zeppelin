@@ -327,6 +327,10 @@ public class OldSparkInterpreter extends AbstractSparkInterpreter {
         if (key.startsWith("spark.")) {
           logger.debug(String.format("SparkConf: key = [%s], value = [%s]", key, val));
           conf.set(key, val);
+          // TODO 应用名称加上用户名
+          if (key.equals("spark.app.name")) {
+            conf.set("spark.app.name",val + "-" + getUserName());
+          }
         }
         if (key.startsWith("zeppelin.spark.")) {
           String sparkPropertyKey = key.substring("zeppelin.spark.".length());
@@ -460,6 +464,10 @@ public class OldSparkInterpreter extends AbstractSparkInterpreter {
         if (key.startsWith("spark.")) {
           logger.debug(String.format("SparkConf: key = [%s], value = [%s]", key, val));
           conf.set(key, val);
+          // TODO 应用名称加上用户名
+          if (key.equals("spark.app.name")) {
+            conf.set("spark.app.name",val + "-" + getUserName());
+          }
         }
 
         if (key.startsWith("zeppelin.spark.")) {

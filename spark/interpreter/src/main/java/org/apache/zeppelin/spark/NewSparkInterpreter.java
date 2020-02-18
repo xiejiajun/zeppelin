@@ -89,6 +89,10 @@ public class NewSparkInterpreter extends AbstractSparkInterpreter {
         if (entry.getKey().toString().equals("zeppelin.spark.useHiveContext")) {
           conf.set("spark.useHiveContext", entry.getValue().toString());
         }
+        // TODO 应用名称加上用户名
+        if (entry.getKey().toString().equals("spark.app.name")) {
+          conf.set("spark.app.name", entry.getValue().toString() + "-" + getUserName());
+        }
       }
       // use local mode for embedded spark mode when spark.master is not found
       conf.setIfMissing("spark.master", "local");

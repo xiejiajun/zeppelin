@@ -99,6 +99,7 @@ import java.util.concurrent.ConcurrentMap;
  *   作为Spark Application提交，然后被提交的spark解释器Application（spark-interpreter-*.jar: *代表版本号，永远只允许存在一个Spark解释器jar，
  *   否则spark-submit会报错）再监听客户端传递过去的通过Java/Scala/pySpark代码来动态执行。不是通过之前所想的：先把用户
  *   写的scala/java/pySpark代码编译打包，再作为Spark Application提交的方式来做的。
+ *   更正一下：Spark解释器提交时指定的mainClass也是这个类
  * Entry point for Interpreter process.
  * Accepting thrift connections from ZeppelinServer.
  */

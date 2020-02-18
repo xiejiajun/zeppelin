@@ -94,6 +94,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
+ * TODO 这个class作为除了spark submit提交的作业外的所有解释器的启动入口（interpreter.sh脚本会调用这个类来启动解释器）
+ *   spark-submit启动的作业用到的spark解释器其实就是内部自己实现来监听回调端口等逻辑，实际上是通过spark-submit命令将spark-interpreter-*.jar
+ *   作为Spark Application提交，然后被提交的Application再监听客户端传递过去的通过Java/Scala/pySpark代码来动态执行。不是通过之前所想的：先把用户
+ *   写的scala/java/pySpark代码编译打包，再作为Spark Application提交的方式来做的
  * Entry point for Interpreter process.
  * Accepting thrift connections from ZeppelinServer.
  */

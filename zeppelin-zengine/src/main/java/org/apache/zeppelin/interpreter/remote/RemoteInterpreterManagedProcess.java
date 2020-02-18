@@ -58,7 +58,9 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
   private ExecuteWatchdog watchdog;
   private AtomicBoolean running = new AtomicBoolean(false);
   private TServer callbackServer;
+  // TODO..用于保存解释器启动后的host
   private String host = null;
+  // TODo ..用于保存解释器启动后的端口
   private int port = -1;
   private final String interpreterDir;
   private final String localRepoDir;
@@ -115,6 +117,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
 
     logger.info("Thrift server for callback will start. Port: {}", callbackPort);
     try {
+      // TODO 监听解释器服务的回调服务
       callbackServer = new TThreadPoolServer(
         new TThreadPoolServer.Args(tSocket).processor(
           new RemoteInterpreterCallbackService.Processor<>(
@@ -122,6 +125,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
               @Override
               public void callback(CallbackInfo callbackInfo) throws TException {
                 logger.info("RemoteInterpreterServer Registered: {}", callbackInfo);
+                // TODO 解释器服务启动成功后，会进行RPC回调，将自己的主机、端口告诉RemoteInterpreterManagedProcess
                 host = callbackInfo.getHost();
                 port = callbackInfo.getPort();
                 running.set(true);
@@ -130,6 +134,8 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
                 }
               }
             })));
+
+      // TODO 用于监听请求的线程
       // Start thrift server to receive callbackInfo from RemoteInterpreterServer;
       new Thread(new Runnable() {
         @Override
@@ -197,11 +203,13 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
     }
 
     try {
+      // TODO 阻塞等待解释器启动起来
       synchronized (running) {
         if (!running.get()) {
           running.wait(getConnectTimeout() * 2);
         }
       }
+      // TODO 超过getConnectTimeout() * 2)超时时间还没收到解释器启动成功的信息则抛异常置为启动失败
       if (!running.get()) {
         callbackServer.stop();
         throw new RuntimeException(new String(cmdOut.toByteArray()));

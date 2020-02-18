@@ -147,7 +147,9 @@ public class RemoteInterpreterServer extends Thread
   public RemoteInterpreterServer(String callbackHost, int callbackPort, String portRange,
                                  boolean isTest) throws TTransportException, IOException {
     if (null != callbackHost) {
+      // TODO Zeppelin Server主机
       this.callbackHost = callbackHost;
+      // TODO Zeppelin Server用于和当前解释器交互的端口
       this.callbackPort = callbackPort;
     } else {
       // DevInterpreter
@@ -180,6 +182,7 @@ public class RemoteInterpreterServer extends Thread
         boolean interrupted = false;
         @Override
         public void run() {
+          // TODO 等待解释器启动
           while (!interrupted && !server.isServing()) {
             try {
               Thread.sleep(1000);
@@ -191,6 +194,7 @@ public class RemoteInterpreterServer extends Thread
           if (!interrupted) {
             CallbackInfo callbackInfo = new CallbackInfo(host, port);
             try {
+              // TODO 将启动的解释器服务向Zeppelin Server注册
               RemoteInterpreterUtils
                   .registerInterpreter(callbackHost, callbackPort, callbackInfo);
             } catch (TException e) {
@@ -206,6 +210,7 @@ public class RemoteInterpreterServer extends Thread
       }).start();
     }
     logger.info("Starting remote interpreter server on port {}", port);
+    // TODO 监听作业执行请求
     server.serve();
   }
 

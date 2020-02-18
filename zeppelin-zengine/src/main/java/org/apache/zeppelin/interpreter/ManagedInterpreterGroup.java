@@ -54,6 +54,13 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     return interpreterSetting;
   }
 
+  /**
+   * TODO 获取RemoteInterpreterProcess（这里面保存了连接远程解释器服务的相关参数），没有就创建（即启动解释器服务）
+   * @param userName
+   * @param properties
+   * @return
+   * @throws IOException
+   */
   public synchronized RemoteInterpreterProcess getOrCreateInterpreterProcess(String userName,
                                                                              Properties properties)
       throws IOException {

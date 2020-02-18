@@ -388,9 +388,11 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
     InterpreterSetting interpreterSetting = ((ManagedInterpreterGroup)
         interpreter.getInterpreterGroup()).getInterpreterSetting();
     if (interpreterSetting != null) {
+      // TODO 等待下载依赖包
       interpreterSetting.waitForReady();
     }
     if (this.hasUser() && this.note.hasInterpreterBinded()) {
+      // TODO 检查有无权限
       if (interpreterSetting != null && interpreterHasUser(interpreterSetting)
           && isUserAuthorizedToAccessInterpreter(interpreterSetting.getOption()) == false) {
         logger.error("{} has no permission for {} ", authenticationInfo.getUser(), intpText);

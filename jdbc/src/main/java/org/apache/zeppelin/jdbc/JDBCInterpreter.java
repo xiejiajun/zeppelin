@@ -440,6 +440,10 @@ public class JDBCInterpreter extends KerberosInterpreter {
     final String url = properties.getProperty(URL_KEY);
 
     if (isEmpty(getProperty("zeppelin.jdbc.auth.type"))) {
+//      // TODO hive 指定提交作业的用户可以在这里做 但是可能会导致没权限，所以还需要靠用户自己通过设置作业名称的方式去解决
+//      if (jdbcUserConfigurations.getPropertyMap(propertyKey).getProperty(DRIVER_KEY).contains("HiveDriver")){
+//        jdbcUserConfigurations.getPropertyMap(propertyKey).setProperty(USER_KEY,user);
+//      }
       connection = getConnectionFromPool(url, user, propertyKey, properties);
     } else {
       UserGroupInformation.AuthenticationMethod authType =
@@ -707,6 +711,14 @@ public class JDBCInterpreter extends KerberosInterpreter {
     try {
       List<String> sqlArray;
       if (splitQuery) {
+        // TODO 在这里可以改掉SQL，执行前自动加上set appname操作
+//      if (getJDBCConfiguration(user).getPropertyMap(propertyKey).getProperty(DRIVER_KEY).contains("HiveDriver")){
+//        StringBuffer sb = new StringBuffer("set mapred.job.name=hive_on_mr_").append(user).append("_job;\n");
+//        sb.append("set spark.app.name=hive_on_spark_").append(user).append("_job;\n");
+//        sb.append("set tez.app.name=hive_on_tez_").append(user).append("_job;\n");
+//        sb.append(sql);
+//        sql = sb.toString();
+//      }
         sqlArray = splitSqlQueries(sql);
       } else {
         sqlArray = Arrays.asList(sql);

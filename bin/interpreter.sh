@@ -25,7 +25,7 @@ function usage() {
 }
 ## 用于标记是哪个用户启动的解释器，不做其他特殊用途
 INTERPRETER_USER_TAG=""
-while getopts "hc:p:r:d:l:v:u:g:t" o; do
+while getopts "hc:p:r:d:l:v:u:g:t:" o; do
     case ${o} in
         h)
             usage

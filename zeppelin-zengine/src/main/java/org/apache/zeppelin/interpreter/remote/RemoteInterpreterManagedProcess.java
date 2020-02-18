@@ -181,6 +181,10 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
     cmdLine.addArgument("-g", false);
     cmdLine.addArgument(interpreterSettingName, false);
 
+    // TODO 新增标记，用于标注是哪个用户启动的解释器
+    cmdLine.addArgument("-t", false);
+    cmdLine.addArgument(userName,false);
+
     executor = new DefaultExecutor();
 
     ByteArrayOutputStream cmdOut = new ByteArrayOutputStream();

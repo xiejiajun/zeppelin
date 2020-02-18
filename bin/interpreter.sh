@@ -108,6 +108,11 @@ fi
 if [[ ! -z "$ZEPPELIN_IMPERSONATE_USER" ]]; then
     ZEPPELIN_LOGFILE+="${ZEPPELIN_IMPERSONATE_USER}-"
 fi
+
+if [[ -z "$ZEPPELIN_IMPERSONATE_USER"  && -n "${INTERPRETER_USER_TAG}" ]]; then
+   ZEPPELIN_LOGFILE+="${INTERPRETER_USER_TAG}-"
+fi
+
 ZEPPELIN_LOGFILE+="${ZEPPELIN_IDENT_STRING}-${HOSTNAME}.log"
 JAVA_INTP_OPTS+=" -Dzeppelin.log.file=${ZEPPELIN_LOGFILE}"
 
@@ -226,7 +231,7 @@ if [[ -n "${SPARK_SUBMIT}" ]]; then
     # spark-interpreter-xxx.jar内部和我们平常写的Spark代码有所不同，我们平时一般不会有在在自己写的Spark应用内部实现一个常驻服务，
     # 不断接受客户端请求，然后不断出通过Driver提交并运行这些请求所包含的业务逻辑。（这个Spark解释器是类似于SparkStreaming的一个服务，
     # sparkStreaming应该也是这么实现的，只不过SparkStreaming是自己不断去拉数据来驱动SparkCore作业，而我们这里是被动监听客户端请求来触发SparkCore作业）
-    # 我们平常写的SPARK APP除了流计算是常驻的,其他的应用基本上都是像命令行程序一样执行完就退出的
+    # 我们平常写的SPARK APP除了流计算是常驻的,其他的应用基本上都是像命令行程序一样执行完就退出的,MainClass也是org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer
     INTERPRETER_RUN_COMMAND+=' '` echo ${SPARK_SUBMIT} --class ${ZEPPELIN_SERVER} --driver-class-path \"${ZEPPELIN_INTP_CLASSPATH_OVERRIDES}:${ZEPPELIN_INTP_CLASSPATH}\" --driver-java-options \"${JAVA_INTP_OPTS}\" ${SPARK_SUBMIT_OPTIONS} ${ZEPPELIN_SPARK_CONF} ${SPARK_APP_JAR} ${CALLBACK_HOST} ${PORT} ${INTP_PORT}`
 else
     ## 其他解释器都是通过RemoteInterpreterServer作为入口来启动一个监听用户请求的常驻服务的

@@ -23,8 +23,9 @@ bin=$(cd "${bin}">/dev/null; pwd)
 function usage() {
     echo "usage) $0 -p <port> -r <intp_port> -d <interpreter dir to load> -l <local interpreter repo dir to load> -g <interpreter group name>"
 }
-
-while getopts "hc:p:r:d:l:v:u:g:" o; do
+## 用于标记是哪个用户启动的解释器，不做其他特殊用途
+INTERPRETER_USER_TAG=""
+while getopts "hc:p:r:d:l:v:u:g:t" o; do
     case ${o} in
         h)
             usage
@@ -54,6 +55,9 @@ while getopts "hc:p:r:d:l:v:u:g:" o; do
             ;;
         g)
             INTERPRETER_SETTING_NAME=${OPTARG}
+            ;;
+        t)
+            INTERPRETER_USER_TAG=${OPTARG}
             ;;
         esac
 done
@@ -218,8 +222,14 @@ if [[ ! -z "$ZEPPELIN_IMPERSONATE_USER" ]]; then
 fi
 
 if [[ -n "${SPARK_SUBMIT}" ]]; then
+    ## Spark解释器启动逻辑，直接通过spark-submit命令将spark-interpreter-xxx.jar作为Spark应用提交，
+    # spark-interpreter-xxx.jar内部和我们平常写的Spark代码有所不同，我们平时一般不会有在在自己写的Spark应用内部实现一个常驻服务，
+    # 不断接受客户端请求，然后不断出通过Driver提交并运行这些请求所包含的业务逻辑。（这个Spark解释器是类似于SparkStreaming的一个服务，
+    # sparkStreaming应该也是这么实现的，只不过SparkStreaming是自己不断去拉数据来驱动SparkCore作业，而我们这里是被动监听客户端请求来触发SparkCore作业）
+    # 我们平常写的SPARK APP除了流计算是常驻的,其他的应用基本上都是像命令行程序一样执行完就退出的
     INTERPRETER_RUN_COMMAND+=' '` echo ${SPARK_SUBMIT} --class ${ZEPPELIN_SERVER} --driver-class-path \"${ZEPPELIN_INTP_CLASSPATH_OVERRIDES}:${ZEPPELIN_INTP_CLASSPATH}\" --driver-java-options \"${JAVA_INTP_OPTS}\" ${SPARK_SUBMIT_OPTIONS} ${ZEPPELIN_SPARK_CONF} ${SPARK_APP_JAR} ${CALLBACK_HOST} ${PORT} ${INTP_PORT}`
 else
+    ## 其他解释器都是通过RemoteInterpreterServer作为入口来启动一个监听用户请求的常驻服务的
     INTERPRETER_RUN_COMMAND+=' '` echo ${ZEPPELIN_RUNNER} ${JAVA_INTP_OPTS} ${ZEPPELIN_INTP_MEM} -cp ${ZEPPELIN_INTP_CLASSPATH_OVERRIDES}:${ZEPPELIN_INTP_CLASSPATH} ${ZEPPELIN_SERVER} ${CALLBACK_HOST} ${PORT} ${INTP_PORT}`
 fi
 

@@ -68,6 +68,7 @@ class SparkScala211Interpreter(override val conf: SparkConf,
       "-Yrepl-outdir", s"${outputDir.getAbsolutePath}"), true)
     settings.embeddedDefaults(Thread.currentThread().getContextClassLoader())
     settings.usejavacp.value = true
+    // TODO 将依赖包添加到Settings
     settings.classpath.value = getUserJars.mkString(File.pathSeparator)
 
     val replOut = if (printReplOutput) {
@@ -76,6 +77,8 @@ class SparkScala211Interpreter(override val conf: SparkConf,
       new JPrintWriter(Console.out, true)
     }
     sparkILoop = new SparkILoop(None, replOut)
+    // TODO 依赖包赋值给sparkILoop,sc会在底层加载他们，不知道sparkILoop是啥，请看
+    //  https://www.cnblogs.com/swordfall/p/9270703.html?utm_source=debugrun&utm_medium=referral
     sparkILoop.settings = settings
     sparkILoop.createInterpreter()
 
@@ -84,6 +87,7 @@ class SparkScala211Interpreter(override val conf: SparkConf,
 
     sparkILoop.in = reader
     sparkILoop.initializeSynchronous()
+    // TODO sparkILoop初始化
     loopPostInit(this)
     this.scalaCompleter = reader.completion.completer()
 

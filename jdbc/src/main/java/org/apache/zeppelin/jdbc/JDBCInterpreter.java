@@ -712,7 +712,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
 
     try {
 //      List<String> sqlArray = Lists.newArrayList();
-//      // TODO 在这里可以改掉SQL，执行前自动加上set appname操作
+//      // TODO 在这里可以改掉SQL，执行前自动加上set appname操作(这种方式已经测试通过）
 //      if (getProperty(String.format("%s.%s",propertyKey,DRIVER_KEY)).contains("HiveDriver")){
 //         sqlArray.add(String.format("set mapred.job.name=hive_on_mr_%s_job",user));
 //         sqlArray.add(String.format("set spark.app.name=hive_on_spark_%s_job",user));

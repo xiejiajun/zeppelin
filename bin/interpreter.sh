@@ -257,6 +257,12 @@ fi
 
 ### 使用trap命令进行SIGTERM SIGINT SIGQUIT信号响应（默认Ctrl+C 只执行一次kill -2，不一定杀得掉解释器，所以这里修改了杀进程行为，会重试）
 trap 'shutdown_hook;' SIGTERM SIGINT SIGQUIT
+### 对于有些时候页面上重启解释器一致重启不成功，卡住不动的情况，可以考虑把shutdown_hook函数的实现逻辑直接改成简单粗暴的kill -9,即如下实现
+#function shutdown_hook() {
+#    $(kill -9 ${pid} > /dev/null 2> /dev/null)
+#    rm -f "${ZEPPELIN_PID}"
+#}
+
 function shutdown_hook() {
   local count
   count=0

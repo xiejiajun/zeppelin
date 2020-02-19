@@ -228,13 +228,16 @@ fi
 
 if [[ -n "${SPARK_SUBMIT}" ]]; then
     ## Spark解释器启动逻辑，直接通过spark-submit命令将spark-interpreter-xxx.jar作为Spark应用提交，
-    # spark-interpreter-xxx.jar内部和我们平常写的Spark代码有所不同，我们平时一般不会有在在自己写的Spark应用内部实现一个常驻服务，
-    # 不断接受客户端请求，然后不断出通过Driver提交并运行这些请求所包含的业务逻辑。（这个Spark解释器是类似于SparkStreaming的一个服务，
+    # spark-interpreter-xxx.jar内部和我们平常写的Spark代码有所不同，我们平时一般不会有在在自己写的Spark应用内部实现一个常驻服务去不断接受客户端请求,
+    # 但这里是以org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer为Spark的MainClass将整个Spark解释器jar包作为SparkApp提交，以达到在Spark
+    # Driver端启动一个监听用户交互式执行请求（这个常驻服务是运行在driver上的，且这里只支持yarn-client模式，driver起在本地，保证RPC调用通畅，这个实现方式应该是
+    # 参照spark-shell的实现方式进行改造的），然后不断出通过Driver提交并运行这些请求所包含的业务逻辑。（这个Spark解释器应该也是类似于SparkStreaming的一个服务，
     # sparkStreaming应该也是这么实现的，只不过SparkStreaming是自己不断去拉数据来驱动SparkCore作业，而我们这里是被动监听客户端请求来触发SparkCore作业）
-    # 我们平常写的SPARK APP除了流计算是常驻的,其他的应用基本上都是像命令行程序一样执行完就退出的,MainClass也是org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer
+    # 我们平常写的SPARK APP除了流计算是常驻的,其他的应用基本上都是像命令行程序一样执行完就退出的
+    ## 所以：spark-shell的交互式查询请求监听服务是否和SparkStreaming数据监听服务实现方案差不多呢？ 等待对Spark源码进行分析来解答
     INTERPRETER_RUN_COMMAND+=' '` echo ${SPARK_SUBMIT} --class ${ZEPPELIN_SERVER} --driver-class-path \"${ZEPPELIN_INTP_CLASSPATH_OVERRIDES}:${ZEPPELIN_INTP_CLASSPATH}\" --driver-java-options \"${JAVA_INTP_OPTS}\" ${SPARK_SUBMIT_OPTIONS} ${ZEPPELIN_SPARK_CONF} ${SPARK_APP_JAR} ${CALLBACK_HOST} ${PORT} ${INTP_PORT}`
 else
-    ## 其他解释器都是通过RemoteInterpreterServer作为入口来启动一个监听用户请求的常驻服务的
+    ## 其他解释器直接将RemoteInterpreterServer作为入口来启动一个普通Java进程监听用户请求的常驻服务的
     INTERPRETER_RUN_COMMAND+=' '` echo ${ZEPPELIN_RUNNER} ${JAVA_INTP_OPTS} ${ZEPPELIN_INTP_MEM} -cp ${ZEPPELIN_INTP_CLASSPATH_OVERRIDES}:${ZEPPELIN_INTP_CLASSPATH} ${ZEPPELIN_SERVER} ${CALLBACK_HOST} ${PORT} ${INTP_PORT}`
 fi
 

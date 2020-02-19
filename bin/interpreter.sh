@@ -255,7 +255,7 @@ else
   echo ${pid} > ${ZEPPELIN_PID}
 fi
 
-
+### 使用trap命令进行SIGTERM SIGINT SIGQUIT信号响应（默认Ctrl+C 只执行一次kill -2，不一定杀得掉解释器，所以这里修改了杀进程行为，会重试）
 trap 'shutdown_hook;' SIGTERM SIGINT SIGQUIT
 function shutdown_hook() {
   local count

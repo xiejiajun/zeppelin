@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.dbcp2.ConnectionFactory;
 import org.apache.commons.dbcp2.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp2.PoolableConnectionFactory;
@@ -710,9 +711,23 @@ public class JDBCInterpreter extends KerberosInterpreter {
     }
 
     try {
+//      List<String> sqlArray = Lists.newArrayList();
+//      // TODO 在这里可以改掉SQL，执行前自动加上set appname操作
+//      if (getProperty(String.format("%s.%s",propertyKey,DRIVER_KEY)).contains("HiveDriver")){
+//         sqlArray.add(String.format("set mapred.job.name=hive_on_mr_%s_job",user));
+//         sqlArray.add(String.format("set spark.app.name=hive_on_spark_%s_job",user));
+//         sqlArray.add(String.format("set tez.app.name=hive_on_tez_%s_job",user));
+//      }
+//      if (splitQuery) {
+//        sqlArray.addAll(splitSqlQueries(sql));
+//      } else {
+//        sqlArray.add(sql);
+//      }
+
+
       List<String> sqlArray;
       if (splitQuery) {
-        // TODO 在这里可以改掉SQL，执行前自动加上set appname操作
+        // TODO 在这里也可以改掉SQL，执行前自动加上set appname操作
 //      if (getJDBCConfiguration(user).getPropertyMap(propertyKey).getProperty(DRIVER_KEY).contains("HiveDriver")){
 //        StringBuffer sb = new StringBuffer("set mapred.job.name=hive_on_mr_").append(user).append("_job;\n");
 //        sb.append("set spark.app.name=hive_on_spark_").append(user).append("_job;\n");

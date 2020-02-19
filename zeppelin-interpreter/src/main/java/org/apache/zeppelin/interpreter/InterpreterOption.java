@@ -88,7 +88,7 @@ public class InterpreterOption {
 
   public InterpreterOption() {
     // TODO 这样做也可以做到能区分各个解释器进程是哪个用户启动的
-    setUserImpersonate(true);
+//    setUserImpersonate(true);
   }
 
   public InterpreterOption(String perUser, String perNote) {

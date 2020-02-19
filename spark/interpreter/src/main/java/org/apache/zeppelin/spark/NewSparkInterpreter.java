@@ -90,7 +90,7 @@ public class NewSparkInterpreter extends AbstractSparkInterpreter {
           conf.set("spark.useHiveContext", entry.getValue().toString());
         }
         // TODO 应用名称加上用户名
-        if (entry.getKey().toString().equals("spark.app.name")) {
+        if ("spark.app.name".equals(entry.getKey().toString())) {
           conf.set("spark.app.name", entry.getValue().toString() + "-" + getUserName());
         }
       }

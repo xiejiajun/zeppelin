@@ -328,7 +328,7 @@ public class OldSparkInterpreter extends AbstractSparkInterpreter {
           logger.debug(String.format("SparkConf: key = [%s], value = [%s]", key, val));
           conf.set(key, val);
           // TODO 应用名称加上用户名
-          if (key.equals("spark.app.name")) {
+          if ("spark.app.name".equals(key)) {
             conf.set("spark.app.name",val + "-" + getUserName());
           }
         }
@@ -465,7 +465,7 @@ public class OldSparkInterpreter extends AbstractSparkInterpreter {
           logger.debug(String.format("SparkConf: key = [%s], value = [%s]", key, val));
           conf.set(key, val);
           // TODO 应用名称加上用户名
-          if (key.equals("spark.app.name")) {
+          if ("spark.app.name".equals(key)) {
             conf.set("spark.app.name",val + "-" + getUserName());
           }
         }

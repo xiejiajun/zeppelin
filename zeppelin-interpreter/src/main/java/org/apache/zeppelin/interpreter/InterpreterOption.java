@@ -82,6 +82,10 @@ public class InterpreterOption {
     return isUserImpersonate;
   }
 
+  /**
+   * 设置以当前用户启动解释器进程
+   * @param userImpersonate
+   */
   public void setUserImpersonate(boolean userImpersonate) {
     isUserImpersonate = userImpersonate;
   }

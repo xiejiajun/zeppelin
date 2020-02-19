@@ -236,6 +236,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
    * "maxRows" value.
    */
   private void setMaxRows() {
+    //TODO 设置最多可拉取的结果条数
     maxRows = Integer.valueOf(getProperty(MAX_ROWS_KEY, "1000"));
   }
 
@@ -729,7 +730,9 @@ public class JDBCInterpreter extends KerberosInterpreter {
         statement = connection.createStatement();
 
         // fetch n+1 rows in order to indicate there's more rows available (for large selects)
+        // TODO 通过JDBC的maxRows限制每个查询返回的行数,setFetchSize和setMaxRows一起设置，不同的JDBC服务端支持不同的参数
         statement.setFetchSize(getMaxResult());
+        // TODO 通过JDBC的maxRows限制每个查询返回的行数
         statement.setMaxRows(maxRows);
 
         if (statement == null) {

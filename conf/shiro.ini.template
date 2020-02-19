@@ -46,6 +46,29 @@ user3 = password4, role2
 #ldapRealm.userDnTemplate = uid={0},ou=Users,dc=COMPANY,dc=COM
 #ldapRealm.contextFactory.authenticationMechanism = simple
 
+
+### A advanced LDAP Ream Configuration
+ldapRealm=org.apache.zeppelin.realm.LdapRealm
+ldapRealm.contextFactory.authenticationMechanism=simple
+ldapRealm.contextFactory.url=ldap://ldap.test.com:389
+ldapRealm.userDnTemplate=cn={0},ou=user_ou,dc=dc_name
+ldapRealm.pagingSize = 200
+ldapRealm.authorizationEnabled=true
+ldapRealm.searchBase= dc=dc_name
+ldapRealm.userSearchBase = ou=user_ou,dc=dc_name
+ldapRealm.groupSearchBase = ou=group_ou,dc=dc_name
+ldapRealm.groupObjectClass= posixGroup
+ldapRealm.userLowerCase = true
+ldapRealm.userSearchScope = subtree;
+ldapRealm.groupSearchScope = subtree;
+ldapRealm.contextFactory.systemUsername= cn=admin_account,dc=dc_name
+ldapRealm.contextFactory.systemPassword= admin_password
+ldapRealm.groupSearchEnableMatchingRuleInChain = true
+ldapRealm.rolesByGroup = zeppeline_role1:ldap_group1, zeppelin_role2:ldap_group2, zeppelin_role3:ldap_group3
+## 配置允许登录的组，以此来隔离每个zeppelin服务允许哪些团队使用
+##ldapRealm.allowedRolesForAuthentication = zeppeline_role1,zeppeline_role1
+
+
 ### A sample PAM configuration
 #pamRealm=org.apache.zeppelin.realm.PamRealm
 #pamRealm.service=sshd

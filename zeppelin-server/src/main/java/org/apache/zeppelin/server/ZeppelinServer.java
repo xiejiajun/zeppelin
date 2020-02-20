@@ -219,6 +219,7 @@ public class ZeppelinServer extends Application {
     final ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     conf.setProperty("args", args);
 
+    // TODO 配置Jetty
     jettyWebServer = setupJettyServer(conf);
 
     ContextHandlerCollection contexts = new ContextHandlerCollection();

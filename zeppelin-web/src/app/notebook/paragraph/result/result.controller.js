@@ -841,6 +841,7 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
     commitParagraphResult(paragraph.title, paragraph.text, newConfig, newParams);
   };
 
+  // TODO js 导出页面上已经收到并保存在本地的数据的函数
   $scope.exportToDSV = function(delimiter) {
     let dsv = '';
     let dateFinished = moment(paragraph.dateFinished).format('YYYY-MM-DD hh:mm:ss A');

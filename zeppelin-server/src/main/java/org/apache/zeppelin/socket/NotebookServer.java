@@ -486,6 +486,12 @@ public class NotebookServer extends WebSocketServlet
   }
 
 
+  /**
+   * TODO 这个方法是往Web端websocket客户端发送响应数据的方法:发送响应结果对应的op=Message.OP.PARAGRAPH_APPEND_OUTPUT
+   *  Message.OP.PARAGRAPH_APPEND_OUTPUT具体是哪个上有方法发起的需要debug
+   * @param noteId
+   * @param m
+   */
   private void broadcast(String noteId, Message m) {
     List<NotebookSocket> socketsToBroadcast = Collections.emptyList();
     synchronized (noteSocketMap) {

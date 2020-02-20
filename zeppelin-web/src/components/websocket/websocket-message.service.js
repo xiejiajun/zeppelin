@@ -14,6 +14,7 @@
 
 angular.module('zeppelinWebApp').service('websocketMsgSrv', WebsocketMessageService);
 
+// TODO zeppelin web页面组装websocket请求的逻辑，客户端是websocket-event.factory.js
 function WebsocketMessageService($rootScope, websocketEvents) {
   'ngInject';
 

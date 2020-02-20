@@ -31,6 +31,7 @@ function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv, ng
     }, 10000);
   });
 
+  // TODO js websocket客户端往NotebookServer发送请求的函数，NotebookServer.onMessage接收
   websocketCalls.sendNewEvent = function(data) {
     if ($rootScope.ticket !== undefined) {
       data.principal = $rootScope.ticket.principal;
@@ -49,6 +50,7 @@ function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv, ng
     return (websocketCalls.ws.socket.readyState === 1);
   };
 
+  // TODO js websocket接收NotebookServer.broadcast(String noteId, Message m)推送的消息的处理逻辑
   websocketCalls.ws.onMessage(function(event) {
     let payload;
     if (event.data) {
@@ -112,6 +114,7 @@ function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv, ng
       $rootScope.$broadcast('updateParagraph', data);
     } else if (op === 'RUN_PARAGRAPH_USING_SPELL') {
       $rootScope.$broadcast('runParagraphUsingSpell', data);
+      // TODO 接收执行结果
     } else if (op === 'PARAGRAPH_APPEND_OUTPUT') {
       $rootScope.$broadcast('appendParagraphOutput', data);
     } else if (op === 'PARAGRAPH_UPDATE_OUTPUT') {

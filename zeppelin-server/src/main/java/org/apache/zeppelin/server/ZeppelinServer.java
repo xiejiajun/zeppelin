@@ -377,6 +377,11 @@ public class ZeppelinServer extends Application {
     final ServletHolder servletHolder = new ServletHolder(
             new org.glassfish.jersey.servlet.ServletContainer());
 
+    // javax.ws.rs实现Restful: https://blog.csdn.net/flowingflying/article/details/52212389
+    // https://stackoverflow.com/questions/25418684/when-to-use-javax-ws-rs-core-application-to-create-restful-web-services
+    // java – JAX-RS：如何扩展Application类来扫描包？:http://www.voidcn.com/article/p-nsqmlirm-buh.html
+    // TODO 将ZeppelinServer配置为Jetty服务ServletHolder的Application(ZeppelinServer实现了javax.ws.rs.Application接口）
+    //  详情搜索 "基于jersery协议实现RestApi" 或者 "jetty开发RestApi"
     servletHolder.setInitParameter("javax.ws.rs.Application", ZeppelinServer.class.getName());
     servletHolder.setName("rest");
     servletHolder.setForcedPath("rest");
@@ -385,6 +390,7 @@ public class ZeppelinServer extends Application {
     webapp.addServlet(servletHolder, "/api/*");
 
     String shiroIniPath = conf.getShiroPath();
+    // TODO 配置Shiro权限认证
     if (!StringUtils.isBlank(shiroIniPath)) {
       webapp.setInitParameter("shiroConfigLocations", new File(shiroIniPath).toURI().toString());
       SecurityUtils.setIsEnabled(true);
@@ -436,7 +442,7 @@ public class ZeppelinServer extends Application {
   @Override
   public Set<Object> getSingletons() {
     Set<Object> singletons = new HashSet<>();
-
+    //  TODO Zeppelin RestApi 对应的处理器配置
     /** Rest-api root endpoint */
     ZeppelinRestApi root = new ZeppelinRestApi();
     singletons.add(root);

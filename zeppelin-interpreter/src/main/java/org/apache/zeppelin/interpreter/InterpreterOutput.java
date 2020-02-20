@@ -335,6 +335,7 @@ public class InterpreterOutput extends OutputStream {
   }
 
   public void flush() throws IOException {
+    // TODO 用于触发通过WebSocket输出结果到Web端
     InterpreterResultMessageOutput out = getCurrentOutput();
     if (out != null) {
       out.flush();

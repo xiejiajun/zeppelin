@@ -203,6 +203,7 @@ public class InterpreterResultMessageOutput extends OutputStream {
   }
 
   private void flush(boolean append) throws IOException {
+    // TODO 用于触发通过WebSocket输出结果到Web端
     synchronized (outList) {
       buffer.flush();
       byte[] bytes = buffer.toByteArray();
@@ -210,10 +211,12 @@ public class InterpreterResultMessageOutput extends OutputStream {
         outList.add(bytes);
         if (append) {
           if (flushListener != null) {
+            // TODO 用于触发通过WebSocket输出结果到Web端
             flushListener.onAppend(this, bytes);
           }
         } else {
           if (flushListener != null) {
+            // TODO 用于触发通过WebSocket输出结果到Web端
             flushListener.onUpdate(this);
           }
         }
@@ -223,6 +226,7 @@ public class InterpreterResultMessageOutput extends OutputStream {
   }
 
   public void flush() throws IOException {
+    // TODO 用于触发通过WebSocket输出结果到Web端
     flush(isAppendSupported());
   }
 

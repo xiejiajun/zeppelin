@@ -2038,7 +2038,7 @@ public class NotebookServer extends WebSocketServlet
 
   /**
    * This callback is for the paragraph that runs on ZeppelinServer
-   *
+   * TODO 通过websocket发送数据到web端
    * @param output output to append
    */
   @Override
@@ -2347,6 +2347,7 @@ public class NotebookServer extends WebSocketServlet
     }
 
     /**
+     * TODO 通过websocket发送数据到web端
      * This callback is for paragraph that runs on RemoteInterpreterProcess
      */
     @Override

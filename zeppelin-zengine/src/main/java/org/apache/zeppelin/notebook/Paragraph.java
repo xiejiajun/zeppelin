@@ -521,11 +521,13 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
     return getInterpreterContext(new InterpreterOutput(new InterpreterOutputListener() {
       @Override
       public void onAppend(int index, InterpreterResultMessageOutput out, byte[] line) {
+        // TODO 用于触发通过WebSocket输出结果到Web端
         ((ParagraphJobListener) getListener()).onOutputAppend(self, index, new String(line));
       }
 
       @Override
       public void onUpdate(int index, InterpreterResultMessageOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端
         try {
           ((ParagraphJobListener) getListener())
               .onOutputUpdate(self, index, out.toInterpreterResultMessage());
@@ -536,6 +538,7 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
 
       @Override
       public void onUpdateAll(InterpreterOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端
         try {
           List<InterpreterResultMessage> messages = out.toInterpreterResultMessage();
           ((ParagraphJobListener) getListener()).onOutputUpdateAll(self, messages);

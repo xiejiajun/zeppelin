@@ -21,11 +21,13 @@ package org.apache.zeppelin.interpreter;
  */
 public interface InterpreterOutputListener {
   /**
+   * TODO 用于触发通过WebSocket输出结果到Web端
    * update all message outputs
    */
   public void onUpdateAll(InterpreterOutput out);
 
   /**
+   * TODO 用于触发通过WebSocket输出结果到Web端
    * called when newline is detected
    * @param index
    * @param out
@@ -34,6 +36,7 @@ public interface InterpreterOutputListener {
   public void onAppend(int index, InterpreterResultMessageOutput out, byte[] line);
 
   /**
+   * TODO 用于触发通过WebSocket输出结果到Web端
    * when entire output is updated. eg) after detecting new display system
    * @param index
    * @param out

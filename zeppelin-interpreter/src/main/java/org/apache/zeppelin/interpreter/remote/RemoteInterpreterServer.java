@@ -644,6 +644,7 @@ public class RemoteInterpreterServer extends Thread
         }
 
         // data from context.out is prepended to InterpreterResult if both defined
+        // TODO 用于触发通过WebSocket输出结果到Web端
         context.out.flush();
         List<InterpreterResultMessage> resultMessages = context.out.toInterpreterResultMessage();
         resultMessages.addAll(result.message());
@@ -785,6 +786,7 @@ public class RemoteInterpreterServer extends Thread
     return new InterpreterOutput(new InterpreterOutputListener() {
       @Override
       public void onUpdateAll(InterpreterOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         try {
           eventClient.onInterpreterOutputUpdateAll(
               noteId, paragraphId, out.toInterpreterResultMessage());
@@ -795,6 +797,7 @@ public class RemoteInterpreterServer extends Thread
 
       @Override
       public void onAppend(int index, InterpreterResultMessageOutput out, byte[] line) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         String output = new String(line);
         logger.debug("Output Append: {}", output);
         eventClient.onInterpreterOutputAppend(
@@ -803,6 +806,7 @@ public class RemoteInterpreterServer extends Thread
 
       @Override
       public void onUpdate(int index, InterpreterResultMessageOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         String output;
         try {
           output = new String(out.toByteArray());
@@ -1226,11 +1230,13 @@ public class RemoteInterpreterServer extends Thread
 
       @Override
       public void onAppend(int index, InterpreterResultMessageOutput out, byte[] line) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         eventClient.onAppOutputAppend(noteId, paragraphId, index, appId, new String(line));
       }
 
       @Override
       public void onUpdate(int index, InterpreterResultMessageOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         try {
           eventClient.onAppOutputUpdate(noteId, paragraphId, index, appId,
               out.getType(), new String(out.toByteArray()));

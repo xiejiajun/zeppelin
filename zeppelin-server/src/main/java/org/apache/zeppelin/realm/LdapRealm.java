@@ -140,8 +140,11 @@ public class LdapRealm extends JndiLdapRealm {
   // LDAP Operator '1.2.840.113556.1.4.1941'
   // walks the chain of ancestry in objects all the way to the root until it finds a match
   // see https://msdn.microsoft.com/en-us/library/aa746475(v=vs.85).aspx
+//  private static final String MATCHING_RULE_IN_CHAIN_FORMAT =
+//      "(&(objectClass=%s)(%s:1.2.840.113556.1.4.1941:=%s))";
+
   private static final String MATCHING_RULE_IN_CHAIN_FORMAT =
-      "(&(objectClass=%s)(%s:1.2.840.113556.1.4.1941:=%s))";
+          "(&(objectClass=%s)(%s))";
 
   private static Pattern TEMPLATE_PATTERN = Pattern.compile("\\{(\\d+?)\\}");
   private static String DEFAULT_PRINCIPAL_REGEX = "(.*)";
@@ -373,11 +376,18 @@ public class LdapRealm extends JndiLdapRealm {
         SearchControls searchControls = getGroupSearchControls();
         try {
           if (groupSearchEnableMatchingRuleInChain) {
+//            searchResultEnum = ldapCtx.search(
+//                getGroupSearchBase(),
+//                String.format(
+//                    MATCHING_RULE_IN_CHAIN_FORMAT, groupObjectClass, memberAttribute, userDn),
+//                searchControls);
+
             searchResultEnum = ldapCtx.search(
-                getGroupSearchBase(),
-                String.format(
-                    MATCHING_RULE_IN_CHAIN_FORMAT, groupObjectClass, memberAttribute, userDn),
-                searchControls);
+                    getGroupSearchBase(),
+                    String.format(
+                            MATCHING_RULE_IN_CHAIN_FORMAT, groupObjectClass,userDn.replace("uid","memberUid")),
+                    searchControls);
+
             while (searchResultEnum != null && searchResultEnum.hasMore()) {
               // searchResults contains all the groups in search scope
               numResults++;

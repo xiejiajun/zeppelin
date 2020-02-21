@@ -53,8 +53,8 @@ public class OSSNotebookRepo implements NotebookRepo {
 
   public OSSNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     this.conf = conf;
-    bucketName = conf.getS3BucketName();
-    user = conf.getS3User();
+    bucketName = conf.getOSSBucketName();
+    user = conf.getOSSUser();
     String accessKeyId = conf.getOSSAccessKeyId();
     String accessKeySecret = conf.getOSSAccessKeySecret();
     String stsToken = conf.getOssStsToken();

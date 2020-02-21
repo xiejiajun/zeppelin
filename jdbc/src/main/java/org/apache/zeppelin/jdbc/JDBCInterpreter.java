@@ -442,7 +442,8 @@ public class JDBCInterpreter extends KerberosInterpreter {
     final String url = properties.getProperty(URL_KEY);
 
     if (isEmpty(getProperty("zeppelin.jdbc.auth.type"))) {
-//      // TODO hive 指定提交作业的用户可以在这里做 但是可能会导致没权限，所以还需要靠用户自己通过设置作业名称的方式去解决
+      // TODO hive 指定提交作业的用户可以在这里做 但是可能会导致没权限，所以还需要靠用户自己通过设置作业名称的方式去解决
+      //   判断条件用properties.getProperty(DRIVER_KEY).contains("HiveDriver")也行
 //      if (jdbcUserConfigurations.getPropertyMap(propertyKey).getProperty(DRIVER_KEY).contains("HiveDriver")){
 //        jdbcUserConfigurations.getPropertyMap(propertyKey).setProperty(USER_KEY,user);
 //      }

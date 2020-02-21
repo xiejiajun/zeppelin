@@ -93,6 +93,8 @@ public class ZeppelinServer extends Application {
   private NotebookAuthorization notebookAuthorization;
   private Credentials credentials;
 
+  private ZeppelinConfiguration conf;
+
   public ZeppelinServer() throws Exception {
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     if (conf.getShiroPath().length() > 0) {
@@ -102,6 +104,7 @@ public class ZeppelinServer extends Application {
         if (realms.size() > 1) {
           Boolean isIniRealmEnabled = false;
           for (Object realm : realms) {
+            // TODO Shiro Realm校验，额外配置了realm时禁止使用[users]配置用户名密码（IniRealm是默认就有的）
             if (realm instanceof IniRealm && ((IniRealm) realm).getIni().get("users") != null) {
               isIniRealmEnabled = true;
               break;
@@ -161,6 +164,8 @@ public class ZeppelinServer extends Application {
         notebookRepo, schedulerFactory, replFactory, interpreterSettingManager, notebookWsServer,
             noteSearchService, notebookAuthorization, credentials);
     this.configStorage = ConfigStorage.getInstance(conf);
+
+    this.conf = conf;
 
     ZeppelinServer.helium = new Helium(
         conf.getHeliumConfPath(),
@@ -467,7 +472,8 @@ public class ZeppelinServer extends Application {
     singletons.add(settingsApi);
 
     // TODO 新增用于处理导出行为埋点请求的的RestAPI
-    ResultExportHookRestApi resultExportHook = new ResultExportHookRestApi();
+    String auditLogPath = conf.getString(ConfVars.ZEPPELIN_PARAGRAPH_RESULT_EXPORT_AUDIT_PATH);
+    ResultExportHookRestApi resultExportHook = new ResultExportHookRestApi(auditLogPath);
     singletons.add(resultExportHook);
 
     return singletons;

@@ -93,7 +93,7 @@ public class ZeppelinServer extends Application {
   private NotebookAuthorization notebookAuthorization;
   private Credentials credentials;
 
-  private ZeppelinConfiguration conf;
+  private final String auditLogPath;
 
   public ZeppelinServer() throws Exception {
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
@@ -165,7 +165,7 @@ public class ZeppelinServer extends Application {
             noteSearchService, notebookAuthorization, credentials);
     this.configStorage = ConfigStorage.getInstance(conf);
 
-    this.conf = conf;
+    this.auditLogPath = conf.getString(ConfVars.ZEPPELIN_PARAGRAPH_RESULT_EXPORT_AUDIT_PATH);
 
     ZeppelinServer.helium = new Helium(
         conf.getHeliumConfPath(),
@@ -472,7 +472,6 @@ public class ZeppelinServer extends Application {
     singletons.add(settingsApi);
 
     // TODO 新增用于处理导出行为埋点请求的的RestAPI
-    String auditLogPath = conf.getString(ConfVars.ZEPPELIN_PARAGRAPH_RESULT_EXPORT_AUDIT_PATH);
     ResultExportHookRestApi resultExportHook = new ResultExportHookRestApi(auditLogPath);
     singletons.add(resultExportHook);
 

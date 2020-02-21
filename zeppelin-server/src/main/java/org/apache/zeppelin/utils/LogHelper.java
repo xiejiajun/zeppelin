@@ -46,7 +46,7 @@ public class LogHelper {
         final String absolutePath = logFile.getAbsolutePath();
 
         // Attempt to create FileAppender
-        Layout loggerLayout =  new EnhancedPatternLayout("%d{dd-MM-yyyy HH:mm:ss z} -| %m\n");
+        Layout loggerLayout =  new EnhancedPatternLayout("%d{yyyy-MM-dd HH:mm:ss z} -|- %m\n");
         final RollingFileAppender fileAppender =
                 new RollingFileAppender(loggerLayout, absolutePath, true);
 

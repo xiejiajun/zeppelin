@@ -886,6 +886,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
 
   @Override
   public int getProgress(InterpreterContext context) {
+    // TODO JDBC获取作业进度的方法在这里 未进行实现
     return 0;
   }
 

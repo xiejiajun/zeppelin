@@ -242,6 +242,10 @@ public abstract class Job {
     this.jobName = jobName;
   }
 
+  /**
+   * TODO 获取作业当前进度
+   * @return
+   */
   public abstract int progress();
 
   public abstract Map<String, Object> info();

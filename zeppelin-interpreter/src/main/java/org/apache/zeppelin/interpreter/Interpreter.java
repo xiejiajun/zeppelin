@@ -139,7 +139,7 @@ public abstract class Interpreter {
 
   /**
    * get interpret() method running process in percentage.
-   *
+   * TODO 获取作业运行进度的抽象方法
    * @return number between 0-100
    */
   @ZeppelinApi

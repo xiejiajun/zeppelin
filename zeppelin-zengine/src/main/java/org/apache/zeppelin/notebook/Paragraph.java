@@ -312,6 +312,7 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
   public int progress() {
     try {
       if (this.interpreter != null) {
+        // TODO 获取作业进度
         return this.interpreter.getProgress(getInterpreterContext(null));
       } else {
         return 0;

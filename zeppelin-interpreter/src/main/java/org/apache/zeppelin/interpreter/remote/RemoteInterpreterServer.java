@@ -561,6 +561,7 @@ public class RemoteInterpreterServer extends Thread
 
     @Override
     public int progress() {
+      // TODO 这个作业比较特殊，无需实现进度获取方法
       return 0;
     }
 

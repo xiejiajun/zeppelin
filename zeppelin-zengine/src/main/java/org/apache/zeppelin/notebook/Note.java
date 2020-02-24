@@ -432,22 +432,43 @@ public class Note implements ParagraphJobListener, JsonSerializable {
    * @return a paragraph that was deleted, or <code>null</code> otherwise
    */
   public Paragraph removeParagraph(String user, String paragraphId) {
+//    removeAllAngularObjectInParagraph(user, paragraphId);
+//    interpreterSettingManager.removeResourcesBelongsToParagraph(getId(), paragraphId);
+//    synchronized (paragraphs) {
+//      Iterator<Paragraph> i = paragraphs.iterator();
+//      while (i.hasNext()) {
+//        Paragraph p = i.next();
+//        if (p.getId().equals(paragraphId)) {
+//          index.deleteIndexDoc(this, p);
+//          i.remove();
+//
+//          if (noteEventListener != null) {
+//            noteEventListener.onParagraphRemove(p);
+//          }
+//          return p;
+//        }
+//      }
+//    }
+//    return null;
+
     removeAllAngularObjectInParagraph(user, paragraphId);
     interpreterSettingManager.removeResourcesBelongsToParagraph(getId(), paragraphId);
+    Paragraph removedParagraph = null;
     synchronized (paragraphs) {
       Iterator<Paragraph> i = paragraphs.iterator();
       while (i.hasNext()) {
         Paragraph p = i.next();
         if (p.getId().equals(paragraphId)) {
+          removedParagraph = p;
           index.deleteIndexDoc(this, p);
           i.remove();
-
-          if (noteEventListener != null) {
-            noteEventListener.onParagraphRemove(p);
-          }
-          return p;
+          break;
         }
       }
+    }
+    if (removedParagraph != null && noteEventListener != null) {
+      noteEventListener.onParagraphRemove(removedParagraph);
+      return removedParagraph;
     }
     return null;
   }

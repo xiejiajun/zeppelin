@@ -101,7 +101,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
   }
 
   /**
-   * TODO 关闭当前session的所有解释器实例
+   * TODO 关闭当前session的所有解释器实例: per user模式其实一个sessionId只对应一个Interpreter
    * Close all interpreter instances in this session
    * @param sessionId
    */

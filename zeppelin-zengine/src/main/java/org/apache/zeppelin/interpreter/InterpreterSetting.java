@@ -437,6 +437,7 @@ public class InterpreterSetting {
   }
 
   public ManagedInterpreterGroup getInterpreterGroup(String user, String noteId) {
+    // TODO 获取解释器组ID
     String groupId = getInterpreterGroupId(user, noteId);
     try {
       interpreterGroupReadLock.lock();
@@ -471,9 +472,19 @@ public class InterpreterSetting {
     return DEFAULT_EDITOR;
   }
 
+  /**
+   * TODO 处理notebook页面的重启解释器请求
+   * @param user
+   * @param noteId
+   */
   void closeInterpreters(String user, String noteId) {
+    // TODO 到这里的InterpreterSetting已经是和用户要重启的类型一致了
+    //  获取解释器组
     ManagedInterpreterGroup interpreterGroup = getInterpreterGroup(user, noteId);
     if (interpreterGroup != null) {
+      // TODO 获取用户ID以及noteId对应的哪个解释器sessionId（这里的session不是用户和ZeppelinServer之间的Session，而是
+      //  ZeppelinServer和各个解释器实例之间维护的Session，所以一个用户可能会对应很多个Session，需要加上InterpreterSetting和
+      //  NoteId来唯一确定用户的对应类型的解释器和ZeppelinServer之间的Session）
       String sessionId = getInterpreterSessionId(user, noteId);
       interpreterGroup.close(sessionId);
     }

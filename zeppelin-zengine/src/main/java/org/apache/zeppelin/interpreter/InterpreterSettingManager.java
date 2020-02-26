@@ -811,10 +811,19 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     }
   }
 
+  /**
+   * TODO 处理notebook页面的重启解释器请求
+   * @param settingId
+   * @param noteId
+   * @param user
+   * @throws InterpreterException
+   */
   // restart in note page
   public void restart(String settingId, String noteId, String user) throws InterpreterException {
+    // TODO 获取对应解释器类型的所有解释器
     InterpreterSetting intpSetting = interpreterSettings.get(settingId);
     Preconditions.checkNotNull(intpSetting);
+    // TODO 获取对应解释器类型的所有解释器
     intpSetting = interpreterSettings.get(settingId);
     // Check if dependency in specified path is changed
     // If it did, overwrite old dependency jar with new one
@@ -822,6 +831,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
       // clean up metaInfos
       intpSetting.setInfos(null);
       copyDependenciesFromLocalPath(intpSetting);
+      // TODO 到这里的InterpreterSetting已经是和用户要重启的类型一致了
       intpSetting.closeInterpreters(user, noteId);
     } else {
       throw new InterpreterException("Interpreter setting id " + settingId + " not found");

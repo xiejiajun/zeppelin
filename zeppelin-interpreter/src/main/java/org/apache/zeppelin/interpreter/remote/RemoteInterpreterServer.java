@@ -387,6 +387,12 @@ public class RemoteInterpreterServer extends Thread
     }
   }
 
+  /**
+   * TODO 用于接收并处理ZeppelinServer发送过来的close 解释器请求
+   * @param sessionId
+   * @param className
+   * @throws TException
+   */
   @Override
   public void close(String sessionId, String className) throws TException {
     // unload all applications
@@ -417,6 +423,7 @@ public class RemoteInterpreterServer extends Thread
         Interpreter inp = it.next();
         if (inp.getClassName().equals(className)) {
           try {
+            // TODO 接收到RemoteInterpreter的close方法发起的关闭解释器请求后，经过一系列处理，到这里执行真正的解释器close操作
             inp.close();
           } catch (InterpreterException e) {
             logger.warn("Fail to close interpreter", e);

@@ -101,12 +101,14 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
   }
 
   /**
+   * TODO 关闭当前session的所有解释器实例
    * Close all interpreter instances in this session
    * @param sessionId
    */
   public synchronized void close(String sessionId) {
     LOGGER.info("Close Session: " + sessionId + " for interpreter setting: " +
         interpreterSetting.getName());
+    // TODO 关闭所有解释器实例
     close(sessions.remove(sessionId));
     //TODO(zjffdu) whether close InterpreterGroup if there's no session left in Zeppelin Server
     if (sessions.isEmpty() && interpreterSetting != null) {
@@ -125,6 +127,10 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     }
   }
 
+  /**
+   * TODO 关闭所有解释器实例
+   * @param interpreters
+   */
   private void close(Collection<Interpreter> interpreters) {
     if (interpreters == null) {
       return;
@@ -132,6 +138,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
 
     for (Interpreter interpreter : interpreters) {
       Scheduler scheduler = interpreter.getScheduler();
+      // TODO 先终止所有Job
       for (Job job : scheduler.getJobsRunning()) {
         job.abort();
         job.setStatus(Job.Status.ABORT);
@@ -144,6 +151,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
       }
 
       try {
+        // TODO 关闭解释器：通过RemoteInterpreter RPC客户端发送请求调用各个解释器自己实现的close方法
         interpreter.close();
       } catch (InterpreterException e) {
         LOGGER.warn("Fail to close interpreter " + interpreter.getClassName(), e);

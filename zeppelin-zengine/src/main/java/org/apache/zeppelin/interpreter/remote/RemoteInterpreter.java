@@ -195,6 +195,10 @@ public class RemoteInterpreter extends Interpreter {
   }
 
 
+  /**
+   * TODO 用于向远程RemoteInterpreterServer启动的解释器服务发送close请求，对应解释器收到请求后再调用自己的close方法kill -2杀掉进程
+   * @throws InterpreterException
+   */
   @Override
   public void close() throws InterpreterException {
     if (isOpened) {

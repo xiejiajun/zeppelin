@@ -74,6 +74,8 @@ public class ShellInterpreter extends KerberosInterpreter {
       DefaultExecutor executor = executors.remove(executorKey);
       if (executor != null) {
         try {
+          // TODO 关闭通过commons-exec调起来的解释器进程： ExecuteWatchdog.destroyProcess ->
+          //  timeoutOccured -> UNIXProcess.destroy -> destroy(false) -> Native方法UNIXProcess.destroyProcess(pid, false)
           executor.getWatchdog().destroyProcess();
         } catch (Exception e){
           LOGGER.error("error destroying executor for paragraphId: " + executorKey, e);

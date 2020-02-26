@@ -224,6 +224,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
     processOutput.setOutputStream(null);
   }
 
+  @Override
   public void stop() {
     // shutdown EventPoller first.
     this.getRemoteInterpreterEventPoller().shutdown();
@@ -243,6 +244,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
       } catch (Exception e) {
         logger.warn("ignore the exception when shutting down");
       }
+      // TODO 杀死启动解释器进程的父进程 （ps -ef | grep "\-g" 可以查到的那些interpreter.sh进程）
       watchdog.destroyProcess();
     }
 

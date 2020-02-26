@@ -12,6 +12,7 @@ import java.util.Map;
 
 
 /**
+ * TODO 用于手动杀解释器进程
  * Utility class for stopping interpreter in the case that you want to stop all the
  * interpreter process even when you enable recovery, or you want to kill interpreter process
  * to avoid orphan process.

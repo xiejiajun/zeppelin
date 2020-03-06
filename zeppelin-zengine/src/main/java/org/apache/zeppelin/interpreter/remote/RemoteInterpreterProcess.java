@@ -41,6 +41,9 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
       int connectTimeout) {
     this.interpreterContextRunnerPool = new InterpreterContextRunnerPool();
     this.connectTimeout = connectTimeout;
+    if (clientPool == null || clientPool.isClosed()) {
+      clientPool = new GenericObjectPool<>(new ClientFactory(getHost(), getPort()));
+    }
   }
 
   public RemoteInterpreterEventPoller getRemoteInterpreterEventPoller() {
@@ -55,10 +58,14 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
     return connectTimeout;
   }
 
-  public synchronized Client getClient() throws Exception {
-    if (clientPool == null || clientPool.isClosed()) {
-      clientPool = new GenericObjectPool<>(new ClientFactory(getHost(), getPort()));
-    }
+//  public synchronized Client getClient() throws Exception {
+//    if (clientPool == null || clientPool.isClosed()) {
+//      clientPool = new GenericObjectPool<>(new ClientFactory(getHost(), getPort()));
+//    }
+//    return clientPool.borrowObject();
+//  }
+
+  public Client getClient() throws Exception {
     return clientPool.borrowObject();
   }
 

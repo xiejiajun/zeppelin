@@ -46,11 +46,18 @@ public class ParallelScheduler implements Scheduler {
     this.name = name;
     this.executor = executor;
     this.listener = listener;
-    // TODO 注意这里的最大并发是有问题的 如果zeppelin.scheduler.threadpool.size配置的大小小于会在略大于maxConcurrency的话
-    //  是用于达不到maxConcurrency并发数的，原因有二
-    //    1. 因为这里的线程池是好几个地方共享的
-    //    2. 每个解释器进程都共享这一个线程池，用户多的时候一个解释器更分不到几个线程，所以这里能达到的并发数应该远远小于maxConcurrency
-    //  对于这个问题，0.9.x新版本的ParallelScheduler通过单独构建一个size为maxConcurrency的线程池来为当前解释器的并发数提供保证
+    // TODO 注意这里的最大并发是有问题的 如果zeppelin.scheduler.threadpool.size配置大于maxConcurrency的话
+    //  会有大量线程被浪费，如果zeppelin.scheduler.threadpool.size配置小于于maxConcurrency又达不到最大并发度
+    //  原因是线程池大小和允许的并发数不一定一致，因为是通过两个参数控制的,对于这个问题，0.9.x新版本的ParallelScheduler通过单独构建
+    //  一个size为maxConcurrency的线程池来控制当前解释器的并发数，这样就保证了最大并发是一定能达到maxConcurrency且不会有线程浪费。
+    //
+    //  TODO 这里要注意下：之前的分析错了（master分支和0.8.x分支之前关于调度器的分析都忽略掉，因为不正确）
+    //    - FIFO调度器和并行调度器应该是用在解释器进程中的，用于在解释器进程中提交/执行任务，它们和zeppelin服务不在同一个JVM，
+    //      所以它们资源是不共享的（和zeppelin服务不共享，解释器进程间也不共享）：RemoteInterpreterServer.interpret里面会初始化
+    //      对应解释器的调度器
+    //    - RemoteScheduler是运行在zeppelin服务中用于和各个解释器进行交互的，而且一个session会构建一个RemoteScheduler,但是虽然是多个
+    //     RemoteScheduler,但是由于它们在同一个JVM里面，而且SchedulerFactory又是单例的，所以这些RemoteScheduler是共享一个线程池的
+    //
     this.maxConcurrency = maxConcurrency;
   }
 

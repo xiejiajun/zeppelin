@@ -310,6 +310,8 @@ public class RemoteInterpreterServer extends Thread
     }
 
     try {
+      // TODO 根据Thrift客户端传过来的className创建对应的懒加载解释器(每个Session创建一个解释器实例，避免各个
+      //    Session直接相互影响
       Class<Interpreter> replClass = (Class<Interpreter>) Object.class.forName(className);
       Properties p = new Properties();
       p.putAll(properties);
@@ -323,6 +325,9 @@ public class RemoteInterpreterServer extends Thread
       repl.setInterpreterGroup(interpreterGroup);
       repl.setUserName(userName);
 
+      // TODO LazyOpenInterpreter是使用装饰器模式实现解释器的懒加载
+      //  装饰器模式：被装饰的对象从外部传入
+      //  代理模式：被代理的对象内部new出来
       interpreterGroup.addInterpreterToSession(new LazyOpenInterpreter(repl), sessionId);
     } catch (ClassNotFoundException | NoSuchMethodException | SecurityException
         | InstantiationException | IllegalAccessException
@@ -361,6 +366,7 @@ public class RemoteInterpreterServer extends Thread
           new InterpreterException("Interpreter instance " + className + " not created"));
     }
     synchronized (interpreterGroup) {
+      // TODO LazyOpenInterpreter类型
       List<Interpreter> interpreters = interpreterGroup.get(sessionId);
       if (interpreters == null) {
         throw new TException(
@@ -446,6 +452,7 @@ public class RemoteInterpreterServer extends Thread
     InterpreterContext context = convert(interpreterContext);
     context.setClassName(intp.getClassName());
 
+    // TODO 根据具体的解释器构建或者获取已经创建好的调度器实现来调度任务
     Scheduler scheduler = intp.getScheduler();
     InterpretJobListener jobListener = new InterpretJobListener();
     InterpretJob job = new InterpretJob(
@@ -456,8 +463,10 @@ public class RemoteInterpreterServer extends Thread
         intp,
         st,
         context);
+    // TODO 提交任务
     scheduler.submit(job);
 
+    // TODO TThreadPoolServer每个监听任务提交请求的线程到这里都会阻塞等待自己接收的任务执行完成并返回结果
     while (!job.isTerminated()) {
       synchronized (jobListener) {
         try {

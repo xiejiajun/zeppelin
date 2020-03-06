@@ -108,6 +108,7 @@ public class RemoteInterpreter extends Interpreter {
       return this.interpreterProcess;
     }
     ManagedInterpreterGroup intpGroup = getInterpreterGroup();
+    // TODO 解释器启动进程
     this.interpreterProcess = intpGroup.getOrCreateInterpreterProcess(getUserName(), properties);
     return interpreterProcess;
   }
@@ -129,6 +130,7 @@ public class RemoteInterpreter extends Interpreter {
                                         .getOrCreateSession(this.getUserName(), sessionId)) {
           try {
             if (!(interpreter instanceof ConfInterpreter)) {
+              // TODO 启动解释器进程入口
               ((RemoteInterpreter) interpreter).internal_create();
             }
           } catch (IOException e) {
@@ -179,11 +181,13 @@ public class RemoteInterpreter extends Interpreter {
   private void internal_create() throws IOException {
     synchronized (this) {
       if (!isCreated) {
+        // TODO 创建解释器进程（入口是RemoteInterpreterServer)
         this.interpreterProcess = getOrCreateInterpreterProcess();
         interpreterProcess.callRemoteFunction(new RemoteInterpreterProcess.RemoteFunction<Void>() {
           @Override
           public Void call(Client client) throws Exception {
             LOGGER.info("Create RemoteInterpreter {}", getClassName());
+            // TODO 使用Thrift客户端和解释器进程交互，加载对应的解释器逻辑实现类
             client.createInterpreter(getInterpreterGroup().getId(), sessionId,
                 className, (Map) getProperties(), getUserName());
             return null;

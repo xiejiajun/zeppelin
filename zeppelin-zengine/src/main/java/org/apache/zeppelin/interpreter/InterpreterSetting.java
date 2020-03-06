@@ -716,6 +716,7 @@ public class InterpreterSetting {
     List<InterpreterInfo> interpreterInfos = getInterpreterInfos();
     Properties intpProperties = getJavaProperties();
     for (InterpreterInfo info : interpreterInfos) {
+      // TODO 创建解释器客户端
       Interpreter interpreter = new RemoteInterpreter(intpProperties, sessionId,
           info.getClassName(), user, lifecycleManager);
       if (info.isDefaultInterpreter()) {
@@ -777,6 +778,7 @@ public class InterpreterSetting {
         "noteId {}", user, noteId);
     // TODO 根据解释器绑定模式生成会话ID
     String sessionId = getInterpreterSessionId(user, noteId);
+    // TODO 有了解释器组ID和SessionId，下面就该获取或者创建对应的解释器进程了（所以这里是创建解释器进程的入口）
     return interpreterGroup.getOrCreateSession(user, sessionId);
   }
 

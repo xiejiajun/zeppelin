@@ -68,7 +68,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
       LOGGER.info("Create InterpreterProcess for InterpreterGroup: " + getId());
       remoteInterpreterProcess = interpreterSetting.createInterpreterProcess(id, userName,
           properties);
-      // TODO 启动解释器
+      // TODO 启动解释器进程
       remoteInterpreterProcess.start(userName);
       interpreterSetting.getLifecycleManager().onInterpreterProcessStarted(this);
       remoteInterpreterProcess.getRemoteInterpreterEventPoller()
@@ -167,6 +167,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     if (sessions.containsKey(sessionId)) {
       return sessions.get(sessionId);
     } else {
+      // TODO 创建解释器(这里只是返回一个解释器客户端，还未真正启动解释器，当该sessionID对应的解释器open时才启动解释器进程）
       List<Interpreter> interpreters = interpreterSetting.createInterpreters(user, id, sessionId);
       for (Interpreter interpreter : interpreters) {
         interpreter.setInterpreterGroup(this);

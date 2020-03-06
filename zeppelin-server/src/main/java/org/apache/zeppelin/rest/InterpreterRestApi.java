@@ -104,7 +104,7 @@ public class InterpreterRestApi {
 
   /**
    * Add new interpreter setting
-   *
+   * TODO 页面新建解释器
    * @param message NewInterpreterSettingRequest
    */
   @POST
@@ -130,6 +130,12 @@ public class InterpreterRestApi {
     }
   }
 
+  /**
+   * 更新解释器配置
+   * @param message
+   * @param settingId
+   * @return
+   */
   @PUT
   @Path("setting/{settingId}")
   @ZeppelinApi

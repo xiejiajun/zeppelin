@@ -786,7 +786,11 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     interpreterBindings.remove(noteId);
   }
 
-  /** Change interpreter properties and restart */
+  /**
+   * TODO 解释器配置更新请求处理逻辑
+   * Change interpreter properties and restart
+   *
+   * */
   public void setPropertyAndRestart(
       String id,
       InterpreterOption option,

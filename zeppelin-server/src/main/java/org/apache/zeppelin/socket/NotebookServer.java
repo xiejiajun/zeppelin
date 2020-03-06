@@ -631,13 +631,45 @@ public class NotebookServer extends WebSocketServlet
       }
     }
 
+    // TODO 获取所有满足条件的note
     List<Note> notes = notebook.getAllNotes(userAndRoles);
     List<Map<String, String>> notesInfo = new LinkedList<>();
+
+    boolean rbacEnabled = conf.getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_AUTHC_RBAC_ENABLED);
+    NotebookAuthorization authorization = null;
+    String adminRole = null;
+    List<String> userRoles = null;
+    String currentUser = null;
+    if (rbacEnabled){
+      authorization = NotebookAuthorization.getInstance();
+      adminRole = conf.getString(ConfVars.ZEPPELIN_ADMIN_ROLE);
+      userRoles = subject.getRoles();
+      currentUser = subject.getUser();
+    }
     for (Note note : notes) {
       Map<String, String> info = new HashMap<>();
 
       if (hideHomeScreenNotebookFromList && note.getId().equals(homescreenNoteId)) {
         continue;
+      }
+      // TODO 控制每个人只能列出自己的notes,管理员可以列出所有notes
+      if (rbacEnabled) {
+        Set<String> noteOwners = authorization.getOwners(note.getId());
+        if (!"anonymous".equals(currentUser)) {
+          if (noteOwners != null) {
+            if (StringUtils.isBlank(currentUser)) {
+              continue;
+            }
+            if (!noteOwners.contains(currentUser)) {
+              if (userRoles == null) {
+                continue;
+              }
+              if (!userRoles.contains(adminRole)) {
+                continue;
+              }
+            }
+          }
+        }
       }
 
       info.put("id", note.getId());

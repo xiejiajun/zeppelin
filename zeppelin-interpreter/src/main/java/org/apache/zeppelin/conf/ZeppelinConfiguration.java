@@ -831,7 +831,10 @@ public class ZeppelinConfiguration extends XMLConfiguration {
     ZEPPELIN_NOTEBOOK_CRON_ENABLE("zeppelin.notebook.cron.enable", false),
     ZEPPELIN_NOTEBOOK_CRON_FOLDERS("zeppelin.notebook.cron.folders", null),
     ZEPPELIN_PARAGRAPH_RESULT_EXPORT_AUDIT_PATH("zeppelin.paragraph.result.export.audit-log.path",
-            "/tmp/zeppelin/audit/");
+            "/tmp/zeppelin/audit/"),
+    // TODO 自定义用于新增RBAC notebook列表权限控制的配置项
+    ZEPPELIN_NOTEBOOK_AUTHC_RBAC_ENABLED("zeppelin.notebook.authc.rbac.enabled",false),
+    ZEPPELIN_ADMIN_ROLE("zeppelin.admin.role","admin");
 
     private String varName;
     @SuppressWarnings("rawtypes")

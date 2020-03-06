@@ -694,6 +694,10 @@ public class Notebook implements NoteEventListener {
       return FluentIterable.from(notes.values()).filter(new Predicate<Note>() {
         @Override
         public boolean apply(Note input) {
+          // TODO 开启基于RBAC的访问控制时，列出note列表不再使用zeppelin自带的读权限检查,保证管理员可以列出所有notes
+          if (conf.getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_AUTHC_RBAC_ENABLED)){
+            return input != null;
+          }
           return input != null && notebookAuthorization.isReader(input.getId(), entities);
         }
       }).toSortedList(new Comparator<Note>() {

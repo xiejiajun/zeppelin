@@ -58,6 +58,7 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
     return connectTimeout;
   }
 
+  // TODO 这种写法如果某个解释器的option为globally shared，同时又有大量用户在用这个解释器的话，会造成大量线程BLOCKED在这里，从而导致服务卡顿
 //  public synchronized Client getClient() throws Exception {
 //    if (clientPool == null || clientPool.isClosed()) {
 //      clientPool = new GenericObjectPool<>(new ClientFactory(getHost(), getPort()));

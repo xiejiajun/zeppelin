@@ -46,6 +46,11 @@ public class ParallelScheduler implements Scheduler {
     this.name = name;
     this.executor = executor;
     this.listener = listener;
+    // TODO 注意这里的最大并发是有问题的 如果zeppelin.scheduler.threadpool.size配置的大小小于会在略大于maxConcurrency的话
+    //  是用于达不到maxConcurrency并发数的，原因有二
+    //    1. 因为这里的线程池是好几个地方共享的
+    //    2. 每个解释器进程都共享这一个线程池，用户多的时候一个解释器更分不到几个线程，所以这里能达到的并发数应该远远小于maxConcurrency
+    //  对于这个问题，0.9.x新版本的ParallelScheduler通过单独构建一个size为maxConcurrency的线程池来为当前解释器的并发数提供保证
     this.maxConcurrency = maxConcurrency;
   }
 

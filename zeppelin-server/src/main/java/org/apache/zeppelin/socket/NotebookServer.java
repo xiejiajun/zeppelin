@@ -796,7 +796,9 @@ public class NotebookServer extends WebSocketServlet
       throws IOException {
 
     NotebookAuthorization notebookAuthorization = notebook.getNotebookAuthorization();
-    if (!notebookAuthorization.isReader(noteId, userAndRoles)) {
+    ZeppelinConfiguration conf = notebook.getConf();
+    boolean isRBACMode = conf.isRBACMode();
+    if (!isRBACMode && !notebookAuthorization.isReader(noteId, userAndRoles)) {
       permissionError(conn, op, principal, userAndRoles,
           notebookAuthorization.getOwners(noteId));
       return false;
@@ -815,7 +817,17 @@ public class NotebookServer extends WebSocketServlet
       throws IOException {
 
     NotebookAuthorization notebookAuthorization = notebook.getNotebookAuthorization();
-    if (!notebookAuthorization.isRunner(noteId, userAndRoles)) {
+    ZeppelinConfiguration conf = notebook.getConf();
+    boolean isRBACMode = conf.isRBACMode();
+    String adminRole = conf.getString(ConfVars.ZEPPELIN_ADMIN_ROLE);
+    boolean isAdmin = false;
+    if (isRBACMode){
+      // TODO 这里其实不严谨，若某个用户名称和admin角色名相同，会直接绕过权限控制，
+      //  如果需要，后期再统一把权限抽出来做，现在能做的粒度比较粗糙
+      isAdmin = userAndRoles.contains(adminRole);
+    }
+
+    if (!notebookAuthorization.isRunner(noteId, userAndRoles) && !isAdmin) {
       permissionError(conn, op, principal, userAndRoles,
               notebookAuthorization.getOwners(noteId));
       return false;
@@ -834,7 +846,17 @@ public class NotebookServer extends WebSocketServlet
       throws IOException {
 
     NotebookAuthorization notebookAuthorization = notebook.getNotebookAuthorization();
-    if (!notebookAuthorization.isWriter(noteId, userAndRoles)) {
+    ZeppelinConfiguration conf = notebook.getConf();
+    boolean isRBACMode = conf.isRBACMode();
+    String adminRole = conf.getString(ConfVars.ZEPPELIN_ADMIN_ROLE);
+    boolean isAdmin = false;
+    if (isRBACMode){
+      // TODO 这里其实不严谨，若某个用户名称和admin角色名相同，会直接绕过权限控制，
+      //  如果需要，后期再统一把权限抽出来做，现在能做的粒度比较粗糙
+      isAdmin = userAndRoles.contains(adminRole);
+    }
+
+    if (!notebookAuthorization.isWriter(noteId, userAndRoles) && !isAdmin) {
       permissionError(conn, op, principal, userAndRoles,
           notebookAuthorization.getOwners(noteId));
       return false;
@@ -853,7 +875,16 @@ public class NotebookServer extends WebSocketServlet
       throws IOException {
 
     NotebookAuthorization notebookAuthorization = notebook.getNotebookAuthorization();
-    if (!notebookAuthorization.isOwner(noteId, userAndRoles)) {
+    ZeppelinConfiguration conf = notebook.getConf();
+    boolean isRBACMode = conf.isRBACMode();
+    String adminRole = conf.getString(ConfVars.ZEPPELIN_ADMIN_ROLE);
+    boolean isAdmin = false;
+    if (isRBACMode){
+      // TODO 这里其实不严谨，若某个用户名称和admin角色名相同，会直接绕过权限控制，
+      //  如果需要，后期再统一把权限抽出来做，现在能做的粒度比较粗糙
+      isAdmin = userAndRoles.contains(adminRole);
+    }
+    if (!notebookAuthorization.isOwner(noteId, userAndRoles) && !isAdmin) {
       permissionError(conn, op, principal, userAndRoles,
           notebookAuthorization.getOwners(noteId));
       return false;

@@ -657,6 +657,10 @@ public class ZeppelinConfiguration extends XMLConfiguration {
     return configurations;
   }
 
+  public boolean isRBACMode() {
+    return getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_AUTHC_RBAC_ENABLED);
+  }
+
   /**
    * Predication whether key/value pair should be included or not
    */

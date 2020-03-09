@@ -837,8 +837,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
     ZEPPELIN_PARAGRAPH_RESULT_EXPORT_AUDIT_PATH("zeppelin.paragraph.result.export.audit-log.path",
             "/tmp/zeppelin/audit/"),
     // TODO 自定义用于新增RBAC notebook列表权限控制的配置项
-    ZEPPELIN_NOTEBOOK_AUTHC_RBAC_ENABLED("zeppelin.notebook.authc.rbac.enabled",false),
-    ZEPPELIN_ADMIN_ROLE("zeppelin.admin.role","admin");
+    ZEPPELIN_NOTEBOOK_AUTHC_RBAC_ENABLED("zeppelin.notebook.authc.rbac.enabled",false);
 
     private String varName;
     @SuppressWarnings("rawtypes")

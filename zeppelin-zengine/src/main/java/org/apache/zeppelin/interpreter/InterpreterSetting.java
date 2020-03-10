@@ -516,6 +516,9 @@ public class InterpreterSetting {
     }
   }
 
+  /**
+   * TODO 停止解释器
+   */
   public void close() {
     LOGGER.info("Close InterpreterSetting: " + name);
     for (ManagedInterpreterGroup intpGroup : interpreterGroups.values()) {

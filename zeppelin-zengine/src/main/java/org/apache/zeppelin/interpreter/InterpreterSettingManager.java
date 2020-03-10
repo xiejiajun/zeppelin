@@ -663,6 +663,16 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     return settingIdList;
   }
 
+  /**
+   * TODO 新增解释器配置
+   * @param name
+   * @param group
+   * @param dependencies
+   * @param option
+   * @param p
+   * @return
+   * @throws IOException
+   */
   public InterpreterSetting createNewSetting(String name, String group,
       List<Dependency> dependencies, InterpreterOption option, Map<String, InterpreterProperty> p)
       throws IOException {
@@ -685,6 +695,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     setting.setProperties(p);
     initInterpreterSetting(setting);
     interpreterSettings.put(setting.getId(), setting);
+    // TODO 保存到持久化存储
     saveToFile();
     return setting;
   }
@@ -800,6 +811,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     InterpreterSetting intpSetting = interpreterSettings.get(id);
     if (intpSetting != null) {
       try {
+        // TODO 关闭解释器
         intpSetting.close();
         intpSetting.setOption(option);
         intpSetting.setProperties(properties);

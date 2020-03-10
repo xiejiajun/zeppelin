@@ -36,7 +36,7 @@ public class RemoteInterpreterRunningProcess extends RemoteInterpreterProcess {
       String host,
       int port
   ) {
-    super(connectTimeout);
+    super(connectTimeout,null);
     this.interpreterSettingName = interpreterSettingName;
     this.host = host;
     this.port = port;

@@ -67,7 +67,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
   private final String interpreterSettingName;
   private final boolean isUserImpersonated;
 
-  private Map<String, String> env;
+//  private Map<String, String> env;
 
   public RemoteInterpreterManagedProcess(
       String intpRunner,
@@ -79,11 +79,11 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
       int connectTimeout,
       String interpreterSettingName,
       boolean isUserImpersonated) {
-    super(connectTimeout);
+    super(connectTimeout,env);
     this.interpreterRunner = intpRunner;
     this.callbackPortRange = callbackPortRange;
     this.interpreterPortRange = interpreterPortRange;
-    this.env = env;
+//    this.env = env;
     this.interpreterDir = intpDir;
     this.localRepoDir = localRepoDir;
     this.interpreterSettingName = interpreterSettingName;

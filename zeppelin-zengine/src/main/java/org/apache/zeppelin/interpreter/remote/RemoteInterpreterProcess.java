@@ -17,6 +17,8 @@
 package org.apache.zeppelin.interpreter.remote;
 
 import com.google.gson.Gson;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.thrift.TException;
 import org.apache.zeppelin.helium.ApplicationEventListener;
@@ -25,6 +27,10 @@ import org.apache.zeppelin.interpreter.launcher.InterpreterClient;
 import org.apache.zeppelin.interpreter.thrift.RemoteInterpreterService.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+
+import static org.apache.zeppelin.conf.InterpreterConfiguration.*;
 
 /**
  * Abstract class for interpreter process
@@ -36,13 +42,37 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
   private RemoteInterpreterEventPoller remoteInterpreterEventPoller;
   private final InterpreterContextRunnerPool interpreterContextRunnerPool;
   private int connectTimeout;
+  protected Map<String, String> env;
 
   public RemoteInterpreterProcess(
-      int connectTimeout) {
+      int connectTimeout,Map<String, String> env) {
     this.interpreterContextRunnerPool = new InterpreterContextRunnerPool();
     this.connectTimeout = connectTimeout;
+    this.env = env;
+    this.createClientPool();
+  }
+
+
+  /**
+   * create thrift client pool
+   */
+  private void createClientPool(){
+    int maxIdle = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE;
+    int minIdle = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE;
+    int maxTotal = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL;
+    if (MapUtils.isNotEmpty(this.env)) {
+      maxTotal = formatInteger(env.get(ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL),
+              DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL);
+      minIdle = formatInteger(env.get(ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE),
+              DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE);
+      maxIdle = formatInteger(env.get(ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE),
+              DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE);
+    }
     if (clientPool == null || clientPool.isClosed()) {
       clientPool = new GenericObjectPool<>(new ClientFactory(getHost(), getPort()));
+      clientPool.setMaxIdle(maxIdle);
+      clientPool.setMinIdle(minIdle);
+      clientPool.setMaxTotal(maxTotal);
     }
   }
 
@@ -153,6 +183,20 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
       }
     }
     return null;
+  }
+
+  /**
+   * String to Integer
+   * @param intString
+   * @param defaultValue
+   * @return
+   */
+  private Integer formatInteger(String intString,Integer defaultValue){
+    try {
+      return NumberUtils.createInteger(intString);
+    }catch (Exception e){
+      return defaultValue;
+    }
   }
 
   /**

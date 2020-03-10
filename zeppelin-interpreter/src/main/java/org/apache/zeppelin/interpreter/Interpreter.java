@@ -365,6 +365,8 @@ public abstract class Interpreter {
   }
 
   /**
+   * TODO 这里会解析#{}表达式，以支持解释器配置时引用InterpreterContext的字段值，以及通过#{user}引用
+   *   当前登陆用户
    * Replace markers #{contextFieldName} by values from {@link InterpreterContext} fields
    * with same name and marker #{user}. If value == null then replace by empty string.
    */

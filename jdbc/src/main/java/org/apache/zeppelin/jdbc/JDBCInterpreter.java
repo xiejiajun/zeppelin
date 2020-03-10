@@ -683,7 +683,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
   private InterpreterResult executeSql(String propertyKey, String sql,
       InterpreterContext interpreterContext) {
     Connection connection = null;
-    Statement statement;
+    Statement statement = null;
     ResultSet resultSet = null;
     String paragraphId = interpreterContext.getParagraphId();
     String user = interpreterContext.getAuthenticationInfo().getUser();
@@ -725,8 +725,38 @@ public class JDBCInterpreter extends KerberosInterpreter {
 //        sqlArray.add(sql);
 //      }
 
+//      // TODO SQL加默认Yarn ApplicationName 更优雅的方案
+//      List<String> preSqlArray = Lists.newArrayList();
+//      String driverName = getProperty(String.format("%s.%s",propertyKey,DRIVER_KEY));
+//      if (StringUtils.isNotBlank(driverName) && driverName.contains("HiveDriver")) {
+//        preSqlArray.add(String.format("set mapred.job.name=hive_on_mr_%s", user));
+//        preSqlArray.add(String.format("set spark.app.name=hive_on_spark_%s", user));
+//        preSqlArray.add(String.format("set tez.app.name=hive_on_tez_%s", user));
+//        for (String preSql : preSqlArray) {
+//          try {
+//            statement = connection.createStatement();
+//            statement.execute(preSql);
+//            resultSet = statement.getResultSet();
+//          } catch (Exception e) {
+//            logger.error(e.getMessage(), e);
+//          } finally {
+//            if (resultSet != null) {
+//              try {
+//                resultSet.close();
+//              } catch (SQLException e) { /*ignored*/ }
+//            }
+//            if (statement != null) {
+//              try {
+//                statement.close();
+//              } catch (SQLException e) { /*ignored*/ }
+//            }
+//          }
+//        }
+//      }
 
-      List<String> sqlArray;
+
+
+        List<String> sqlArray;
       if (splitQuery) {
         // TODO 在这里也可以改掉SQL，执行前自动加上set appname操作
 //      if (getJDBCConfiguration(user).getPropertyMap(propertyKey).getProperty(DRIVER_KEY).contains("HiveDriver")){

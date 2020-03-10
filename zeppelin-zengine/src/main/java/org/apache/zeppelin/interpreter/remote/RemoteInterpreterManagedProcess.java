@@ -197,6 +197,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
 
     try {
       Map procEnv = EnvironmentUtils.getProcEnvironment();
+      // TODO 这里将解释器相关配置通过shell环境变量方式传递给即将启动的解释器进程
       procEnv.putAll(env);
 
       logger.info("Run interpreter process {}", cmdLine);

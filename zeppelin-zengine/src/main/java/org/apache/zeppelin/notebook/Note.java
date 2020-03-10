@@ -768,9 +768,10 @@ public class Note implements ParagraphJobListener, JsonSerializable {
   }
 
   public List<Paragraph> getParagraphs() {
-    synchronized (paragraphs) {
-      return new LinkedList<>(paragraphs);
-    }
+//    synchronized (paragraphs) {
+//      return new LinkedList<>(paragraphs);
+//    }
+    return this.paragraphs;
   }
 
   private void snapshotAngularObjectRegistry(String user) {

@@ -40,6 +40,11 @@ public class SparkInterpreterLauncher extends ShellScriptLauncher {
     super(zConf, recoveryStorage);
   }
 
+  /**
+   * TODO 组装Spark 作业提交配置，最终放到Process的env里面给脚本引用
+   * @param context
+   * @return
+   */
   @Override
   protected Map<String, String> buildEnvFromProperties(InterpreterLaunchContext context) {
     Map<String, String> env = new HashMap<String, String>();

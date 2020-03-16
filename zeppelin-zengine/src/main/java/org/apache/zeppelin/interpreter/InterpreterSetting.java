@@ -281,6 +281,7 @@ public class InterpreterSetting {
    */
   public InterpreterSetting(InterpreterSetting o) {
     this();
+    // TODO interpreter name (直接从interpreter-setting.json得到）
     this.id = o.name;
     this.name = o.name;
     this.group = o.group;
@@ -402,6 +403,7 @@ public class InterpreterSetting {
 
     //TODO(zjffdu) we encode interpreter setting id into groupId, this is not a good design
     // TODO 解释器ID + 解释器进程模式的组合作为解释器组ID，用于隔离进程
+    //  id从interpreter-setting.json文件中反序列化得到的name而来
     return id + ":" + key;
   }
 

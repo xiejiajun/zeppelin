@@ -326,6 +326,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
          * 2. Register it from interpreter-setting.json in classpath
          *    {ZEPPELIN_HOME}/interpreter/{interpreter_name}
          */
+        // TODO 先加载解释器列表
         if (!registerInterpreterFromPath(interpreterDirString, interpreterJson)) {
           if (!registerInterpreterFromResource(cl, interpreterDirString, interpreterJson)) {
             LOGGER.warn("No interpreter-setting.json found in " + interpreterDirString);

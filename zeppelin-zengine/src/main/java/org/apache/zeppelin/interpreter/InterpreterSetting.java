@@ -711,7 +711,29 @@ public class InterpreterSetting {
 
   //////////////////////////// IMPORTANT ////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
+  // TODO WARN [2020-03-16 02:12:32,859] ({qtp1231156911-16} InterpreterSettingManager.java[compare]:892) - InterpreterGroup sap is not specified in zeppelin.interpreter.group.order
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[getOrCreateInterpreterGroup]:419) - Create InterpreterGroup with groupId: spark:shared_process for user: user1 and note: 2F2H12WSQ
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.SparkInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.SparkSqlInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.DepInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.PySparkInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.IPySparkInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.SparkRInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} ManagedInterpreterGroup.java[getOrCreateSession]:158) - Create Session: shared_session in InterpreterGroup: spark:shared_process for user: user1
+  //  INFO [2020-03-16 02:12:36,444] ({qtp1231156911-16} VFSNotebookRepo.java[save]:196) - Saving note:2F2H12WSQ
+  //  INFO [2020-03-16 02:12:36,447] ({pool-2-thread-6} SchedulerFactory.java[jobStarted]:114) - Job 20200311-132458_1167144774 started by scheduler org.apache.zeppelin.interpreter.remote.RemoteInterpreter-spark:shared_process-shared_session
   ///////////////////////////////////////////////////////////////////////////////////////
+  // TODO  INFO [2020-03-16 02:12:39,533] ({pool-2-thread-6} TimeoutLifecycleManager.java[onInterpreterProcessStarted]:62) - Process of InterpreterGroup spark:shared_process is started
+  //  INFO [2020-03-16 02:12:39,536] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.SparkInterpreter
+  //  INFO [2020-03-16 02:12:39,596] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.SparkSqlInterpreter
+  //  INFO [2020-03-16 02:12:39,597] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.DepInterpreter
+  //  INFO [2020-03-16 02:12:39,601] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.PySparkInterpreter
+  //  INFO [2020-03-16 02:12:39,606] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.IPySparkInterpreter
+  //  INFO [2020-03-16 02:12:39,609] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.SparkRInterpreter
+  //  INFO [2020-03-16 02:12:39,610] ({pool-2-thread-6} RemoteInterpreter.java[call]:142) - Open RemoteInterpreter org.apache.zeppelin.spark.PySparkInterpreter
+  ///////////////////////////////////////////////////////////////////////////////////////
+  // TODO 这里是根据所有注册的解释器列表一次性创建用户所有的解释器客户端，但只会通过客户端RemoteInterpreter的
+  //  internal_create中的call方法创建对应解释器进程(例如上面日志最终只open了PySparkInterpreter)
   // This is the only place to create interpreters. For now we always create multiple interpreter
   // together (one session). We don't support to create single interpreter yet.
   List<Interpreter> createInterpreters(String user, String interpreterGroupId, String sessionId) {

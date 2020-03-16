@@ -438,6 +438,7 @@ public class InterpreterSetting {
   }
 
   public ManagedInterpreterGroup getOrCreateInterpreterGroup(String user, String noteId) {
+    // TODO 获取解释器组ID（会根据解释器绑定模式生成组ID) 组ID用于解释器进程隔
     String groupId = getInterpreterGroupId(user, noteId);
     try {
       interpreterGroupWriteLock.lock();
@@ -797,7 +798,7 @@ public class InterpreterSetting {
    * @return
    */
   List<Interpreter> getOrCreateSession(String user, String noteId) {
-    // TODO 获取解释器组ID（会根据解释器绑定模式生成组ID) 组ID用于解释器进程隔离
+    // TODO 获取解释器组
     ManagedInterpreterGroup interpreterGroup = getOrCreateInterpreterGroup(user, noteId);
     Preconditions.checkNotNull(interpreterGroup, "No InterpreterGroup existed for user {}, " +
         "noteId {}", user, noteId);

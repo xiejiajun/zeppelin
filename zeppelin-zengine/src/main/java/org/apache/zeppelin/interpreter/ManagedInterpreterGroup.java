@@ -163,6 +163,14 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     }
   }
 
+  /**
+   * TODO 虽然这个方法里面用到的共享变量都是并发容器，但是这个方法还是需要加锁，因为若不加锁，两个线程同时访问这个方法时
+   *   sessions.containsKey(sessionId)都会为false，然后两个线程会分别创建两个interpreters列表分别存到sessions，这可能会有问题
+   *   加锁后，第一个线程创建完，第二个线程就直接在sessions.containsKey(sessionId)取现成的来用来
+   * @param user
+   * @param sessionId
+   * @return
+   */
   public synchronized List<Interpreter> getOrCreateSession(String user, String sessionId) {
     if (sessions.containsKey(sessionId)) {
       return sessions.get(sessionId);

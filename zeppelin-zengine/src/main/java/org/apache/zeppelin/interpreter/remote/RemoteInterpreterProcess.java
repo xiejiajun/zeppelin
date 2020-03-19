@@ -73,6 +73,8 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
       clientPool.setMaxIdle(maxIdle);
       clientPool.setMinIdle(minIdle);
       clientPool.setMaxTotal(maxTotal);
+      // TODO 这里加上获取Thrift客户端2秒超时，否则默认-1永不超时，手动kill -9强制杀掉解释器进程后可能会导致无法重启对应解释器（一直阻塞转圈）
+      clientPool.setMaxWaitMillis(2000);
     }
   }
 

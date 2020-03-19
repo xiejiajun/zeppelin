@@ -49,14 +49,15 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
     this.interpreterContextRunnerPool = new InterpreterContextRunnerPool();
     this.connectTimeout = connectTimeout;
     this.env = env;
-    this.createClientPool();
+    // TODO 不能在构造方法里面初始化，因为这个时候解释器的端口和host都还为null
+//    this.createClientPool();
   }
 
 
   /**
    * create thrift client pool
    */
-  private void createClientPool(){
+  private synchronized void createClientPool(){
     int maxIdle = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE;
     int minIdle = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE;
     int maxTotal = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL;
@@ -98,7 +99,11 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
 //    return clientPool.borrowObject();
 //  }
 
+
   public Client getClient() throws Exception {
+    if (clientPool == null || clientPool.isClosed()){
+      createClientPool();
+    }
     return clientPool.borrowObject();
   }
 

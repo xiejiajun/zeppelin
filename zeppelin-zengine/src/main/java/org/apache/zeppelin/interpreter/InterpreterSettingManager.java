@@ -518,6 +518,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
 
   private ResourceSet getAllResourcesExcept(String interpreterGroupExcludsion) {
     ResourceSet resourceSet = new ResourceSet();
+    // TODO 获取所有解释器组，若所有请求都到这里竞争同一个解释器组的锁，会卡住
     for (ManagedInterpreterGroup intpGroup : getAllInterpreterGroup()) {
       if (interpreterGroupExcludsion != null &&
           intpGroup.getId().equals(interpreterGroupExcludsion)) {
@@ -531,6 +532,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
           resourceSet.addAll(localPool.getAll());
         }
       } else if (remoteInterpreterProcess.isRunning()) {
+        // TODO 获取所有解释器组，若所有请求都到这里getClient竞争同一个解释器组的锁，会卡住
         List<String> resourceList = remoteInterpreterProcess.callRemoteFunction(
             new RemoteInterpreterProcess.RemoteFunction<List<String>>() {
               @Override

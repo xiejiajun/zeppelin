@@ -198,7 +198,7 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
    * @param defaultValue
    * @return
    */
-  private Integer formatInteger(String intString,Integer defaultValue){
+  private int formatInteger(String intString,int defaultValue){
     try {
       return NumberUtils.createInteger(intString);
     }catch (Exception e){

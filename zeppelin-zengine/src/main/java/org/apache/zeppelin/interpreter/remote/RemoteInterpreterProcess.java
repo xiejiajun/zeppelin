@@ -193,6 +193,7 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
   }
 
   /**
+   * OpenJDK int不能自动转为Integer
    * String to Integer
    * @param intString
    * @param defaultValue

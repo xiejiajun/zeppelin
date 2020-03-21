@@ -43,6 +43,7 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
   private final InterpreterContextRunnerPool interpreterContextRunnerPool;
   private int connectTimeout;
   protected Map<String, String> env;
+  private ClientFactory clientFactory;
 
   public RemoteInterpreterProcess(
       int connectTimeout,Map<String, String> env) {
@@ -70,7 +71,8 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
               DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE);
     }
     if (clientPool == null || clientPool.isClosed()) {
-      clientPool = new GenericObjectPool<>(new ClientFactory(getHost(), getPort()));
+      clientFactory = new ClientFactory(getHost(), getPort());
+      clientPool = new GenericObjectPool<>(clientFactory);
       clientPool.setMaxIdle(maxIdle);
       clientPool.setMinIdle(minIdle);
       clientPool.setMaxTotal(maxTotal);
@@ -79,7 +81,15 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
     }
   }
 
-  public RemoteInterpreterEventPoller getRemoteInterpreterEventPoller() {
+  public void shutdown() {
+
+    // Close client socket connection
+    if (clientFactory != null) {
+      clientFactory.close();
+    }
+  }
+
+    public RemoteInterpreterEventPoller getRemoteInterpreterEventPoller() {
     return remoteInterpreterEventPoller;
   }
 

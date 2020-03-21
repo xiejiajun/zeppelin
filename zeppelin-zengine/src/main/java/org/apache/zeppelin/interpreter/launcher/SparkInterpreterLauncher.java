@@ -78,7 +78,12 @@ public class SparkInterpreterLauncher extends ShellScriptLauncher {
       }
     }
     for (String name : sparkProperties.stringPropertyNames()) {
-      sparkConfBuilder.append(" --conf " + name + "=" + sparkProperties.getProperty(name));
+      // TODO 保证cluster模式也能将用户名绑定到yarn app name
+      String value = sparkProperties.getProperty(name);
+      if ("spark.app.name".equals(name)){
+        value = value + "-" + context.getUserName();
+      }
+      sparkConfBuilder.append(" --conf " + name + "=" + value);
     }
     String useProxyUserEnv = System.getenv("ZEPPELIN_IMPERSONATE_SPARK_PROXY_USER");
     if (context.getOption().isUserImpersonate() && (StringUtils.isBlank(useProxyUserEnv) ||

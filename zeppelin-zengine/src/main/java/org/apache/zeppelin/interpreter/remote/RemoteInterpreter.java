@@ -115,7 +115,8 @@ public class RemoteInterpreter extends Interpreter {
     //  模式下Driver是先启动在本地，然后再向RM申请容器启动AM的，所以最终是RemoteInterpreterServer运行在本地，然后再启动Spark解释器时
     //  替换掉spark.app.name中的宏变量再在yarn中启动spark解释器
 
-    this.interpreterProcess = intpGroup.getOrCreateInterpreterProcess(getUserName(), properties);
+//    this.interpreterProcess = intpGroup.getOrCreateInterpreterProcess(getUserName(), properties);
+    this.interpreterProcess = intpGroup.getOrCreateInterpreterProcess(getUserName(), getProperties());
     return interpreterProcess;
   }
 

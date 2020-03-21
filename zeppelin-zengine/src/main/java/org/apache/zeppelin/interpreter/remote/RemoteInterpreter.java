@@ -108,7 +108,13 @@ public class RemoteInterpreter extends Interpreter {
       return this.interpreterProcess;
     }
     ManagedInterpreterGroup intpGroup = getInterpreterGroup();
-    // TODO 解释器启动进程
+    // TODO 解释器启动进程: 由于这里的properties是直接引用成员变量，没有调用父亲类的getProperties()方法进行过替换，
+    //  所以spark 解释器cluster模式没法绑定用户名到yarn application,因为cluster模式的Driver(同时也是AM)一起来就运行到yarn上面了，
+    //  这时候其实Driver里面运行的还不是SparkInterpreter，而是RemoteInterpreterServer,所以用户名宏变量还没被替换,就保持
+    //  原来的spark.app.name把AM运行起来了；再来看Client模式，一开始Driver里面运行的还是RemoteInterpreterServer,因为Yarn Client
+    //  模式下Driver是先启动在本地，然后再向RM申请容器启动AM的，所以最终是RemoteInterpreterServer运行在本地，然后再启动Spark解释器时
+    //  替换掉spark.app.name中的宏变量再在yarn中启动spark解释器
+
     this.interpreterProcess = intpGroup.getOrCreateInterpreterProcess(getUserName(), properties);
     return interpreterProcess;
   }

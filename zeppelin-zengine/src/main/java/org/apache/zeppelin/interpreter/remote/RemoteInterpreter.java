@@ -113,7 +113,14 @@ public class RemoteInterpreter extends Interpreter {
     //  这时候其实Driver里面运行的还不是SparkInterpreter，而是RemoteInterpreterServer,所以用户名宏变量还没被替换,就保持
     //  原来的spark.app.name把AM运行起来了；再来看Client模式，一开始Driver里面运行的还是RemoteInterpreterServer,因为Yarn Client
     //  模式下Driver是先启动在本地，然后再向RM申请容器启动AM的，所以最终是RemoteInterpreterServer运行在本地，然后再启动Spark解释器时
-    //  替换掉spark.app.name中的宏变量再在yarn中启动spark解释器
+    //  替换掉spark.app.name中的宏变量再在yarn中启动spark解释器的真正的Driver，替换掉原来RemoteInterpreterServer的appName
+    //  说明了Spark解释器其实是分两阶段的，第一步将RemoteInterpreterServer作为Spark App提交到Yarn上，真正的作业到达后再在yarn上通过
+    //  RemoteInterpreterServer对真正的spark解释器进行实例化并提交作业
+    //  那又是怎么将Spark作业提交配置传递给真正的Spark解释器对RemoteInterpreterServer的spark配置进行更新的呢：通过RemoteInterpreter
+    //  的internal_create方法通过hrift Client调用createInterpreter进行传递的
+    //  对应为啥client模式能刷新appName，而cluster模式不能刷新，原因应该是client模式的Driver启动在RemoteInterpreterServer作业对应的
+    //  AM中，而cluster模式Driver又再次启动到了其他节点上？（这个待验证）
+    //
 
 //    this.interpreterProcess = intpGroup.getOrCreateInterpreterProcess(getUserName(), properties);
     this.interpreterProcess = intpGroup.getOrCreateInterpreterProcess(getUserName(), getProperties());

@@ -183,14 +183,18 @@ public abstract class Job {
     JobProgressPoller progressUpdator = null;
     dateStarted = new Date();
     try {
+      // TODO 启动一个线程隔progressUpdateIntervalMs向解释器进程发请求拉取一次进度，并通过Job的监听器推送到web
+      //  目前监听器只有一个实现NotebookServer.ParagraphListenerImpl
       progressUpdator = new JobProgressPoller(this, progressUpdateIntervalMs);
       progressUpdator.start();
+      // TODO jobRun执行真正的作业运行逻辑
       completeWithSuccess(jobRun());
     } catch (Throwable e) {
       LOGGER.error("Job failed", e);
       completeWithError(e);
     } finally {
       if (progressUpdator != null) {
+        // TODO 作业结束 ，关闭进度拉取线程
         progressUpdator.interrupt();
       }
       //aborted = false;

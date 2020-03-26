@@ -95,6 +95,9 @@ public class ShellScriptLauncher extends InterpreterLauncher {
       if (RemoteInterpreterUtils.isEnvString((String) key)) {
         env.put((String) key, context.getProperties().getProperty((String) key));
       }
+      if (RemoteInterpreterUtils.isClientPoolConfig((String) key)){
+        env.put((String) key, context.getProperties().getProperty((String) key));
+      }
     }
     return env;
   }

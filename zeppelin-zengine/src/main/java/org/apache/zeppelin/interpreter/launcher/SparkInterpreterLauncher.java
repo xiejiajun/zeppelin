@@ -54,6 +54,9 @@ public class SparkInterpreterLauncher extends ShellScriptLauncher {
       if (RemoteInterpreterUtils.isEnvString(key)) {
         env.put(key, properties.getProperty(key));
       }
+      if (RemoteInterpreterUtils.isClientPoolConfig(key)){
+        env.put(key, properties.getProperty(key));
+      }
       if (isSparkConf(key, properties.getProperty(key))) {
         sparkProperties.setProperty(key, toShellFormat(properties.getProperty(key)));
       }

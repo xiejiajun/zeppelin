@@ -376,6 +376,22 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
   }
 
   protected def getUserJars(): Seq[String] = {
+    // 0.8.1版本的写法，不支持%conf导入的依赖
+//    val sparkJars = conf.getOption("spark.jars").map(_.split(","))
+//      .map(_.filter(_.nonEmpty)).toSeq.flatten
+//    val depJars = depFiles.asScala.filter(_.endsWith(".jar"))
+//    // add zeppelin spark interpreter jar
+//    val zeppelinInterpreterJarURL = getClass.getProtectionDomain.getCodeSource.getLocation
+//    // zeppelinInterpreterJarURL might be a folder when under unit testing
+//    val result = if (new File(zeppelinInterpreterJarURL.getFile).isDirectory) {
+//      sparkJars ++ depJars
+//    } else {
+//      sparkJars ++ depJars ++ Seq(zeppelinInterpreterJarURL.getFile)
+//    }
+//    conf.set("spark.jars", result.mkString(","))
+//    LOGGER.debug("User jar for spark repl: " + conf.get("spark.jars"))
+//    result
+
     var classLoader = Thread.currentThread().getContextClassLoader
     var extraJars = Seq.empty[String]
     while (classLoader != null) {
@@ -386,14 +402,17 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
           .filter { u => u.getProtocol == "file" && new File(u.getPath).isFile }
           // Some bad spark packages depend on the wrong version of scala-reflect. Blacklist it.
           .filterNot {
-            u => Paths.get(u.toURI).getFileName.toString.contains("org.scala-lang_scala-reflect")
-          }
+          u => Paths.get(u.toURI).getFileName.toString.contains("org.scala-lang_scala-reflect")
+        }
           .map(url => url.toString).toSeq
         classLoader = null
       } else {
         classLoader = classLoader.getParent
       }
     }
+
+    // TODO 参考0.9版本的写法
+    extraJars ++= classLoader.asInstanceOf[URLClassLoader].getURLs().map(_.getPath())
     LOGGER.debug("User jar for spark repl: " + extraJars.mkString(","))
     extraJars
   }

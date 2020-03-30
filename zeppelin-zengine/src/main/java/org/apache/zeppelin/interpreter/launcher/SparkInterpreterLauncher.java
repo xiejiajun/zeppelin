@@ -25,9 +25,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Properties;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Spark specific launcher.
@@ -79,7 +82,36 @@ public class SparkInterpreterLauncher extends ShellScriptLauncher {
       } else {
         sparkProperties.put("spark.files", zConf.getConfDir() + "/log4j_yarn_cluster.properties");
       }
+      sparkProperties.put("spark.yarn.maxAppAttempts", "1");
     }
+
+
+    // TODO yarn mode加载本地依赖
+    if (isYarnMode()){
+      try {
+        List<String> additionalJars = new ArrayList();
+        Path localRepoPath =
+                Paths.get(zConf.getInterpreterLocalRepoPath(), context.getInterpreterSettingId());
+        if (Files.exists(localRepoPath) && Files.isDirectory(localRepoPath)) {
+          List<String> localRepoJars = StreamSupport.stream(
+                  Files.newDirectoryStream(localRepoPath, entry -> Files.isRegularFile(entry))
+                          .spliterator(),
+                  false)
+                  .map(jar -> jar.toAbsolutePath().toString()).collect(Collectors.toList());
+          additionalJars.addAll(localRepoJars);
+        }
+
+        if (sparkProperties.containsKey("spark.jars")) {
+          sparkProperties.put("spark.jars", sparkProperties.getProperty("spark.jars") + "," +
+                  StringUtils.join(additionalJars, ","));
+        } else {
+          sparkProperties.put("spark.jars", StringUtils.join(additionalJars, ","));
+        }
+      } catch (Exception e) {
+        LOGGER.error("Fail to set additional jars for spark interpreter", e);
+      }
+    }
+
     for (String name : sparkProperties.stringPropertyNames()) {
       // TODO 保证cluster模式也能将用户名绑定到yarn app name
       String value = sparkProperties.getProperty(name);

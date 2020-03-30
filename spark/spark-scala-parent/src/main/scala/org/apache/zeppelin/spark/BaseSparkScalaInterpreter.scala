@@ -412,7 +412,9 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
     }
 
     // TODO 参考0.9版本的写法
-    extraJars ++= classLoader.asInstanceOf[URLClassLoader].getURLs().map(_.getPath())
+    var sparkInterpreterClassLoader: ClassLoader = Thread.currentThread.getContextClassLoader
+    extraJars ++= sparkInterpreterClassLoader.asInstanceOf[URLClassLoader].getURLs().map(_.getPath())
+    sparkInterpreterClassLoader = null
     LOGGER.debug("User jar for spark repl: " + extraJars.mkString(","))
     extraJars
   }

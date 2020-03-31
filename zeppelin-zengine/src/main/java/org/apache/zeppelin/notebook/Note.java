@@ -453,6 +453,7 @@ public class Note implements ParagraphJobListener, JsonSerializable {
 
     removeAllAngularObjectInParagraph(user, paragraphId);
     try {
+      // TODO 移除段落前，先移除所有解释器中对应的用于运行该段落时交换数据和状态的资源对象
       interpreterSettingManager.removeResourcesBelongsToParagraph(getId(), paragraphId);
     }catch (Exception e){
       logger.error(e.getMessage());

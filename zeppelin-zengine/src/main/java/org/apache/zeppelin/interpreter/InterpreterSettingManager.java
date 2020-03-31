@@ -556,8 +556,10 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     for (ManagedInterpreterGroup intpGroup : getAllInterpreterGroup()) {
       ResourceSet resourceSet = new ResourceSet();
       RemoteInterpreterProcess remoteInterpreterProcess = intpGroup.getRemoteInterpreterProcess();
+      // TODO 若该解释器还未启动解释器进程还未启动或者本身就不需要启动远程解释器进程（如confInterperter)，即还未开始启动解释器并将段落（job)发送到Worker进行提交
       if (remoteInterpreterProcess == null) {
         ResourcePool localPool = intpGroup.getResourcePool();
+        // TODO 其实这种情况localPool永远为null???
         if (localPool != null) {
           resourceSet.addAll(localPool.getAll());
         }
@@ -574,7 +576,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
               r.getResourceId().getParagraphId(),
               r.getResourceId().getName());
         }
-      } else if (remoteInterpreterProcess.isRunning()) {
+      } else if (remoteInterpreterProcess.isRunning()) { // TODO 解释器进程启动成功且未调用stop/complete方法
         List<String> resourceList = remoteInterpreterProcess.callRemoteFunction(
             new RemoteInterpreterProcess.RemoteFunction<List<String>>() {
               @Override
@@ -594,6 +596,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
         }
 
         for (final Resource r : resourceSet) {
+          // TODO 通知远程解释器可以移除即将废弃的资源了
           remoteInterpreterProcess.callRemoteFunction(
               new RemoteInterpreterProcess.RemoteFunction<Void>() {
 

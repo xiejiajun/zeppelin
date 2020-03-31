@@ -452,7 +452,11 @@ public class Note implements ParagraphJobListener, JsonSerializable {
 //    return null;
 
     removeAllAngularObjectInParagraph(user, paragraphId);
-    interpreterSettingManager.removeResourcesBelongsToParagraph(getId(), paragraphId);
+    try {
+      interpreterSettingManager.removeResourcesBelongsToParagraph(getId(), paragraphId);
+    }catch (Exception e){
+      logger.error(e.getMessage());
+    }
     Paragraph removedParagraph = null;
     synchronized (paragraphs) {
       Iterator<Paragraph> i = paragraphs.iterator();

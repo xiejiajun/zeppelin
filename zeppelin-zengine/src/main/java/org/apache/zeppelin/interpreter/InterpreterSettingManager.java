@@ -595,21 +595,26 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
           resourceSet = resourceSet.filterByParagraphId(paragraphId);
         }
 
-        for (final Resource r : resourceSet) {
-          // TODO 通知远程解释器可以移除即将废弃的资源了
-          remoteInterpreterProcess.callRemoteFunction(
-              new RemoteInterpreterProcess.RemoteFunction<Void>() {
+        try {
+          for (final Resource r : resourceSet) {
+            // TODO 通知远程解释器可以移除即将废弃的资源了
+            remoteInterpreterProcess.callRemoteFunction(
+                    new RemoteInterpreterProcess.RemoteFunction<Void>() {
 
-                @Override
-                public Void call(RemoteInterpreterService.Client client) throws Exception {
-                  client.resourceRemove(
-                      r.getResourceId().getNoteId(),
-                      r.getResourceId().getParagraphId(),
-                      r.getResourceId().getName());
-                  return null;
-                }
-              });
+                      @Override
+                      public Void call(RemoteInterpreterService.Client client) throws Exception {
+                        client.resourceRemove(
+                                r.getResourceId().getNoteId(),
+                                r.getResourceId().getParagraphId(),
+                                r.getResourceId().getName());
+                        return null;
+                      }
+                    });
+          }
+        }catch (Exception e){
+          LOGGER.error(e.getMessage());
         }
+
       }
     }
   }

@@ -513,6 +513,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
       logger.info("Using proxy property for user as :" +
           basePropretiesMap.get(propertyKey).getProperty("proxy.user.property"));
       // TODO 将解释器配置页面default.proxy.user.property/hive.proxy.user.property配置的模拟用户属性key和value拼接到JdbcURL
+      //  这里的user是当前登陆zeppelin的用户，不是要用来登陆数据库的用户，登陆数据库的用户在properties里面，这里要注意下
       connectionUrl.insert(lastIndexOfUrl, ";" +
           basePropretiesMap.get(propertyKey).getProperty("proxy.user.property") + "=" + user + ";");
     } else if (user != null && !user.equals("anonymous") && url.contains("hive")) {

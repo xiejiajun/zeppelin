@@ -465,6 +465,7 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
       List<InterpreterResultMessage> resultMessages = context.out.toInterpreterResultMessage();
       resultMessages.addAll(ret.message());
 
+      // TODO 执行结果：在这个方法里面可以做拦截执行代码、执行用户，开始时间、结束时间以及执行结果或者执行错误等信息的审计
       InterpreterResult res = new InterpreterResult(ret.code(), resultMessages);
 
       Paragraph p = getUserParagraph(getUser());

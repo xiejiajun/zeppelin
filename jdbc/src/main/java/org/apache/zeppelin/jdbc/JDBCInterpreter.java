@@ -429,6 +429,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
 
   public Connection getConnection(String propertyKey, InterpreterContext interpreterContext)
       throws ClassNotFoundException, SQLException, InterpreterException, IOException {
+    // TODO 这里获取的是当前登陆zeppelin的用户，不是jdbc 登陆用户
     final String user =  interpreterContext.getAuthenticationInfo().getUser();
     Connection connection;
     if (propertyKey == null || basePropretiesMap.get(propertyKey) == null) {
@@ -452,6 +453,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
       UserGroupInformation.AuthenticationMethod authType =
           JDBCSecurityImpl.getAuthtype(getProperties());
 
+      // TODO 拼接需要进行模拟用户授权执行时的最终jdbcURL
       final String connectionUrl = appendProxyUserToURL(url, user, propertyKey);
 
       JDBCSecurityImpl.createSecureConfiguration(getProperties(), authType);
@@ -510,6 +512,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
       logger.info("Using proxy user as :" + user);
       logger.info("Using proxy property for user as :" +
           basePropretiesMap.get(propertyKey).getProperty("proxy.user.property"));
+      // TODO 将解释器配置页面default.proxy.user.property/hive.proxy.user.property配置的模拟用户属性key和value拼接到JdbcURL
       connectionUrl.insert(lastIndexOfUrl, ";" +
           basePropretiesMap.get(propertyKey).getProperty("proxy.user.property") + "=" + user + ";");
     } else if (user != null && !user.equals("anonymous") && url.contains("hive")) {

@@ -505,10 +505,27 @@ public class Notebook implements NoteEventListener {
     }
   }
 
+  /**
+   * TODO loadAllNotes和reloadAllNotes需要参考createNode和getNote方法改造成懒加载模式
+   *      调用这个方法进行预加载会导致冷数据占用大量内存，10GB的Note信息全加载进来，再加上
+   *      Lucene 索引这些数据结构，ZeppelinServer设置20G的堆内存都不够。
+   *      懒加载方案：
+   *      1. loadNote时只拉取权限、NoteID、NoteName等元信息(由于没有获取段落，对于RBAC的Notebook列表不好控制
+   *         [NotebookServer.generateNotesInfo中]，需要另想解决方案）
+   *      2. 真正调用getNote方法时, 先从notes Map里面找，找不到在从RemoteRepo读取，
+   *         读取后仿照createNote方法添加到notes Map(但要注意权限信息处理)
+   *         调用folders.putNote建立文件夹索引
+   *      3. 列出文件夹下的所有note这块逻辑需要仔细研究，然后适配懒加载方案
+   *
+   * @param id
+   * @param subject
+   * @return
+   */
   @SuppressWarnings("rawtypes")
   public Note loadNoteFromRepo(String id, AuthenticationInfo subject) {
     Note note = null;
     try {
+      // TODO subject只有ZeppelinHubRepo会用到
       note = notebookRepo.get(id, subject);
     } catch (IOException e) {
       logger.error("Failed to load " + id, e);

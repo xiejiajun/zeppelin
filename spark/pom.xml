@@ -164,6 +164,10 @@
                 </executions>
                 <configuration>
                     <scalaVersion>${scala.compile.version}</scalaVersion>
+<!--                    <javacArgs></javacArgs>&ndash;&gt;-->
+<!--                    <addJavacArgs>-->
+<!--                        -source 1.8  -target 1.8-->
+<!--                    </addJavacArgs>-->
                     <args>
                         <arg>-unchecked</arg>
                         <arg>-deprecation</arg>

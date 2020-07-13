@@ -63,11 +63,15 @@ class SparkScala211Interpreter(override val conf: SparkConf,
       conf.set("spark.repl.class.uri", uri)
     }
 
+    val target = conf.get("scala.repl.target", "jvm-1.8")
+
     val settings = new Settings()
     settings.processArguments(List("-Yrepl-class-based",
       "-Yrepl-outdir", s"${outputDir.getAbsolutePath}"), true)
     settings.embeddedDefaults(Thread.currentThread().getContextClassLoader())
     settings.usejavacp.value = true
+    // TODO 指定scala repl(交互式解释器）进行Scala代码编译时的目标Java字节码版本
+    settings.target.value = target
     // TODO 将依赖包添加到Settings
     settings.classpath.value = getUserJars.mkString(File.pathSeparator)
 

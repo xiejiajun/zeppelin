@@ -353,6 +353,12 @@ public class NotebookService {
 
     try {
       notebook.saveNote(note, context.getAutheInfo());
+      // TODO Note.run -> paragraph.execute -> AbstractScheduler.submit -> run
+      //  -> RemoteScheduler.runJobInScheduler -> RemoteScheduler#JobRunner.run
+      //  -> RemoteScheduler.runJob -> Job.run -> Paragraph.jobRun -> RemoteInterpreter.interpret
+      //  -> ...RPC... -> xxxInterpreter.interpret -> 得到InterpreterResult -> Paragraph.setResult将结果保存到当前段落
+      //  -> ... ... -> note.run执行结束 -> callback.onSuccess(p, context) -> NotebookServer.runParagraph里面
+      //  定义的匿名WebSocketServiceCallback.onSuccess -> getConnectionManager().unicastParagraph将结果单播到页面
       note.run(p.getId(), blocking, context.getAutheInfo().getUser());
       callback.onSuccess(p, context);
       return true;

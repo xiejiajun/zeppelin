@@ -188,6 +188,7 @@ public class JupyterKernelInterpreter extends AbstractInterpreter {
       FileUtils.copyURLToFile(url, new File(kernelWorkDir, kernelScript));
     }
 
+    // TODO 两个启动入口：这是启动python文件的入口，RemoteInterpreterManagedProcess是启动interpreter.sh的入口
     CommandLine cmd = CommandLine.parse(pythonExecutable);
     cmd.addArgument(kernelWorkDir.getAbsolutePath() + "/kernel_server.py");
     cmd.addArgument(getKernelName());

@@ -1849,6 +1849,14 @@ public class NotebookServer extends WebSocketServlet
         new Message(OP.RUN_PARAGRAPH_USING_SPELL).put("paragraph", p), conn);
   }
 
+  /**
+   * TODO https://github.com/xiejiajun/zeppelin.git有基于0.9.x代码的Zeppelin结果响应到页面的流程分析
+   * @param conn
+   * @param userAndRoles
+   * @param notebook
+   * @param fromMessage
+   * @throws IOException
+   */
   private void runParagraph(NotebookSocket conn, HashSet<String> userAndRoles, Notebook notebook,
                             Message fromMessage) throws IOException {
     final String paragraphId = (String) fromMessage.get("id");

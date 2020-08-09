@@ -143,14 +143,26 @@ public class IPySparkInterpreter extends IPythonInterpreter {
     return sparkInterpreter.getProgress(context);
   }
 
+  /**
+   * TODO 在zeppelin_ipyspark.py里面通过intp.isSpark1()调用
+   * @return
+   */
   public boolean isSpark1() {
     return sparkInterpreter.getSparkVersion().getMajorVersion() == 1;
   }
 
+  /**
+   * TODO 在zeppelin_ipyspark.py里面通过intp.isSpark3()调用
+   * @return
+   */
   public boolean isSpark3() {
     return sparkInterpreter.getSparkVersion().getMajorVersion() == 3;
   }
 
+  /**
+   * TODO 在zeppelin_ipyspark.py里面通过intp.getJavaSparkContext()调用
+   * @return
+   */
   public JavaSparkContext getJavaSparkContext() {
     return sparkInterpreter.getJavaSparkContext();
   }

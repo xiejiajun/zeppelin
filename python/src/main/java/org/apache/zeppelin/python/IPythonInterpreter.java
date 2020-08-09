@@ -118,6 +118,12 @@ public class IPythonInterpreter extends JupyterKernelInterpreter {
     }
   }
 
+  /**
+   * TODO 启动py4j的gateWay Server
+   * @param gatewayHost
+   * @param gatewayPort
+   * @throws IOException
+   */
   private void setupJVMGateway(String gatewayHost, int gatewayPort) throws IOException {
     this.gatewayServer = PythonUtils.createGatewayServer(this, gatewayHost,
             gatewayPort, py4jGatewaySecret, usePy4JAuth);

@@ -116,6 +116,10 @@ public class PythonInterpreter extends Interpreter {
     }
   }
 
+  /**
+   * TODO 启动py4j的gateWay Server
+   * @throws IOException
+   */
   // start gateway sever and start python process
   private void createGatewayServerAndStartScript() throws IOException {
     // start gateway server in JVM side

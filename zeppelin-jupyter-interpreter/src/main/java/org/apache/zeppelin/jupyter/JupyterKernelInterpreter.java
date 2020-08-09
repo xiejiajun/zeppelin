@@ -109,6 +109,7 @@ public class JupyterKernelInterpreter extends AbstractInterpreter {
         // JupyterKernelInterpreter might already been opened
         return;
       }
+      // TODO 这里的pythonExecutable和ipyspark无关
       pythonExecutable = getProperty("zeppelin.python", "python");
       LOGGER.info("Python Exec: " + pythonExecutable);
       String checkPrerequisiteResult = checkKernelPrerequisite(pythonExecutable);
@@ -189,6 +190,7 @@ public class JupyterKernelInterpreter extends AbstractInterpreter {
     }
 
     // TODO 两个启动入口：这是启动python文件的入口，RemoteInterpreterManagedProcess是启动interpreter.sh的入口
+    // TODO 用于启动基于Grpc的执行Jupyter解释器发送过来的python命令的python GrpcServer 进程
     CommandLine cmd = CommandLine.parse(pythonExecutable);
     cmd.addArgument(kernelWorkDir.getAbsolutePath() + "/kernel_server.py");
     cmd.addArgument(getKernelName());

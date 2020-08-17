@@ -53,6 +53,9 @@ public class PluginManager {
   private static PluginManager instance;
 
   private ZeppelinConfiguration zConf = ZeppelinConfiguration.create();
+  /**
+   * TODO 获取插件所在目录
+   */
   private String pluginsDir = zConf.getPluginsDir();
 
   private Map<String, InterpreterLauncher> cachedLaunchers = new HashMap<>();
@@ -89,12 +92,14 @@ public class PluginManager {
     }
 
     String simpleClassName = notebookRepoClassName.substring(notebookRepoClassName.lastIndexOf(".") + 1);
+    // TODO 获取插件类加载器
     URLClassLoader pluginClassLoader = getPluginClassLoader(pluginsDir, "NotebookRepo", simpleClassName);
     if (pluginClassLoader == null) {
       return null;
     }
     NotebookRepo notebookRepo = null;
     try {
+      // TODO 使用自定义类加载器加载插件
       notebookRepo = (NotebookRepo) (Class.forName(notebookRepoClassName, true, pluginClassLoader)).newInstance();
     } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
       throw new IOException("Fail to instantiate notebookrepo " + notebookRepoClassName +
@@ -138,6 +143,7 @@ public class PluginManager {
     }
     OldNotebookRepo notebookRepo = null;
     try {
+      // TODO 使用自定义类加载器加载插件
       notebookRepo = (OldNotebookRepo) (Class.forName(oldNotebookRepoClassName, true, pluginClassLoader)).newInstance();
     } catch (InstantiationException | IllegalAccessException | ClassNotFoundException e) {
       throw new IOException("Fail to instantiate notebookrepo " + oldNotebookRepoClassName +
@@ -172,9 +178,11 @@ public class PluginManager {
       }
     }
 
+    // TODO 获取Launcher插件类加载器
     URLClassLoader pluginClassLoader = getPluginClassLoader(pluginsDir, "Launcher", launcherPlugin);
     InterpreterLauncher launcher = null;
     try {
+      // TODO 使用自定义类加载器加载Launcher插件
       launcher = (InterpreterLauncher) (Class.forName(launcherClassName, true, pluginClassLoader))
           .getConstructor(ZeppelinConfiguration.class, RecoveryStorage.class)
           .newInstance(zConf, recoveryStorage);

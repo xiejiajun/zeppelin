@@ -75,7 +75,7 @@ public abstract class InterpreterLauncher {
 
   /**
    * Try to recover interpreter process first, then call launchDirectly via sub class implementation.
-   *
+   * TODO 先尝试恢复，恢复失败再新建启动客户端
    * @param context
    * @return
    * @throws IOException

@@ -318,6 +318,7 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
 
     initSparkWebUrl()
 
+    // TODO 将sparkContext SparkSession SqlContext绑定到sparkILoop（通过动态执行Scala代码的方式）
     bind("spark", sparkSession.getClass.getCanonicalName, sparkSession, List("""@transient"""))
     bind("sc", "org.apache.spark.SparkContext", sc, List("""@transient"""))
     bind("sqlContext", "org.apache.spark.sql.SQLContext", sqlContext, List("""@transient"""))

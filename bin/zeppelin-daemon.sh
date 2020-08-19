@@ -97,7 +97,10 @@ if [[ "${USE_HADOOP}" == "true"  ]]; then
     ZEPPELIN_CLASSPATH+=":`hadoop classpath`"
   fi
 fi
-
+## TODO 这里存在一个bug，当zeppelin-env.sh中未export CLASSPATH环境变量但/etc/profile或者~/.bashrc中export CLASSPATH时，
+#   这里修改过的CLASSPATH会原封不动的传递到interpreter.sh中，这会把zeppelin lib目录下的jar包带到解释器进程的CLASSPATH中，
+#   从而导致一些解释器和zeppelin lib下的包之间的依赖冲突(zeppelin-env.sh中export CLASSPATH后就没问题，因为interpreter.sh
+#   中. "${bin}/common.sh"会重新source zeppelin-env.sh，从而重置CLASSPATH), 这个问题我在ZEPPELIN-4987分支修复
 CLASSPATH+=":${ZEPPELIN_CLASSPATH}"
 
 if [[ "${ZEPPELIN_NICENESS}" = "" ]]; then

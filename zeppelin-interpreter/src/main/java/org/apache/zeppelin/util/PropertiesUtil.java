@@ -17,6 +17,14 @@
 
 package org.apache.zeppelin.util;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.reflect.FieldUtils;
+import org.apache.zeppelin.interpreter.InterpreterContext;
+import org.slf4j.Logger;
+
+import java.lang.reflect.Field;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -71,6 +79,43 @@ public class PropertiesUtil {
       return Integer.parseInt(valueString);
     }catch (Exception e){
       return defaultValue;
+    }
+  }
+
+
+  /**
+   * Replace markers #{contextFieldName} by values from {@link InterpreterContext} fields
+   * with same name and marker #{user}. If value == null then replace by empty string.
+   */
+  public static void replaceContextParameters(Properties properties, Logger LOGGER, String userName) {
+    InterpreterContext interpreterContext = InterpreterContext.get();
+    if (interpreterContext != null) {
+      String markerTemplate = "#\\{%s\\}";
+      List<String> skipFields = Arrays.asList("paragraphTitle", "paragraphId", "paragraphText");
+      List<Class<?>> typesToProcess = Arrays.asList(String.class, Double.class, Float.class, Short.class,
+              Byte.class, Character.class, Boolean.class, Integer.class, Long.class);
+      for (String key : properties.stringPropertyNames()) {
+        String p = properties.getProperty(key);
+        if (StringUtils.isNotEmpty(p)) {
+          for (Field field : InterpreterContext.class.getDeclaredFields()) {
+            Class<?> clazz = field.getType();
+            if (!skipFields.contains(field.getName()) && (typesToProcess.contains(clazz)
+                    || clazz.isPrimitive())) {
+              Object value = null;
+              try {
+                value = FieldUtils.readField(field, interpreterContext, true);
+              } catch (Exception e) {
+                LOGGER.error("Cannot read value of field {}", field.getName());
+              }
+              p = p.replaceAll(String.format(markerTemplate, field.getName()),
+                      value != null ? value.toString() : StringUtils.EMPTY);
+            }
+          }
+          p = p.replaceAll(String.format(markerTemplate, "user"),
+                  StringUtils.defaultString(userName, StringUtils.EMPTY));
+          properties.setProperty(key, p);
+        }
+      }
     }
   }
 }

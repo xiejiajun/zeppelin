@@ -19,7 +19,6 @@ package org.apache.zeppelin.interpreter;
 
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.reflect.FieldUtils;
 import org.apache.zeppelin.annotation.Experimental;
 import org.apache.zeppelin.annotation.ZeppelinApi;
 import org.apache.zeppelin.interpreter.thrift.InterpreterCompletion;
@@ -27,12 +26,11 @@ import org.apache.zeppelin.resource.Resource;
 import org.apache.zeppelin.resource.ResourcePool;
 import org.apache.zeppelin.scheduler.Scheduler;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
+import org.apache.zeppelin.util.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Field;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -196,7 +194,7 @@ public abstract class Interpreter {
   public Properties getProperties() {
     Properties p = new Properties();
     p.putAll(properties);
-    replaceContextParameters(p);
+    PropertiesUtil.replaceContextParameters(p, LOGGER, userName);
     return p;
   }
 
@@ -366,41 +364,6 @@ public abstract class Interpreter {
     return getInterpreterInTheSameSessionByClassName(interpreterClass, true);
   }
 
-  /**
-   * Replace markers #{contextFieldName} by values from {@link InterpreterContext} fields
-   * with same name and marker #{user}. If value == null then replace by empty string.
-   */
-  private void replaceContextParameters(Properties properties) {
-    InterpreterContext interpreterContext = InterpreterContext.get();
-    if (interpreterContext != null) {
-      String markerTemplate = "#\\{%s\\}";
-      List<String> skipFields = Arrays.asList("paragraphTitle", "paragraphId", "paragraphText");
-      List<Class<?>> typesToProcess = Arrays.asList(String.class, Double.class, Float.class, Short.class,
-          Byte.class, Character.class, Boolean.class, Integer.class, Long.class);
-      for (String key : properties.stringPropertyNames()) {
-        String p = properties.getProperty(key);
-        if (StringUtils.isNotEmpty(p)) {
-          for (Field field : InterpreterContext.class.getDeclaredFields()) {
-            Class<?> clazz = field.getType();
-            if (!skipFields.contains(field.getName()) && (typesToProcess.contains(clazz)
-                || clazz.isPrimitive())) {
-              Object value = null;
-              try {
-                value = FieldUtils.readField(field, interpreterContext, true);
-              } catch (Exception e) {
-                LOGGER.error("Cannot read value of field {}", field.getName());
-              }
-              p = p.replaceAll(String.format(markerTemplate, field.getName()),
-                  value != null ? value.toString() : StringUtils.EMPTY);
-            }
-          }
-          p = p.replaceAll(String.format(markerTemplate, "user"),
-              StringUtils.defaultString(userName, StringUtils.EMPTY));
-          properties.setProperty(key, p);
-        }
-      }
-    }
-  }
 
   /**
    * Type of interpreter.

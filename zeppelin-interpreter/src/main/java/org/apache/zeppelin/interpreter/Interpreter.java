@@ -366,7 +366,12 @@ public abstract class Interpreter {
 
   /**
    * TODO 这里会解析#{}表达式，以支持解释器配置时引用InterpreterContext的字段值，以及通过#{user}引用
-   *   当前登陆用户
+   *   当前登陆用户, 对于Spark解释器的 yarn-cluster模式不能依赖这里的#{user} #{noteId}等变量替换改变
+   *   Yarn ApplicationName ,因为解释器进程(Driver）是启动在yarn上的，从SparkLauncher启动解释器进程是已经设置了appName
+   *   不能再改变，yarn-client模式解释器进程(Driver）启动在本地，虽然SparkLauncher启动解释器进程是已经设置了appName，但是
+   *   在解释器进程启动SparkContext又修改了appName，这次修改是会调用这里进行变量替换的，所以yarn-client模式支持Zeppelin-#{user}-#{noteId}
+   *   修改解释器名称（要想yarn-cluster模式也生效，需要将SparkInterpreterLauncher中的properties调用这里的replaceContextParameters方法
+   *   类似的逻辑进行变量替换)
    * Replace markers #{contextFieldName} by values from {@link InterpreterContext} fields
    * with same name and marker #{user}. If value == null then replace by empty string.
    */

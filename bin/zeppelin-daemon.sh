@@ -84,6 +84,7 @@ addJarInDir "${ZEPPELIN_HOME}/zeppelin-web/target/lib"
 addJarInDir "${ZEPPELIN_HOME}/zeppelin-web-angular/target/lib"
 
 ## Add hadoop jars when env USE_HADOOP is true
+## TODO 如果执行时YarnAppMonitor.get()提示找不到hadoop Configuration，则在zeppelin-env.sh中配置USE_HADOOP=true
 if [[ "${USE_HADOOP}" == "true"  ]]; then
   if [[ -z "${HADOOP_CONF_DIR}" ]]; then
     echo "Please specify HADOOP_CONF_DIR if USE_HADOOP is true"

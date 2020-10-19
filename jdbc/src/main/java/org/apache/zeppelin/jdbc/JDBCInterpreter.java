@@ -622,25 +622,31 @@ public class JDBCInterpreter extends KerberosInterpreter {
       character = sql.charAt(item);
 
       if (singleLineComment && (character == '\n' || item == sql.length() - 1)) {
+        // TODO 单行注释结束
         singleLineComment = false;
       }
 
       if (multiLineComment && character == '/' && sql.charAt(item - 1) == '*') {
+        // TODO 多行注释结束
         multiLineComment = false;
       }
 
       if (character == '\'') {
         if (quoteString) {
+          // TODO 单引号结束
           quoteString = false;
         } else if (!doubleQuoteString) {
+          // TODO 单引号开始
           quoteString = true;
         }
       }
 
       if (character == '"') {
         if (doubleQuoteString && item > 0) {
+          // TODO 双引号结束
           doubleQuoteString = false;
         } else if (!quoteString) {
+          // TODO 双引号开始
           doubleQuoteString = true;
         }
       }
@@ -648,10 +654,10 @@ public class JDBCInterpreter extends KerberosInterpreter {
       if (!quoteString && !doubleQuoteString && !multiLineComment && !singleLineComment
           && sql.length() > item + 1) {
         if (character == '-' && sql.charAt(item + 1) == '-') {
-          // TODO 单行注释
+          // TODO 单行注释开始
           singleLineComment = true;
         } else if (character == '/' && sql.charAt(item + 1) == '*') {
-          // TODO 多行注释
+          // TODO 多行注释开始
           multiLineComment = true;
         }
       }

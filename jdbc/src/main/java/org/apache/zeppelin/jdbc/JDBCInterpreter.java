@@ -648,8 +648,10 @@ public class JDBCInterpreter extends KerberosInterpreter {
       if (!quoteString && !doubleQuoteString && !multiLineComment && !singleLineComment
           && sql.length() > item + 1) {
         if (character == '-' && sql.charAt(item + 1) == '-') {
+          // TODO 单行注释
           singleLineComment = true;
         } else if (character == '/' && sql.charAt(item + 1) == '*') {
+          // TODO 多行注释
           multiLineComment = true;
         }
       }

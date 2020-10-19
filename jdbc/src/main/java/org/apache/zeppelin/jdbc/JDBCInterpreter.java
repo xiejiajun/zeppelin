@@ -664,9 +664,12 @@ public class JDBCInterpreter extends KerberosInterpreter {
 
       if (character == ';' && !quoteString && !doubleQuoteString && !multiLineComment
           && !singleLineComment) {
+        // TODO 遇到分号时，若不是单引号、双引号、单行注释、多行注释模式则完成一次query匹配
+        //    这样的话：单行注释、多行注释会和它下面的SQL组成一个Query（而不是删掉注释）
         queries.add(StringUtils.trim(query.toString()));
         query = new StringBuilder();
       } else if (item == sql.length() - 1) {
+        // TODO 到了最后一个字符，完成最后一条query提取
         query.append(character);
         queries.add(StringUtils.trim(query.toString()));
       } else {

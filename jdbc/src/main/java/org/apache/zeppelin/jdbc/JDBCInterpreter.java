@@ -109,6 +109,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
   static final String COMPLETER_TTL_KEY = "completer.ttlInSeconds";
   static final String DEFAULT_COMPLETER_TTL = "120";
   static final String SPLIT_QURIES_KEY = "splitQueries";
+  static final String IGNORE_COMMENT_KEY = "ignoreComment";
   static final String JDBC_JCEKS_FILE = "jceks.file";
   static final String JDBC_JCEKS_CREDENTIAL_KEY = "jceks.credentialKey";
   static final String PRECODE_KEY_TEMPLATE = "%s.precode";
@@ -608,7 +609,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
   inspired from https://github.com/postgres/pgadmin3/blob/794527d97e2e3b01399954f3b79c8e2585b908dd/
     pgadmin/dlg/dlgProperty.cpp#L999-L1045
    */
-  protected ArrayList<String> splitSqlQueries(String sql) {
+  protected ArrayList<String> splitSqlQueries(String sql, boolean ignoreComment) {
     ArrayList<String> queries = new ArrayList<>();
     StringBuilder query = new StringBuilder();
     char character;
@@ -662,6 +663,11 @@ public class JDBCInterpreter extends KerberosInterpreter {
         }
       }
 
+      if (ignoreComment && (multiLineComment || singleLineComment)) {
+        // TODO 如果开启了忽略注释，当multiLineComment或者singleLineComment为true时忽略这段文本
+        continue;
+      }
+
       if (character == ';' && !quoteString && !doubleQuoteString && !multiLineComment
           && !singleLineComment) {
         // TODO 遇到分号时，若不是单引号、双引号、单行注释、多行注释模式则完成一次query匹配
@@ -704,9 +710,14 @@ public class JDBCInterpreter extends KerberosInterpreter {
     String user = interpreterContext.getAuthenticationInfo().getUser();
 
     boolean splitQuery = false;
+    boolean ignoreComment = false;
     String splitQueryProperty = getProperty(String.format("%s.%s", propertyKey, SPLIT_QURIES_KEY));
+    String ignoreCommentProperty = getProperty(String.format("%s.%s", propertyKey, IGNORE_COMMENT_KEY));
     if (StringUtils.isNotBlank(splitQueryProperty) && splitQueryProperty.equalsIgnoreCase("true")) {
       splitQuery = true;
+    }
+    if (StringUtils.isNotBlank(ignoreCommentProperty) && ignoreCommentProperty.equalsIgnoreCase("true")) {
+      ignoreComment = true;
     }
 
     InterpreterResult interpreterResult = new InterpreterResult(InterpreterResult.Code.SUCCESS);
@@ -781,13 +792,16 @@ public class JDBCInterpreter extends KerberosInterpreter {
 //        sb.append(sql);
 //        sql = sb.toString();
 //      }
-        sqlArray = splitSqlQueries(sql);
+        sqlArray = splitSqlQueries(sql, ignoreComment);
       } else {
         sqlArray = Arrays.asList(sql);
       }
 
       for (int i = 0; i < sqlArray.size(); i++) {
         String sqlToExecute = sqlArray.get(i);
+        if (StringUtils.isBlank(sqlToExecute)) {
+          continue;
+        }
         statement = connection.createStatement();
 
         // fetch n+1 rows in order to indicate there's more rows available (for large selects)

@@ -111,6 +111,11 @@ function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv, ng
         buttons: btn,
       });
     } else if (op === 'PARAGRAPH') {
+      // TODO 这个功能主要是为了一人修改, 到处同步，每个打开这个note的人都能看到最新代码，
+      //  如果代码只有一个人使用，我们应该可以通过阉割掉这个功能来避免网络抖动导致代码被刷掉的问题
+      //  这里最终会调用paragraph.controller.js里面的updateParagraph函数
+      //  补充：这个函数还用于段落执行状态更新等，不能直接注释掉来阉割，要阉割的话需要到updateParagraph函数里面
+      //      找到替换页面代码(text)的逻辑，再注释掉即可
       $rootScope.$broadcast('updateParagraph', data);
     } else if (op === 'RUN_PARAGRAPH_USING_SPELL') {
       $rootScope.$broadcast('runParagraphUsingSpell', data);

@@ -33,13 +33,13 @@ public class Message implements JsonSerializable {
   public static enum OP {
     GET_HOME_NOTE,    // [c-s] load note for home screen
 
-    GET_NOTE,         // [c-s] client load note
+    GET_NOTE,         // [c-s] client load note: TODO c-s表示这个OP是前端WebSocket发送给NotebookServer的，下同
                       // @param id note id
 
     NOTE,             // [s-c] note info
                       // @param note serialized Note object
 
-    PARAGRAPH,        // [s-c] paragraph info
+    PARAGRAPH,        // [s-c] paragraph info: TODO s-c表示这个OP是NotebookServer发送给前端WebSocket的，下同
                       // @param paragraph serialized paragraph object
 
     PROGRESS,         // [s-c] progress update

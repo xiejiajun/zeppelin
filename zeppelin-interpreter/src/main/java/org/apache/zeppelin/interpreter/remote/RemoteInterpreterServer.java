@@ -207,6 +207,8 @@ public class RemoteInterpreterServer extends Thread
   public void init(Map<String, String> properties) throws TException {
     this.zConf = ZeppelinConfiguration.create();
     for (Map.Entry<String, String> entry : properties.entrySet()) {
+      // TODO 使用ZeppelinServer端传递过来的zeppelin-site.xml中的配置初始化zConf,保证spark yarn-cluster模式也能正常读取
+      //  生命周期管理等配置
       this.zConf.setProperty(entry.getKey(), entry.getValue());
     }
 

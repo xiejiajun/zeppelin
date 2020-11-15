@@ -100,6 +100,10 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
 
   public void init(ZeppelinConfiguration zConf) {
     callRemoteFunction(client -> {
+      // TODO 初始化解释器，主要是解决解释器生命周期管理器从ZeppelinServer端移到解释器服务后，Spark On Yarn cluster模式
+      //  由于zeppelin-site.xml未上传，导致生命周期管理器配置不生效的问题。解决这个问题还可以通过spark-submit的--files选项
+      //  将zeppelin-site.xml也上传过去，但这种方法不是通用解决方案，所以采样Thrift接口方式通过Rpc将ZeppelinServer端的
+      //  配置信息传递给解释器进程的方式来解决这个问题
       client.init(zConf.getProperties());
       return null;
     });

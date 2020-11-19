@@ -318,6 +318,10 @@ abstract class BaseSparkScalaInterpreter(val conf: SparkConf,
 
     initAndSendSparkWebUrl()
 
+    // TODO 这里将SparkContext对象绑定到spark后，note中通过rdd的Action算子最终会触发sparkContext.runJar提交作业到集群运行
+    //  SparkSubmit提交Spark解释器时指定了Driver和Executor配置把Spark集群启动起来，spark真正触发作业提交的是RDD的Action算子
+    //  这一点跟Flink的env.execute有点类似，但又不完全相同(因为SparkSubmit提交时已经触发了一个app.start将Spark解释器提交到Yarn
+    //  上了, 而Flink的execute如果不执行的话是不会上Yarn的)
     bind("spark", sparkSession.getClass.getCanonicalName, sparkSession, List("""@transient"""))
     bind("sc", "org.apache.spark.SparkContext", sc, List("""@transient"""))
     bind("sqlContext", "org.apache.spark.sql.SQLContext", sqlContext, List("""@transient"""))

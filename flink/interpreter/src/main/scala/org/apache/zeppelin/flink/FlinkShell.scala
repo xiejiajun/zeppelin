@@ -106,7 +106,7 @@ object FlinkShell {
 
     val (effectiveConfig, _) = clusterClient match {
         // TODO 获取远程配置？这里面的CliFrontend应该会获取到FlinkYarnSessionCli, 它的applyCommandLineOptionsToConfiguration方法返回的
-        //  配置待遇yarn-session的appId等信息
+        //  配置带有yarn-session的appId等信息
       case Some(_) => fetchDeployedYarnClusterInfo(config, clusterConfig, "yarn-cluster", flinkShims)
       case None => fetchDeployedYarnClusterInfo(config, clusterConfig, "default", flinkShims)
     }

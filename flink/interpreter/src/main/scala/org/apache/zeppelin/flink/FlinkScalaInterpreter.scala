@@ -156,6 +156,7 @@ class FlinkScalaInterpreter(val properties: Properties) {
     LOGGER.info("Using flink: " + flinkVersion)
     this.flinkShims = FlinkShims.getInstance(flinkVersion, properties)
 
+    // TODO 读取flink-conf.yaml
     this.configuration = GlobalConfiguration.loadConfiguration(flinkConfDir)
 
     mode = ExecutionMode.withName(
@@ -246,6 +247,7 @@ class FlinkScalaInterpreter(val properties: Properties) {
         }
       }
 
+      // TODO 获取连接信息（在Yarn上启动Flink集群）, 主要的是effectiveConfig保存了连接到远端JobManager的信息， cluster对象只在close方法用到
       val (effectiveConfig, cluster) = fetchConnectionInfo(config, configuration, flinkShims)
       this.configuration = effectiveConfig
       cluster match {
@@ -286,6 +288,7 @@ class FlinkScalaInterpreter(val properties: Properties) {
         // use FlinkClassLoader to initialize FlinkILoop, otherwise TableFactoryService could not find
         // the TableFactory properly
         Thread.currentThread().setContextClassLoader(getFlinkClassLoader)
+        // TODO 使用保存了yarn-session集群/Standalone集群连接信息的configuration构建FlinkILoop
         val repl = new FlinkILoop(configuration, config.externalJars, None, replOut)
         (repl, cluster)
       } catch {
@@ -316,6 +319,10 @@ class FlinkScalaInterpreter(val properties: Properties) {
     flinkILoop.intp = new FlinkILoopInterpreter(settings, replOut)
     flinkILoop.intp.beQuietDuring {
       // set execution environment
+      // TODO 看FlinkILoop源码得知flinkILoop.scalaBenv和flinkILoop.scalaSenv是根据上面的configuration构建出来的
+      //  通过他们提交作业会根据上面的configuration中的Remote集群信息构建相应的PipelineExecutorFactory，然后获取相应的
+      //  PipelineExecutor，然后执行benv.execute()等方法最终会通过对应的PipelineExecutor.execute(plan, configuration)
+      //  将作业提交到对应远程集群运行
       flinkILoop.intp.bind("benv", flinkILoop.scalaBenv)
       flinkILoop.intp.bind("senv", flinkILoop.scalaSenv)
 

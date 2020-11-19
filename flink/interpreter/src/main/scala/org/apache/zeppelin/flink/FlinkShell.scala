@@ -78,8 +78,11 @@ object FlinkShell {
       flinkShims: FlinkShims): (Configuration, Option[ClusterClient[_]]) = {
 
     config.executionMode match {
+        // TODO 启动LOCAL模式的Flink进程(这里的Local模式其实是为伪布式，会启动一个MiniCluster),
       case ExecutionMode.LOCAL => createLocalClusterAndConfig(flinkConfig)
+        // TODO 连接Standalone模式的集群
       case ExecutionMode.REMOTE => createRemoteConfig(config, flinkConfig)
+        // TODO 在Yarn上启动Flink（类似yarn-session模式)
       case ExecutionMode.YARN => createYarnClusterIfNeededAndGetConfig(config, flinkConfig, flinkShims)
       case ExecutionMode.UNDEFINED => // Wrong input
         throw new IllegalArgumentException("please specify execution mode:\n" +
@@ -88,17 +91,22 @@ object FlinkShell {
   }
 
   private def createYarnClusterIfNeededAndGetConfig(config: Config, flinkConfig: Configuration, flinkShims: FlinkShims) = {
+    // TODO 指定ATTACHED模式是为了作业提交后保持交互，即交互模式(默认为detached即分离模式)
     flinkConfig.setBoolean(DeploymentOptions.ATTACHED, true)
 
     val (clusterConfig, clusterClient) = config.yarnConfig match {
+        // TODO  启动yarn-session集群
       case Some(_) => deployNewYarnCluster(config, flinkConfig, flinkShims)
       case None => (flinkConfig, None)
     }
 
     // workaround for FLINK-17788, otherwise it won't work with flink 1.10.1 which has been released.
+    // TODO 设置为yarn-session模式
     flinkConfig.set(DeploymentOptions.TARGET, YarnSessionClusterExecutor.NAME)
 
     val (effectiveConfig, _) = clusterClient match {
+        // TODO 获取远程配置？这里面的CliFrontend应该会获取到FlinkYarnSessionCli, 它的applyCommandLineOptionsToConfiguration方法返回的
+        //  配置待遇yarn-session的appId等信息
       case Some(_) => fetchDeployedYarnClusterInfo(config, clusterConfig, "yarn-cluster", flinkShims)
       case None => fetchDeployedYarnClusterInfo(config, clusterConfig, "default", flinkShims)
     }
@@ -110,6 +118,7 @@ object FlinkShell {
 
   private def deployNewYarnCluster(config: Config, flinkConfig: Configuration, flinkShims: FlinkShims) = {
     val effectiveConfig = new Configuration(flinkConfig)
+    // TODO 启动一个ATTACHED模式的yarn-cluster所以也相当于yarn-session模式
     val args = parseArgList(config, "yarn-cluster")
 
     val configurationDirectory = getConfigDir(config)
@@ -121,6 +130,7 @@ object FlinkShell {
     val commandOptions = CliFrontendParser.getRunCommandOptions
     val commandLineOptions = CliFrontendParser.mergeOptions(commandOptions,
       frontend.getCustomCommandLineOptions)
+    // TODO 处理parseArgList生成的提交参数
     val commandLine = CliFrontendParser.parse(commandLineOptions, args, true)
 
     val customCLI = flinkShims.getCustomCli(frontend, commandLine).asInstanceOf[CustomCommandLine]
@@ -133,6 +143,7 @@ object FlinkShell {
 
     val clusterClient = try {
       clusterDescriptor
+        // TODO 在Yarn上创建集群
         .deploySessionCluster(clusterSpecification)
         .getClusterClient
     } finally {
@@ -197,6 +208,7 @@ object FlinkShell {
     }
 
     val effectiveConfig = new Configuration(flinkConfig)
+    // TODO 将standalone的连接信息放到effectiveConfig, 方便创建FlinkILoop时使用
     setJobManagerInfoToConfig(effectiveConfig, config.host.get, config.port.get)
     effectiveConfig.set(DeploymentOptions.TARGET, RemoteExecutor.NAME)
     effectiveConfig.setBoolean(DeploymentOptions.ATTACHED, true)
@@ -211,6 +223,7 @@ object FlinkShell {
     val cluster = createLocalCluster(config)
     val port = cluster.getRestAddress.get.getPort
 
+    // TODO 将standalone的连接信息放到effectiveConfig, 方便创建FlinkILoop时使用
     setJobManagerInfoToConfig(config, "localhost", port)
     config.set(DeploymentOptions.TARGET, RemoteExecutor.NAME)
     config.setBoolean(DeploymentOptions.ATTACHED, true)

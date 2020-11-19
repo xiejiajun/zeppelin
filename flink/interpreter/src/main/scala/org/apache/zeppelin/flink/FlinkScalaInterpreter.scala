@@ -189,10 +189,12 @@ class FlinkScalaInterpreter(val properties: Properties) {
         .copy(queue = Some(queue))))
 
     this.userUdfJars = getUserUdfJars()
+    // TODO 强行支持类似Spark解释器的依赖配置方案（自己实现了解析依赖的函数), Spark解释器是直接从Driver的classpath中取的
     this.userJars = getUserJarsExceptUdfJars ++ this.userUdfJars
     LOGGER.info("UserJars: " + userJars.mkString(","))
     config = config.copy(externalJars = Some(userJars.toArray))
     LOGGER.info("Config: " + config)
+    // TODO flink.yarn.jars这个配置Flink官方并不支持，这里应该是写代码的人没注意，因为设置了也不起作用
     configuration.setString("flink.yarn.jars", userJars.mkString(":"))
 
     // load other configuration from interpreter properties

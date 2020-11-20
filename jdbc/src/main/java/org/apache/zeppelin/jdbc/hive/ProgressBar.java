@@ -23,6 +23,7 @@ import java.io.PrintStream;
 
 /**
  * This class is only created for hive >= 2.3 where progress bar is supported.
+ * TODO hive < 2.3 jdbc包没有这个InPlaceUpdateStream，会导致解释器无法启动
  */
 public class ProgressBar {
   private InPlaceUpdateStream.EventNotifier eventNotifier;

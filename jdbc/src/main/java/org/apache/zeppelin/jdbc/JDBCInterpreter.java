@@ -734,6 +734,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
           // start hive monitor thread if it is hive jdbc
           String jdbcURL = getJDBCConfiguration(user).getPropertyMap(dbPrefix).getProperty(URL_KEY);
           if (jdbcURL != null && jdbcURL.startsWith("jdbc:hive2://")) {
+            // TODO 对于hive版本低于2.3的需要注释掉这一句，不然会因为ClassNotFound报错
             HiveUtils.startHiveMonitorThread(statement, context,
                     Boolean.parseBoolean(getProperty("hive.log.display", "true")));
           }

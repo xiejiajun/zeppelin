@@ -23,6 +23,7 @@ import org.apache.zeppelin.interpreter.InterpreterContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -68,7 +69,15 @@ public class HiveUtils {
     final ProgressBar progressBar = progressBarTemp;
 
     Thread thread = new Thread(() -> {
-      while (hiveStmt.hasMoreLogs() && !Thread.interrupted()) {
+      while (true) {
+        try {
+          // TODO 新增stmt关闭后停止日志拉取的逻辑
+          if (hiveStmt.isClosed() || !hiveStmt.hasMoreLogs() || Thread.interrupted()) {
+            break;
+          }
+        } catch (SQLException e) {
+          LOGGER.error(e.getMessage());
+        }
         try {
           List<String> logs = hiveStmt.getQueryLog();
           String logsOutput = StringUtils.join(logs, System.lineSeparator());

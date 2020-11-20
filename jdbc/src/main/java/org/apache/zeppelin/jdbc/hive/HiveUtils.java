@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
 /**
  * This class include hive specific stuff.
  * e.g. Display hive job execution info.
- *
+ * TODO 注释掉用到ProgressBar的地方重新打包可以解决Hive < 2.3不兼容的问题
  */
 public class HiveUtils {
 

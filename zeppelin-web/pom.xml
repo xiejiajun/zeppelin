@@ -61,6 +61,7 @@
         <configuration>
           <nodeDownloadRoot>${plugin.frontend.nodeDownloadRoot}</nodeDownloadRoot>
           <npmDownloadRoot>${plugin.frontend.npmDownloadRoot}</npmDownloadRoot>
+          <npmRegistryURL>https://registry.npm.taobao.org</npmRegistryURL>
         </configuration>
 
         <executions>

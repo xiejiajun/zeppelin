@@ -151,6 +151,10 @@ public class HiveUtils {
       // Move codes into ProgressBar to delay NoClassDefFoundError of InPlaceUpdateStream
       // until ProgressBar instanced.
       // When hive < 2.3, ProgressBar will not be instanced, so it works well.
+      // TODO 实验得出，当满足progressBar==null时 ，这里就算是写的
+      //  hiveStmt.setInPlaceUpdateStream(progressBar.getInPlaceUpdateStream(context.out));也不会报NoClassDefFoundError
+      //  因为JVM的ClassLoader只加载需要实例化或者进行静态方法调用的class,这里不满足条件就不会去加载，不加载就不会去找这个class，不找它就不会
+      //  抛NoClassDefFoundError，这算是ClassLoader的懒加载机制吧
       progressBar.setInPlaceUpdateStream(hiveStmt, context.out);
     }
   }

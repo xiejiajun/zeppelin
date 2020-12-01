@@ -105,6 +105,9 @@ public class HiveUtils {
     LOGGER.info("Start HiveMonitor-Thread for sql: " + stmt);
 
     if (progressBar != null) {
+      // TODO 当Hive版本低于2.3时是不满足这个代码分支条件的，也不会触发new ProgressBar的初始化，
+      //  但是为啥会去加载InPlaceUpdateStream，并且抛出了下列异常呢？（自己写的Demo一直没能复现）
+      //  java.lang.NoClassDefFoundError: org/apache/hive/jdbc/logs/InPlaceUpdateStream
       hiveStmt.setInPlaceUpdateStream(progressBar.getInPlaceUpdateStream(context.out));
     }
   }

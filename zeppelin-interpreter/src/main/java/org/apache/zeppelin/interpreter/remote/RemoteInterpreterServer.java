@@ -801,6 +801,7 @@ public class RemoteInterpreterServer extends Thread
         LazyOpenInterpreter lazy = (LazyOpenInterpreter) interpreter;
         if (!lazy.isOpen()) {
           lazy.open();
+          // TODO 执行前置代码
           result = lazy.executePrecode(context);
         }
 
@@ -816,6 +817,7 @@ public class RemoteInterpreterServer extends Thread
           processInterpreterHooks(context.getNoteId());
           processInterpreterHooks(null);
           LOGGER.debug("Script after hooks: {}", script);
+          // TODO 执行代码
           result = interpreter.interpret(script, context);
         }
 

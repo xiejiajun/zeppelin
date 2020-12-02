@@ -111,7 +111,16 @@ public class HiveUtils {
       //  难道是因为hive-jdbc包是由SPI机制加载的缘故才导致了HiveStatement没调用的方法被提取加载和检查?
       //  但是我这边是由自定义Spi接口方式也没能复现，难道非得jdbc的Spi才有这个问题？
       //  jdbc spi也没能复现
+      //  经过不断验证得出: 当progressBar.getInPlaceUpdateStream的返回值类型不是自定义的BeelineInPlaceUpdateStream类型，
+      //  而是改成父接口InPlaceUpdateStream的话，就算progressBar.getInPlaceUpdateStream + hiveStmt.setInPlaceUpdateStream
+      //  在低版本也不会ClassNotDefException,原因是由于方法返回值类型为接口的子类，而调用方使用的入参类型是父接口类型的话，
+      //  就算方法调用不会走到这个代码分支，也会自动触发方法参数隐式转换成调用方需要的父接口类型（这里的InPlaceUpdateStream), 也就是要切记
+      //  调用方入参类型为父类型，而获取参数的方法返回的是子类型，这种情况接口参数的自动转换会导致ClassNotDefException，哪怕代码分支执行条件
+      //  不被满足也会自动触发这种转换, progressBar.setInPlaceUpdateStream是通过代理类将这种带自定方法参数隐式转换的逻辑放到桥梁类，不直接暴露
+      //  给需要兼容高低版本的这个工具类，从而绕开这种自动转换导致的父接口class被动加载带来的ClassNotDefException问题
       hiveStmt.setInPlaceUpdateStream(progressBar.getInPlaceUpdateStream(context.out));
+
+      //
     }
   }
 

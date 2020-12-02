@@ -35,7 +35,7 @@ public class ProgressBar {
     this.eventNotifier.operationLogShowedToUser();
   }
 
-  public BeelineInPlaceUpdateStream getInPlaceUpdateStream(OutputStream out) {
+  public InPlaceUpdateStream getInPlaceUpdateStream(OutputStream out) {
     return new BeelineInPlaceUpdateStream(
             new PrintStream(out),
             eventNotifier

@@ -92,6 +92,7 @@ public abstract class Interpreter {
       String varPat = m.group(2);
       if (varPat.matches("[{][^{}]+[}]")) {
         // substitute {variable} only if 'variable' has a value ...
+        // TODO 获取分布式资源(ZeppelinContext中定义的变量) , 这里是用ZeppelinContext中定义的变量替换代码证{变量名}的实现逻辑
         Resource resource = resourcePool.get(varPat.substring(1, varPat.length() - 1));
         Object variableValue = resource == null ? null : resource.get();
         if (variableValue != null)

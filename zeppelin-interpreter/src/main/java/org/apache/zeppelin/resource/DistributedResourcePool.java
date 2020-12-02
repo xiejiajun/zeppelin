@@ -17,6 +17,13 @@
 package org.apache.zeppelin.resource;
 
 /**
+ * TODO 目前看来ResourcePool是用来报错ZeppelinContext中定义的变量等信息的
+ *   http://zeppelin.apache.org/docs/0.9.0-SNAPSHOT/interpreter/shell.html
+ *   http://zeppelin.apache.org/docs/0.9.0-preview2/interpreter/jdbc.html#object-interpolation
+ *    - scala代码段定义变量: z.put("dataFileName", "members-list-003.parquet")
+ *    - sh解释器使用变量(前提是zeppelin.shell.interpolation=true): echo {dataFileName}
+ *    - jdbc解释器使用变量(前提是zeppelin.jdbc.interpolation为true):
+ *        - select * from patents_list where df_name = '{dataFileName}' and filing_date like '2015-%'
  * distributed resource pool
  */
 public class DistributedResourcePool extends LocalResourcePool {

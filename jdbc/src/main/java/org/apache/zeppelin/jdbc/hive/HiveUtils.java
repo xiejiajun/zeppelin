@@ -110,6 +110,7 @@ public class HiveUtils {
       //  java.lang.NoClassDefFoundError: org/apache/hive/jdbc/logs/InPlaceUpdateStream,
       //  难道是因为hive-jdbc包是由SPI机制加载的缘故才导致了HiveStatement没调用的方法被提取加载和检查?
       //  但是我这边是由自定义Spi接口方式也没能复现，难道非得jdbc的Spi才有这个问题？
+      //  jdbc spi也没能复现
       hiveStmt.setInPlaceUpdateStream(progressBar.getInPlaceUpdateStream(context.out));
     }
   }

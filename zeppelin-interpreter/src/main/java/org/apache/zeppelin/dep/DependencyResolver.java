@@ -78,8 +78,10 @@ public class DependencyResolver extends AbstractDependencyResolver {
     // <groupId>:<artifactId>[:<extension>[:<classifier>]]:<version>
     int numSplits = artifact.split(":").length;
     if (numSplits >= 3 && numSplits <= 6) {
+      // TODO 从Maven坐标加载
       return loadFromMvn(artifact, excludes);
     } else {
+      // TODO 从本地文件加载
       LinkedList<File> libs = new LinkedList<>();
       libs.add(new File(artifact));
       return libs;

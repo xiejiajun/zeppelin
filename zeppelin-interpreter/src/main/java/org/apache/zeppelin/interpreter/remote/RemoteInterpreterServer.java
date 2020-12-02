@@ -466,6 +466,8 @@ public class RemoteInterpreterServer extends Thread
         }
 
         depLoader = new DependencyResolver(localRepoPath);
+        // TODO 用于加载运行AngularDisplay system的Angular代码的Application实现类的类加载器:
+        //  在org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer.loadApplication中使用
         appLoader = new ApplicationLoader(resourcePool, depLoader);
 
         resultCacheInSeconds =
@@ -1310,6 +1312,9 @@ public class RemoteInterpreterServer extends Thread
           pkgInfo.getClassName(),
           noteId,
           paragraphId);
+      // TODO 加载Zeppelin Helium Application(AngularDisplay system的实现逻辑)
+      //  http://zeppelin.apache.org/docs/0.8.1/usage/display_system/angular_backend.html
+      //  http://zeppelin.apache.org/docs/0.8.1/usage/display_system/angular_frontend.html
       app = appLoader.load(pkgInfo, context);
       runningApplications.put(
           applicationInstanceId,
@@ -1351,6 +1356,7 @@ public class RemoteInterpreterServer extends Thread
       try {
         context.out.clear();
         context.out.setType(InterpreterResult.Type.ANGULAR);
+        // TODO 查找资源(ZeppelinContext保存的信息)
         ResourceSet resource = appLoader.findRequiredResourceSet(
             runningApp.pkg.getResources(),
             context.getNoteId(),

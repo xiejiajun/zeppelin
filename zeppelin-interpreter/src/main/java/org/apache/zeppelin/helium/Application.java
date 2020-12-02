@@ -25,6 +25,9 @@ import java.io.IOException;
  * Base class for pluggable application (e.g. visualization)
  * Application can access resources from ResourcePool and interact with front-end using
  * AngularDisplay system
+ * TODO http://zeppelin.apache.org/docs/0.9.0-preview2/usage/display_system/basic.html#network
+ *   http://zeppelin.apache.org/docs/0.9.0-preview2/usage/display_system/angular_backend.html
+ *   http://zeppelin.apache.org/docs/0.9.0-preview2/usage/display_system/angular_frontend.html
  */
 @Experimental
 public abstract class Application {

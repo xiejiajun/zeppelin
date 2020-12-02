@@ -120,6 +120,7 @@ public class ApplicationLoader {
         context.getNoteId(), context.getParagraphId());
 
     // load class
+    // TODO 加载Application实现类
     Class<Application> appClass = loadClass(packageInfo);
 
     // instantiate

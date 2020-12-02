@@ -632,6 +632,9 @@ public class RemoteInterpreterServer extends Thread
     }
     lifecycleManager.onInterpreterUse(interpreterGroupId);
 
+    // TODO 获取createInterpreter中创建的interpreter，新版本RemoteInterpreter的open方法不再直接调用Interpretr实现类的
+    //  open方法了，而是调用这里的createInterpreter,然后在interpret方法中构建出InterpretJob，最终由线程池调度InterpretJob
+    //  在InterpretJob的jobRun方法中才真正调用open方法
     Interpreter intp = getInterpreter(sessionId, className);
     InterpreterContext context = convert(interpreterContext);
     context.setInterpreterClassName(intp.getClassName());

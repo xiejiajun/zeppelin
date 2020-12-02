@@ -118,6 +118,7 @@ public class HiveUtils {
       //  调用方入参类型为父类型，而获取参数的方法返回的是子类型，这种情况接口参数的自动转换会导致ClassNotDefException，哪怕代码分支执行条件
       //  不被满足也会自动触发这种转换, progressBar.setInPlaceUpdateStream是通过代理类将这种带自定方法参数隐式转换的逻辑放到桥梁类，不直接暴露
       //  给需要兼容高低版本的这个工具类，从而绕开这种自动转换导致的父接口class被动加载带来的ClassNotDefException问题
+      //  progressBar.setInPlaceUpdateStream方式参考ZEPPELIN-5141:https://issues.apache.org/jira/browse/ZEPPELIN-5141
       hiveStmt.setInPlaceUpdateStream(progressBar.getInPlaceUpdateStream(context.out));
 
       //

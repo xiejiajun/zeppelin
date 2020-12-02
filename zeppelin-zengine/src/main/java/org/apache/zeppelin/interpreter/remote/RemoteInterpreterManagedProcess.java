@@ -71,6 +71,8 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess {
     this.interpreterRunner = intpRunner;
     this.interpreterPortRange = interpreterPortRange;
     this.env = env;
+    // TODO 初始化Zeppelin即将启动的解释器对应的jar包及配置文件所在的目录绝对路径，方便interpreter.sh中将其添加到解释器进程的
+    //  classpath
     this.interpreterDir = intpDir;
     this.localRepoDir = localRepoDir;
     this.interpreterSettingName = interpreterSettingName;
@@ -93,6 +95,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess {
     // start server process
     CommandLine cmdLine = CommandLine.parse(interpreterRunner);
     cmdLine.addArgument("-d", false);
+    // TODO 传递解释器所在的文件夹名称
     cmdLine.addArgument(interpreterDir, false);
     cmdLine.addArgument("-c", false);
     cmdLine.addArgument(intpEventServerHost, false);

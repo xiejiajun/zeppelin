@@ -109,6 +109,7 @@ if [[ -d "${ZEPPELIN_HOME}/zeppelin-zengine/target/test-classes" ]]; then
 fi
 
 addJarInDirForIntp "${ZEPPELIN_HOME}/zeppelin-interpreter-shaded/target"
+# TODO 将具体的解释器实现类所在的目录下的所有资源添加到启动解释器进程的classpath（例如: $ZEPPELIN_HOME/interpreter/jabc/*)
 addJarInDirForIntp "${INTERPRETER_DIR}"
 
 HOSTNAME=$(hostname)

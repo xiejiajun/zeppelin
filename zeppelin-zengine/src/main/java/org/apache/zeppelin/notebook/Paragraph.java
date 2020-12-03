@@ -358,7 +358,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
       if (isEnabled()) {
         setAuthenticationInfo(getAuthenticationInfo());
         interpreter.getScheduler().submit(this);
-       } else {
+      } else {
         LOGGER.info("Skip disabled paragraph. {}", getId());
         setStatus(Job.Status.FINISHED);
         return true;
@@ -559,6 +559,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
             .setParagraphTitle(title)
             .setParagraphText(text)
             .setAuthenticationInfo(subject)
+            // TODO(Luffy): 将从%hive(k=v)解析出来的localProperties传递到InterpreterContext供远程解释器使用
             .setLocalProperties(localProperties)
             .setConfig(config)
             .setGUI(settings)
@@ -727,7 +728,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
 
   @VisibleForTesting
   public void waitUntilFinished() throws Exception {
-    while(!isTerminated()) {
+    while (!isTerminated()) {
       LOGGER.debug("Wait for paragraph to be finished");
       Thread.sleep(1000);
     }
@@ -735,7 +736,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
 
   @VisibleForTesting
   public void waitUntilRunning() throws Exception {
-    while(!isRunning()) {
+    while (!isRunning()) {
       LOGGER.debug("Wait for paragraph to be running");
       Thread.sleep(1000);
     }
@@ -835,7 +836,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
       if (shouldSkipRunParagraph()) {
         LOGGER.info("Skip to run blank paragraph. {}", getId());
         setStatus(Job.Status.FINISHED);
-        return ;
+        return;
       }
       setStatus(Status.READY);
       localProperties.put("isRecover", "true");

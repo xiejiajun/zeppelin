@@ -69,6 +69,14 @@ public class ParagraphTextParser {
 
   private static Pattern REPL_PATTERN = Pattern.compile("^(\\s*)%(\\w+(?:\\.\\w+)*)");
 
+  /**
+   * TODO(Luffy): 用于从%hive(k=v)中解析出Session级别的用户配置，可用于覆盖解释器级别配置
+   * @param text
+   * @param startPos
+   * @param localProperties
+   * @return
+   * @throws RuntimeException
+   */
   private static int parseLocalProperties(
           final String text, int startPos,
           Map<String, String> localProperties) throws  RuntimeException{
@@ -76,7 +84,7 @@ public class ParagraphTextParser {
     String propKey = null;
     boolean insideQuotes = false, parseKey = true, finished = false;
     StringBuilder sb = new StringBuilder();
-    while(!finished && startPos < text.length()) {
+    while (!finished && startPos < text.length()) {
       char ch = text.charAt(startPos);
       switch (ch) {
         case ')': {

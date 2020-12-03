@@ -178,6 +178,10 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
     this.remoteInterpreterProcessListener = remoteInterpreterProcessListener;
     this.appEventListener = appEventListener;
 
+    // TODO(Luffy): 0.8.x版本只有解释器进程会启动监听服务，所以解释器运行时日志之类的是ZeppelinServer端的RemoteInterpreterEventPoller
+    //   线程通过轮询方式不断发起Rpc请求拉取的，比较浪费资源，新版本改版后会在ZeppelinServer端启动一个(只启动一个)具体实现为
+    //   RemoteInterpreterEventServer的Thrift服务，远程解释器进程的运行时日志之类的可以通过RemoteInterpreterEventClient
+    //   Thrift客户端直接向RemoteInterpreterEventServer发请求触发，更加高效和节省资源。
     this.interpreterEventServer = new RemoteInterpreterEventServer(conf, this);
     this.interpreterEventServer.start();
 

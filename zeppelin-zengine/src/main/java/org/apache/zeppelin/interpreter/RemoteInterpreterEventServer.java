@@ -169,8 +169,8 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
     RemoteInterpreterProcess interpreterProcess =
         ((ManagedInterpreterGroup) interpreterGroup).getInterpreterProcess();
     if (interpreterProcess == null) {
-      LOGGER.warn("Unable to register interpreter process, because no interpreter process associated with " +
-              "interpreterGroup: {}", registerInfo.getInterpreterGroupId());
+      LOGGER.warn("Unable to register interpreter process, because no interpreter process " +
+          "associated with interpreterGroup: {}", registerInfo.getInterpreterGroupId());
       return;
     }
     LOGGER.info("Register interpreter process: {}:{}, interpreterGroup: {}",
@@ -203,12 +203,20 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
     interpreterGroup.setWebUrl(weburlInfo.getWeburl());
   }
 
+  /**
+   * TODO(Luffy): 用于处理解释器进程端发起的诸如日志追加之类的请求.
+   * @param event
+   * @throws TException
+   */
   @Override
   public void appendOutput(OutputAppendEvent event) throws TException {
     if (event.getAppId() == null) {
       runner.appendBuffer(
           event.getNoteId(), event.getParagraphId(), event.getIndex(), event.getData());
     } else {
+      // TODO(Luffy): 这里最终会调用org.apache.zeppelin.socket.NotebookServer.onOutputAppend(
+      //  java.lang.String,java.lang.String, int, java.lang.String, java.lang.String)来通过
+      //  WebSocket将日志发送给Web端
       appListener.onOutputAppend(event.getNoteId(), event.getParagraphId(), event.getIndex(),
           event.getAppId(), event.getData());
     }
@@ -264,7 +272,7 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
           event.getParagraphIds(), event.getCurParagraphId());
       if (InterpreterContext.get() != null) {
         LOGGER.info("complete runParagraphs." + InterpreterContext.get().getParagraphId() + " "
-          + event);
+            + event);
       } else {
         LOGGER.info("complete runParagraphs." + event);
       }
@@ -434,7 +442,7 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
       try {
         paragraphInfos = listener.getParagraphList(user, noteId);
       } catch (IOException e) {
-       throw new TException(e);
+        throw new TException(e);
       }
       return paragraphInfos;
     } else {
@@ -532,7 +540,7 @@ public class RemoteInterpreterEventServer implements RemoteInterpreterEventServi
         }
       } else if (remoteInterpreterProcess.isRunning()) {
         List<String> resourceList = remoteInterpreterProcess.callRemoteFunction(
-                client -> client.resourcePoolGetAll());
+            client -> client.resourcePoolGetAll());
         for (String res : resourceList) {
           resourceSet.add(RemoteResource.fromJson(res));
         }

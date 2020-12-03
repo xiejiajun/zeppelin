@@ -58,7 +58,6 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -137,6 +136,12 @@ public class InterpreterSetting {
   private transient ZeppelinConfiguration conf = ZeppelinConfiguration.create();
 
   private transient RecoveryStorage recoveryStorage;
+  /**
+   * TODO(Luffy): 0.8.x版本只有解释器进程会启动监听服务，所以解释器运行时日志之类的是ZeppelinServer端的RemoteInterpreterEventPoller
+   *  线程通过轮询方式不断发起Rpc请求拉取的，比较浪费资源，新版本改版后会在ZeppelinServer端启动一个具体实现为RemoteInterpreterEventServer
+   *  的Thrift服务，远程解释器进程的运行时日志之类的可以通过RemoteInterpreterEventClient Thrift客户端直接向
+   *  RemoteInterpreterEventServer发请求触发，更加高效和节省资源。
+   */
   private transient RemoteInterpreterEventServer interpreterEventServer;
 
   public static final String CLUSTER_INTERPRETER_LAUNCHER_NAME = "ClusterInterpreterLauncher";

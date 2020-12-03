@@ -74,7 +74,7 @@ public class HiveUtils {
     Thread thread = new Thread(() -> {
       boolean jobLaunched = false;
       long jobLastActiveTime = System.currentTimeMillis();
-      while (hiveStmt.hasMoreLogs() && !Thread.interrupted()) {
+      while (!Thread.interrupted()) {
         try {
           if (isCancelled(hiveStmt)) {
             LOGGER.info("hiveStmt has been canceled, stop job execution monitor");
@@ -87,6 +87,11 @@ public class HiveUtils {
             LOGGER.info("hiveStmt has been closed, stop job execution monitor");
             break;
           }
+          if (!hiveStmt.hasMoreLogs()) {
+            LOGGER.info("hiveStmt has no more logs, stop job execution monitor");
+            break;
+          }
+
           List<String> logs = hiveStmt.getQueryLog();
           String logsOutput = StringUtils.join(logs, System.lineSeparator());
           LOGGER.debug("Hive job output: " + logsOutput);

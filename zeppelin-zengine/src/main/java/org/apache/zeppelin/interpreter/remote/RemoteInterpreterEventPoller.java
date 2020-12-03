@@ -98,6 +98,18 @@ public class RemoteInterpreterEventPoller extends Thread {
         continue;
       }
 
+      // TODO(Luffy): 拉取远程解释器执行时发出的事件，比如通过InterpreterContext.out.write + InterpreterContext.out.flush将日志刷到页面(具体代码参考ZEPPELIN-5097分支的HiveUtils)的流程为:
+      //  context.out.flush() -> org.apache.zeppelin.interpreter.InterpreterOutput.flush
+      //  -> org.apache.zeppelin.interpreter.InterpreterResultMessageOutput.flush(boolean) ->
+      //  org.apache.zeppelin.interpreter.InterpreterResultMessageOutputListener.onAppend ->
+      //  org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer.createAppOutput#onAppend ->
+      //  org.apache.zeppelin.interpreter.remote.RemoteInterpreterEventClient.onAppOutputAppend ->
+      //  org.apache.zeppelin.interpreter.remote.RemoteInterpreterEventClient.sendEvent ->
+      //  org.apache.zeppelin.interpreter.remote.RemoteInterpreterEventClient.pollEvent <-
+      //  org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer.getEvent <-
+      //  「前面都是在Interpreter进程上运行，Poller是在ZeppelinServer运行，这里是Thrift Rpc调用」org.apache.zeppelin.interpreter.remote.RemoteInterpreterEventPoller.run ->
+      //  event.getType() == RemoteInterpreterEventType.OUTPUT_APPEND -> org.apache.zeppelin.socket.NotebookServer.onOutputAppend(java.lang.String, java.lang.String, int, java.lang.String, java.lang.String)
+      //  -> org.apache.zeppelin.socket.NotebookServer.broadcast(java.lang.String, org.apache.zeppelin.notebook.socket.Message) 「到此位置就通过WebSocket将日志/运行结果发送给前端处理了」
       RemoteInterpreterEvent event = interpreterProcess.callRemoteFunction(
           new RemoteInterpreterProcess.RemoteFunction<RemoteInterpreterEvent>() {
             @Override

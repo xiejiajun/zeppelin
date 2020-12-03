@@ -24,7 +24,7 @@ import org.apache.zeppelin.jdbc.JDBCInterpreter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.sql.SQLException;
+import java.lang.reflect.Field;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -76,6 +76,17 @@ public class HiveUtils {
       long jobLastActiveTime = System.currentTimeMillis();
       while (hiveStmt.hasMoreLogs() && !Thread.interrupted()) {
         try {
+          if (isCancelled(hiveStmt)) {
+            LOGGER.info("hiveStmt has been canceled, stop job execution monitor");
+            break;
+          }
+          // Sometimes, maybe hiveStmt was closed unnormally, hiveStmt.hasMoreLogs() will be true,
+          // this loop cannot jump out, and exceptions thrown.
+          // Add the below codes in case.
+          if (hiveStmt.isClosed()){
+            LOGGER.info("hiveStmt has been closed, stop job execution monitor");
+            break;
+          }
           List<String> logs = hiveStmt.getQueryLog();
           String logsOutput = StringUtils.join(logs, System.lineSeparator());
           LOGGER.debug("Hive job output: " + logsOutput);
@@ -122,20 +133,14 @@ public class HiveUtils {
               break;
             }
           }
-          // refresh logs every 1 second.
-          Thread.sleep(DEFAULT_QUERY_PROGRESS_INTERVAL);
         } catch (Exception e) {
           LOGGER.warn("Fail to write output", e);
         } finally {
           try {
-            // Sometimes, maybe hiveStmt was closed unnormally, hiveStmt.hasMoreLogs() will be true,
-            // this loop cannot jump out, and exceptions thrown.
-            // Add the below codes in case.
-            if (hiveStmt.isClosed()){
-              break;
-            }
-          } catch (SQLException e) {
-            LOGGER.warn("hiveStmt closed unnormally", e);
+            // refresh logs every 1 second.
+            Thread.sleep(DEFAULT_QUERY_PROGRESS_INTERVAL);
+          } catch (InterruptedException e) {
+            LOGGER.warn("Hive Job Monitor Thread interrupted Error", e);
           }
         }
       }
@@ -151,10 +156,19 @@ public class HiveUtils {
       // Move codes into ProgressBar to delay NoClassDefFoundError of InPlaceUpdateStream
       // until ProgressBar instanced.
       // When hive < 2.3, ProgressBar will not be instanced, so it works well.
-      // TODO 实验得出，当满足progressBar==null时 ，这里就算是写的
-      //  hiveStmt.setInPlaceUpdateStream(progressBar.getInPlaceUpdateStream(context.out));也不会报NoClassDefFoundError
-      //  因为JVM的ClassLoader只加载需要实例化或者进行静态方法调用的class,这里不满足条件就不会去加载，不加载就不会去找这个class，不找它就不会
-      //  抛NoClassDefFoundError，这算是ClassLoader的懒加载机制吧
+      // TODO(Luffy) 实验得出，当满足progressBar==null时 ，这里就算是写的
+      //  hiveStmt.setInPlaceUpdateStream(progressBar.getInPlaceUpdateStream(context.out));
+      //  也不会报NoClassDefFoundError,因为JVM的ClassLoader只加载需要实例化或者进行静态方法调用的class,
+      //  这里不满足条件就不会去加载，不加载就不会去找这个class，不找它就不会抛NoClassDefFoundError，
+      //  这算是ClassLoader的懒加载机制吧, 但是这里比较特殊，由于hiveStmt.setInPlaceUpdateStream的入参类型
+      //  是InPlaceUpdateStream， 而progressBar.getInPlaceUpdateStream的返回值类型为InPlaceUpdateStream的子类型
+      //  BeelineInPlaceUpdateStream，所以直接写在这里哪怕progressBar==null也会触发方法入参自动转换，从而被动加载
+      //  InPlaceUpdateStream, 所以这里才通过progressBar.setInPlaceUpdateStream这种桥梁类的方式将
+      //  hiveStmt.setInPlaceUpdateStream隐藏到ProgressBar中，不直接暴露在HiveUtils中，而低版本也不会触发初始化ProgressBar
+      //  的逻辑，也就不会去加载InPlaceUpdateStream。还有一种做法就是将progressBar.getInPlaceUpdateStream的返回值类型改为
+      //  InPlaceUpdateStream，这就避免了触发方法参数类型自动转换，这种情况下可以直接在这里写hiveStmt.setInPlaceUpdateStream
+      //  因为需要progressBar != null才会触发hiveStmt.setInPlaceUpdateStream，类型转换需要加载InPlaceUpdateStream
+      //  和执行时加载InPlaceUpdateStream两个场景都不满足，自然就不会去加载InPlaceUpdateStream了
       progressBar.setInPlaceUpdateStream(hiveStmt, context.out);
     }
   }
@@ -175,5 +189,23 @@ public class HiveUtils {
       return Optional.of(jobURL);
     }
     return Optional.empty();
+  }
+
+  /**
+   * 判断Hive Query是否已经被Cancel
+   * @param hiveStmt
+   * @return
+   */
+  private static boolean isCancelled(HiveStatement hiveStmt) {
+    boolean isCancelled = false;
+    Class<?> clazz = hiveStmt.getClass();
+    try {
+      Field f = clazz.getDeclaredField("isCancelled");
+      f.setAccessible(true);
+      isCancelled = f.getBoolean(hiveStmt);
+    } catch (Throwable e) {
+      LOGGER.error(e.getMessage(), e);
+    }
+    return isCancelled;
   }
 }

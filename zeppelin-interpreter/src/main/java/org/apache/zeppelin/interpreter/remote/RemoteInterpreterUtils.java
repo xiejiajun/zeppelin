@@ -44,6 +44,8 @@ import org.slf4j.LoggerFactory;
 import org.apache.zeppelin.interpreter.thrift.CallbackInfo;
 import org.apache.zeppelin.interpreter.thrift.RemoteInterpreterCallbackService;
 
+import static org.apache.zeppelin.conf.InterpreterConfiguration.*;
+
 /**
  *
  */
@@ -158,6 +160,11 @@ public class RemoteInterpreterUtils {
     }
 
     return key.matches("^[A-Z_0-9]*");
+  }
+
+  public static boolean isClientPoolConfig(String key){
+    return ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE.equals(key) || ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE.equals(key)
+            || ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL.equals(key);
   }
 
   public static void registerInterpreter(String callbackHost, int callbackPort,

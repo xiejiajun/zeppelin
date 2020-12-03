@@ -223,6 +223,8 @@ public class S3NotebookRepo implements NotebookRepo {
 
   @Override
   public void save(Note note, AuthenticationInfo subject) throws IOException {
+
+    // TODO S3NotebookRepo的save方法是直接将note信息上传到s3，所以能在S3上实时看到
     String json = note.toJson();
     String key = user + "/" + "notebook" + "/" + note.getId() + "/" + "note.json";
 

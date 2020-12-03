@@ -58,14 +58,16 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
   private ExecuteWatchdog watchdog;
   private AtomicBoolean running = new AtomicBoolean(false);
   private TServer callbackServer;
+  // TODO.. 用于保存解释器启动后的host
   private String host = null;
+  // TODo ..用于保存解释器启动后的端口
   private int port = -1;
   private final String interpreterDir;
   private final String localRepoDir;
   private final String interpreterSettingName;
   private final boolean isUserImpersonated;
 
-  private Map<String, String> env;
+//  private Map<String, String> env;
 
   public RemoteInterpreterManagedProcess(
       String intpRunner,
@@ -77,11 +79,11 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
       int connectTimeout,
       String interpreterSettingName,
       boolean isUserImpersonated) {
-    super(connectTimeout);
+    super(connectTimeout,env);
     this.interpreterRunner = intpRunner;
     this.callbackPortRange = callbackPortRange;
     this.interpreterPortRange = interpreterPortRange;
-    this.env = env;
+//    this.env = env;
     this.interpreterDir = intpDir;
     this.localRepoDir = localRepoDir;
     this.interpreterSettingName = interpreterSettingName;
@@ -101,6 +103,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
   @Override
   public void start(String userName) {
     // start server process
+    // TODO 启动解释器
     final String callbackHost;
     final int callbackPort;
     TServerSocket tSocket = null;
@@ -114,6 +117,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
 
     logger.info("Thrift server for callback will start. Port: {}", callbackPort);
     try {
+      // TODO 监听解释器服务的回调服务
       callbackServer = new TThreadPoolServer(
         new TThreadPoolServer.Args(tSocket).processor(
           new RemoteInterpreterCallbackService.Processor<>(
@@ -121,6 +125,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
               @Override
               public void callback(CallbackInfo callbackInfo) throws TException {
                 logger.info("RemoteInterpreterServer Registered: {}", callbackInfo);
+                // TODO 解释器服务启动成功后，会进行RPC回调，将自己的主机、端口告诉RemoteInterpreterManagedProcess
                 host = callbackInfo.getHost();
                 port = callbackInfo.getPort();
                 running.set(true);
@@ -129,6 +134,8 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
                 }
               }
             })));
+
+      // TODO 用于监听请求的线程
       // Start thrift server to receive callbackInfo from RemoteInterpreterServer;
       new Thread(new Runnable() {
         @Override
@@ -155,6 +162,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
       logger.warn("", e);
     }
 
+    // TODO interpreterRunner为解释器集群脚本bin/interpreter.sh
     CommandLine cmdLine = CommandLine.parse(interpreterRunner);
     cmdLine.addArgument("-d", false);
     cmdLine.addArgument(interpreterDir, false);
@@ -173,6 +181,10 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
     cmdLine.addArgument("-g", false);
     cmdLine.addArgument(interpreterSettingName, false);
 
+    // TODO 新增标记，用于标注是哪个用户启动的解释器
+    cmdLine.addArgument("-t", false);
+    cmdLine.addArgument(userName,false);
+
     executor = new DefaultExecutor();
 
     ByteArrayOutputStream cmdOut = new ByteArrayOutputStream();
@@ -185,6 +197,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
 
     try {
       Map procEnv = EnvironmentUtils.getProcEnvironment();
+      // TODO 这里将解释器相关配置通过shell环境变量方式传递给即将启动的解释器进程
       procEnv.putAll(env);
 
       logger.info("Run interpreter process {}", cmdLine);
@@ -195,11 +208,13 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
     }
 
     try {
+      // TODO 阻塞等待解释器启动起来
       synchronized (running) {
         if (!running.get()) {
           running.wait(getConnectTimeout() * 2);
         }
       }
+      // TODO 超过getConnectTimeout() * 2)超时时间还没收到解释器启动成功的信息则抛异常置为启动失败
       if (!running.get()) {
         callbackServer.stop();
         throw new RuntimeException(new String(cmdOut.toByteArray()));
@@ -210,6 +225,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
     processOutput.setOutputStream(null);
   }
 
+  @Override
   public void stop() {
     // shutdown EventPoller first.
     this.getRemoteInterpreterEventPoller().shutdown();
@@ -233,6 +249,7 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
       // Shutdown connection
       shutdown();
 
+      // TODO 杀死启动解释器进程的父进程 （ps -ef | grep "\-g" 可以查到的那些interpreter.sh进程）
       watchdog.destroyProcess();
     }
 

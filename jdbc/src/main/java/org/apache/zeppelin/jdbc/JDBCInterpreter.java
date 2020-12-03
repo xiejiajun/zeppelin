@@ -33,6 +33,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import com.google.common.collect.Lists;
 import org.apache.commons.dbcp2.ConnectionFactory;
 import org.apache.commons.dbcp2.DriverManagerConnectionFactory;
 import org.apache.commons.dbcp2.PoolableConnectionFactory;
@@ -108,6 +109,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
   static final String COMPLETER_TTL_KEY = "completer.ttlInSeconds";
   static final String DEFAULT_COMPLETER_TTL = "120";
   static final String SPLIT_QURIES_KEY = "splitQueries";
+  static final String IGNORE_COMMENT_KEY = "ignoreComment";
   static final String JDBC_JCEKS_FILE = "jceks.file";
   static final String JDBC_JCEKS_CREDENTIAL_KEY = "jceks.credentialKey";
   static final String PRECODE_KEY_TEMPLATE = "%s.precode";
@@ -236,6 +238,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
    * "maxRows" value.
    */
   private void setMaxRows() {
+    //TODO 设置最多可拉取的结果条数
     maxRows = Integer.valueOf(getProperty(MAX_ROWS_KEY, "1000"));
   }
 
@@ -427,6 +430,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
 
   public Connection getConnection(String propertyKey, InterpreterContext interpreterContext)
       throws ClassNotFoundException, SQLException, InterpreterException, IOException {
+    // TODO 这里获取的是当前登陆zeppelin的用户，不是jdbc 登陆用户
     final String user =  interpreterContext.getAuthenticationInfo().getUser();
     Connection connection;
     if (propertyKey == null || basePropretiesMap.get(propertyKey) == null) {
@@ -440,11 +444,17 @@ public class JDBCInterpreter extends KerberosInterpreter {
     final String url = properties.getProperty(URL_KEY);
 
     if (isEmpty(getProperty("zeppelin.jdbc.auth.type"))) {
+      // TODO hive 指定提交作业的用户可以在这里做 但是可能会导致没权限，所以还需要靠用户自己通过设置作业名称的方式去解决
+      //   判断条件用properties.getProperty(DRIVER_KEY).contains("HiveDriver")也行
+//      if (jdbcUserConfigurations.getPropertyMap(propertyKey).getProperty(DRIVER_KEY).contains("HiveDriver")){
+//        jdbcUserConfigurations.getPropertyMap(propertyKey).setProperty(USER_KEY,user);
+//      }
       connection = getConnectionFromPool(url, user, propertyKey, properties);
     } else {
       UserGroupInformation.AuthenticationMethod authType =
           JDBCSecurityImpl.getAuthtype(getProperties());
 
+      // TODO 拼接需要进行模拟用户授权执行时的最终jdbcURL
       final String connectionUrl = appendProxyUserToURL(url, user, propertyKey);
 
       JDBCSecurityImpl.createSecureConfiguration(getProperties(), authType);
@@ -503,6 +513,8 @@ public class JDBCInterpreter extends KerberosInterpreter {
       logger.info("Using proxy user as :" + user);
       logger.info("Using proxy property for user as :" +
           basePropretiesMap.get(propertyKey).getProperty("proxy.user.property"));
+      // TODO 将解释器配置页面default.proxy.user.property/hive.proxy.user.property配置的模拟用户属性key和value拼接到JdbcURL
+      //  这里的user是当前登陆zeppelin的用户，不是要用来登陆数据库的用户，登陆数据库的用户在properties里面，这里要注意下
       connectionUrl.insert(lastIndexOfUrl, ";" +
           basePropretiesMap.get(propertyKey).getProperty("proxy.user.property") + "=" + user + ";");
     } else if (user != null && !user.equals("anonymous") && url.contains("hive")) {
@@ -597,7 +609,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
   inspired from https://github.com/postgres/pgadmin3/blob/794527d97e2e3b01399954f3b79c8e2585b908dd/
     pgadmin/dlg/dlgProperty.cpp#L999-L1045
    */
-  protected ArrayList<String> splitSqlQueries(String sql) {
+  protected ArrayList<String> splitSqlQueries(String sql, boolean ignoreComment) {
     ArrayList<String> queries = new ArrayList<>();
     StringBuilder query = new StringBuilder();
     char character;
@@ -611,25 +623,31 @@ public class JDBCInterpreter extends KerberosInterpreter {
       character = sql.charAt(item);
 
       if (singleLineComment && (character == '\n' || item == sql.length() - 1)) {
+        // TODO 单行注释结束
         singleLineComment = false;
       }
 
       if (multiLineComment && character == '/' && sql.charAt(item - 1) == '*') {
+        // TODO 多行注释结束
         multiLineComment = false;
       }
 
       if (character == '\'') {
         if (quoteString) {
+          // TODO 单引号结束
           quoteString = false;
         } else if (!doubleQuoteString) {
+          // TODO 单引号开始
           quoteString = true;
         }
       }
 
       if (character == '"') {
         if (doubleQuoteString && item > 0) {
+          // TODO 双引号结束
           doubleQuoteString = false;
         } else if (!quoteString) {
+          // TODO 双引号开始
           doubleQuoteString = true;
         }
       }
@@ -637,17 +655,27 @@ public class JDBCInterpreter extends KerberosInterpreter {
       if (!quoteString && !doubleQuoteString && !multiLineComment && !singleLineComment
           && sql.length() > item + 1) {
         if (character == '-' && sql.charAt(item + 1) == '-') {
+          // TODO 单行注释开始
           singleLineComment = true;
         } else if (character == '/' && sql.charAt(item + 1) == '*') {
+          // TODO 多行注释开始
           multiLineComment = true;
         }
       }
 
+      if (ignoreComment && (multiLineComment || singleLineComment)) {
+        // TODO 如果开启了忽略注释，当multiLineComment或者singleLineComment为true时忽略这段文本
+        continue;
+      }
+
       if (character == ';' && !quoteString && !doubleQuoteString && !multiLineComment
           && !singleLineComment) {
+        // TODO 遇到分号时，若不是单引号、双引号、单行注释、多行注释模式则完成一次query匹配
+        //    这样的话：单行注释、多行注释会和它下面的SQL组成一个Query（而不是删掉注释）
         queries.add(StringUtils.trim(query.toString()));
         query = new StringBuilder();
       } else if (item == sql.length() - 1) {
+        // TODO 到了最后一个字符，完成最后一条query提取
         query.append(character);
         queries.add(StringUtils.trim(query.toString()));
       } else {
@@ -676,15 +704,20 @@ public class JDBCInterpreter extends KerberosInterpreter {
   private InterpreterResult executeSql(String propertyKey, String sql,
       InterpreterContext interpreterContext) {
     Connection connection = null;
-    Statement statement;
+    Statement statement = null;
     ResultSet resultSet = null;
     String paragraphId = interpreterContext.getParagraphId();
     String user = interpreterContext.getAuthenticationInfo().getUser();
 
     boolean splitQuery = false;
+    boolean ignoreComment = false;
     String splitQueryProperty = getProperty(String.format("%s.%s", propertyKey, SPLIT_QURIES_KEY));
+    String ignoreCommentProperty = getProperty(String.format("%s.%s", propertyKey, IGNORE_COMMENT_KEY));
     if (StringUtils.isNotBlank(splitQueryProperty) && splitQueryProperty.equalsIgnoreCase("true")) {
       splitQuery = true;
+    }
+    if (StringUtils.isNotBlank(ignoreCommentProperty) && ignoreCommentProperty.equalsIgnoreCase("true")) {
+      ignoreComment = true;
     }
 
     InterpreterResult interpreterResult = new InterpreterResult(InterpreterResult.Code.SUCCESS);
@@ -705,19 +738,76 @@ public class JDBCInterpreter extends KerberosInterpreter {
     }
 
     try {
-      List<String> sqlArray;
+//      List<String> sqlArray = Lists.newArrayList();
+//      // TODO 在这里可以改掉SQL，执行前自动加上set appname操作(这种方式已经测试通过）
+//      if (getProperty(String.format("%s.%s",propertyKey,DRIVER_KEY)).contains("HiveDriver")){
+//         sqlArray.add(String.format("set mapred.job.name=hive_on_mr_%s_job",user));
+//         sqlArray.add(String.format("set spark.app.name=hive_on_spark_%s_job",user));
+//         sqlArray.add(String.format("set tez.app.name=hive_on_tez_%s_job",user));
+//      }
+//      if (splitQuery) {
+//        sqlArray.addAll(splitSqlQueries(sql));
+//      } else {
+//        sqlArray.add(sql);
+//      }
+
+//      // TODO SQL加默认Yarn ApplicationName 更优雅的方案
+//      List<String> preSqlArray = Lists.newArrayList();
+//      String driverName = getProperty(String.format("%s.%s",propertyKey,DRIVER_KEY));
+//      if (StringUtils.isNotBlank(driverName) && driverName.contains("HiveDriver")) {
+//        preSqlArray.add(String.format("set mapred.job.name=hive_on_mr_%s", user));
+//        preSqlArray.add(String.format("set spark.app.name=hive_on_spark_%s", user));
+//        preSqlArray.add(String.format("set tez.app.name=hive_on_tez_%s", user));
+//        for (String preSql : preSqlArray) {
+//          try {
+//            statement = connection.createStatement();
+//            statement.execute(preSql);
+//            resultSet = statement.getResultSet();
+//          } catch (Exception e) {
+//            logger.error(e.getMessage(), e);
+//          } finally {
+//            if (resultSet != null) {
+//              try {
+//                resultSet.close();
+//              } catch (SQLException e) { /*ignored*/ }
+//            }
+//            if (statement != null) {
+//              try {
+//                statement.close();
+//              } catch (SQLException e) { /*ignored*/ }
+//            }
+//          }
+//        }
+//      }
+
+
+
+        List<String> sqlArray;
       if (splitQuery) {
-        sqlArray = splitSqlQueries(sql);
+        // TODO 在这里也可以改掉SQL，执行前自动加上set appname操作
+//      if (getJDBCConfiguration(user).getPropertyMap(propertyKey).getProperty(DRIVER_KEY).contains("HiveDriver")){
+//        StringBuffer sb = new StringBuffer("set mapred.job.name=hive_on_mr_").append(user).append("_job;\n");
+//        sb.append("set spark.app.name=hive_on_spark_").append(user).append("_job;\n");
+//        sb.append("set tez.app.name=hive_on_tez_").append(user).append("_job;\n");
+//        sb.append(sql);
+//        sql = sb.toString();
+//      }
+        sqlArray = splitSqlQueries(sql, ignoreComment);
       } else {
         sqlArray = Arrays.asList(sql);
       }
 
       for (int i = 0; i < sqlArray.size(); i++) {
         String sqlToExecute = sqlArray.get(i);
+        if (StringUtils.isBlank(sqlToExecute)) {
+          continue;
+        }
         statement = connection.createStatement();
 
         // fetch n+1 rows in order to indicate there's more rows available (for large selects)
+        // TODO 通过JDBC的maxRows限制每个查询返回的行数,setFetchSize和setMaxRows一起设置，不同的JDBC服务端支持不同的参数
         statement.setFetchSize(getMaxResult());
+        // TODO 通过JDBC的maxRows限制每个查询返回的行数
         statement.setMaxRows(maxRows);
 
         if (statement == null) {
@@ -856,6 +946,7 @@ public class JDBCInterpreter extends KerberosInterpreter {
 
   @Override
   public int getProgress(InterpreterContext context) {
+    // TODO JDBC获取作业进度的方法在这里 未进行实现
     return 0;
   }
 

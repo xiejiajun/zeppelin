@@ -154,6 +154,7 @@ public class PySparkInterpreter extends Interpreter implements ExecuteResultHand
     List<URL> urlList = new LinkedList<>();
 
     if (depInterpreter != null) {
+      // TODO 加载%spark.dep引入的依赖
       SparkDependencyContext depc = depInterpreter.getDependencyContext();
       if (depc != null) {
         List<File> files = depc.getFiles();

@@ -23,8 +23,9 @@ bin=$(cd "${bin}">/dev/null; pwd)
 function usage() {
     echo "usage) $0 -p <port> -r <intp_port> -d <interpreter dir to load> -l <local interpreter repo dir to load> -g <interpreter group name>"
 }
-
-while getopts "hc:p:r:d:l:v:u:g:" o; do
+## 用于标记是哪个用户启动的解释器，不做其他特殊用途
+INTERPRETER_USER_TAG=""
+while getopts "hc:p:r:d:l:v:u:g:t:" o; do
     case ${o} in
         h)
             usage
@@ -54,6 +55,9 @@ while getopts "hc:p:r:d:l:v:u:g:" o; do
             ;;
         g)
             INTERPRETER_SETTING_NAME=${OPTARG}
+            ;;
+        t)
+            INTERPRETER_USER_TAG=${OPTARG}
             ;;
         esac
 done
@@ -104,6 +108,11 @@ fi
 if [[ ! -z "$ZEPPELIN_IMPERSONATE_USER" ]]; then
     ZEPPELIN_LOGFILE+="${ZEPPELIN_IMPERSONATE_USER}-"
 fi
+
+if [[ -z "$ZEPPELIN_IMPERSONATE_USER"  && -n "${INTERPRETER_USER_TAG}" ]]; then
+   ZEPPELIN_LOGFILE+="${INTERPRETER_USER_TAG}-"
+fi
+
 ZEPPELIN_LOGFILE+="${ZEPPELIN_IDENT_STRING}-${HOSTNAME}.log"
 JAVA_INTP_OPTS+=" -Dzeppelin.log.file='${ZEPPELIN_LOGFILE}'"
 
@@ -218,9 +227,18 @@ if [[ ! -z "$ZEPPELIN_IMPERSONATE_USER" ]]; then
 fi
 
 if [[ -n "${SPARK_SUBMIT}" ]]; then
+    ## Spark解释器启动逻辑，直接通过spark-submit命令将spark-interpreter-xxx.jar作为Spark应用提交，
+    # spark-interpreter-xxx.jar内部和我们平常写的Spark代码有所不同，我们平时一般不会有在在自己写的Spark应用内部实现一个常驻服务去不断接受客户端请求,
+    # 但这里是以org.apache.zeppelin.interpreter.remote.RemoteInterpreterServer为Spark的MainClass将整个Spark解释器jar包作为SparkApp提交，以达到在Spark
+    # Driver端启动一个监听用户交互式执行请求（这个常驻服务是运行在driver上的，且这里只支持yarn-client模式，driver起在本地，保证RPC调用通畅，这个实现方式应该是
+    # 参照spark-shell的实现方式进行改造的），然后不断出通过Driver提交并运行这些请求所包含的业务逻辑。（这个Spark解释器应该也是类似于SparkStreaming的一个服务，
+    # sparkStreaming应该也是这么实现的，只不过SparkStreaming是自己不断去拉数据来驱动SparkCore作业，而我们这里是被动监听客户端请求来触发SparkCore作业）
+    # 我们平常写的SPARK APP除了流计算是常驻的,其他的应用基本上都是像命令行程序一样执行完就退出的
+    ## 所以：spark-shell的交互式查询请求监听服务是否和SparkStreaming数据监听服务实现方案差不多呢？ 等待对Spark源码进行分析来解答
     INTERPRETER_RUN_COMMAND+=' '` echo ${SPARK_SUBMIT} --class ${ZEPPELIN_SERVER} --driver-class-path \"${ZEPPELIN_INTP_CLASSPATH_OVERRIDES}:${ZEPPELIN_INTP_CLASSPATH}\" --driver-java-options \"${JAVA_INTP_OPTS}\" ${SPARK_SUBMIT_OPTIONS} ${ZEPPELIN_SPARK_CONF} ${SPARK_APP_JAR} ${CALLBACK_HOST} ${PORT} ${INTP_PORT}`
 else
-    INTERPRETER_RUN_COMMAND+=' '` echo "${ZEPPELIN_RUNNER} ${JAVA_INTP_OPTS} ${ZEPPELIN_INTP_MEM} -cp '${ZEPPELIN_INTP_CLASSPATH_OVERRIDES}:${ZEPPELIN_INTP_CLASSPATH}' ${ZEPPELIN_SERVER} ${CALLBACK_HOST} ${PORT} ${INTP_PORT}"`
+    ## 其他解释器直接将RemoteInterpreterServer作为入口来启动一个普通Java进程监听用户请求的常驻服务的
+    INTERPRETER_RUN_COMMAND+=' '` echo ${ZEPPELIN_RUNNER} ${JAVA_INTP_OPTS} ${ZEPPELIN_INTP_MEM} -cp ${ZEPPELIN_INTP_CLASSPATH_OVERRIDES}:${ZEPPELIN_INTP_CLASSPATH} ${ZEPPELIN_SERVER} ${CALLBACK_HOST} ${PORT} ${INTP_PORT}`
 fi
 
 
@@ -237,8 +255,14 @@ else
   echo ${pid} > "${ZEPPELIN_PID}"
 fi
 
-
+### 使用trap命令进行SIGTERM SIGINT SIGQUIT信号响应（默认Ctrl+C 只执行一次kill -2，不一定杀得掉解释器，所以这里修改了杀进程行为，会重试）
 trap 'shutdown_hook;' SIGTERM SIGINT SIGQUIT
+### 对于有些时候页面上重启解释器一致重启不成功，卡住不动的情况，可以考虑把shutdown_hook函数的实现逻辑直接改成简单粗暴的kill -9,即如下实现
+#function shutdown_hook() {
+#    $(kill -9 ${pid} > /dev/null 2> /dev/null)
+#    rm -f "${ZEPPELIN_PID}"
+#}
+
 function shutdown_hook() {
   local count
   count=0

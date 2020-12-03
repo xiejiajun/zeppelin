@@ -841,6 +841,7 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
     commitParagraphResult(paragraph.title, paragraph.text, newConfig, newParams);
   };
 
+  // TODO js 导出页面上已经收到并保存在本地的数据的函数
   $scope.exportToDSV = function(delimiter) {
     let dsv = '';
     let dateFinished = moment(paragraph.dateFinished).format('YYYY-MM-DD hh:mm:ss A');
@@ -876,6 +877,18 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
       extension = 'csv';
     }
     saveAsService.saveAs(dsv, exportedFileName, extension);
+
+    // TODO 用户下载数据时请求服务端自己新增的RestAPI进行埋点
+    $http.post(baseUrlSrv.getRestApiBase() + '/result/export', {
+      'username': $rootScope.ticket.principal,
+      'paragraph': paragraph.text,    // 注意：这里必须有逗号，否则打包时执行到npm run build:dist命令会报错，具体报啥错可自己到zeppelin-web模块下手动执行npm run build:dist命令查看
+    })
+      .success(function(data, status, headers, config) {
+        console.log('Load app %o', data);
+      })
+      .error(function(err, status, headers, config) {
+        console.log('Error %o', err);
+      });
   };
 
   $scope.getBase64ImageSrc = function(base64Data) {

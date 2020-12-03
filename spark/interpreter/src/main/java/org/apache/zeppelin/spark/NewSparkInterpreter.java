@@ -89,12 +89,18 @@ public class NewSparkInterpreter extends AbstractSparkInterpreter {
         if (entry.getKey().toString().equals("zeppelin.spark.useHiveContext")) {
           conf.set("spark.useHiveContext", entry.getValue().toString());
         }
+        // TODO 应用名称加上用户名
+        if ("spark.app.name".equals(entry.getKey().toString())) {
+          conf.set("spark.app.name", entry.getValue().toString() + "-" + getUserName());
+        }
       }
       // use local mode for embedded spark mode when spark.master is not found
       conf.setIfMissing("spark.master", "local");
 
       String innerIntpClassName = innerInterpreterClassMap.get(scalaVersion);
       Class clazz = Class.forName(innerIntpClassName);
+      // TODO 构建Spark解释器,将%spark.dep动态引入且不是local的依赖和默认本地仓库、远程仓库的依赖作为构造参数传入，
+      //  BaseSparkScalaInterpreter在构造sc时会将依赖通过addFile的方式分发非jar后缀的文件（这会导致 动态引入的jar包依赖不被引入  是个bug)
       this.innerInterpreter = (BaseSparkScalaInterpreter)
           clazz.getConstructor(SparkConf.class, List.class, Boolean.class)
               .newInstance(conf, getDependencyFiles(),
@@ -248,6 +254,7 @@ public class NewSparkInterpreter extends AbstractSparkInterpreter {
     // add jar from DepInterpreter
     DepInterpreter depInterpreter = getDepInterpreter();
     if (depInterpreter != null) {
+      // TODO Spark解释器读取%spark.dep动态引入的依赖
       SparkDependencyContext depc = depInterpreter.getDependencyContext();
       if (depc != null) {
         List<File> files = depc.getFilesDist();

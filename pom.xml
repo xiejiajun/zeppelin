@@ -86,7 +86,7 @@
 
   <properties>
     <!-- language versions -->
-    <java.version>1.7</java.version>
+    <java.version>1.8</java.version>
     <scala.version>2.10.5</scala.version>
     <scala.binary.version>2.10</scala.binary.version>
     <scalatest.version>2.2.4</scalatest.version>
@@ -143,6 +143,7 @@
 
     <PermGen>64m</PermGen>
     <MaxPermGen>512m</MaxPermGen>
+    <!-- 关闭checkstyle插件 -->
 
     <!-- to be able to exclude some tests using command line -->
     <tests.to.exclude/>
@@ -390,29 +391,30 @@
           <configLocation>_tools/checkstyle.xml</configLocation>
           <enableRSS>false</enableRSS>
         </configuration>
-        <executions>
-          <execution>
-            <id>checkstyle-fail-build</id>
-            <phase>validate</phase>
-            <goals>
-              <goal>check</goal>
-            </goals>
-            <configuration>
-              <failOnViolation>true</failOnViolation>
-              <excludes>org/apache/zeppelin/interpreter/thrift/*,org/apache/zeppelin/scio/avro/*,org/apache/zeppelin/python/proto/*</excludes>
-            </configuration>
-          </execution>
-          <execution>
-            <id>checkstyle-gen-html-report</id>
-            <phase>install</phase>
-            <goals>
-              <goal>checkstyle-aggregate</goal>
-            </goals>
-            <configuration>
-              <excludes>org/apache/zeppelin/interpreter/thrift/*,org/apache/zeppelin/scio/avro/*,org/apache/zeppelin/python/proto/*</excludes>
-            </configuration>
-          </execution>
-        </executions>
+        <!-- 关掉checkstyle检查 -->
+<!--        <executions>-->
+<!--          <execution>-->
+<!--            <id>checkstyle-fail-build</id>-->
+<!--            <phase>validate</phase>-->
+<!--            <goals>-->
+<!--              <goal>check</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              <failOnViolation>true</failOnViolation>-->
+<!--              <excludes>org/apache/zeppelin/interpreter/thrift/*,org/apache/zeppelin/scio/avro/*,org/apache/zeppelin/python/proto/*</excludes>-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--          <execution>-->
+<!--            <id>checkstyle-gen-html-report</id>-->
+<!--            <phase>install</phase>-->
+<!--            <goals>-->
+<!--              <goal>checkstyle-aggregate</goal>-->
+<!--            </goals>-->
+<!--            <configuration>-->
+<!--              <excludes>org/apache/zeppelin/interpreter/thrift/*,org/apache/zeppelin/scio/avro/*,org/apache/zeppelin/python/proto/*</excludes>-->
+<!--            </configuration>-->
+<!--          </execution>-->
+<!--        </executions>-->
       </plugin>
 
       <plugin>

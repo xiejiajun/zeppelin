@@ -14,32 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.zeppelin.interpreter;
+
+package org.apache.zeppelin.conf;
 
 /**
- * Listen InterpreterOutput buffer flush
+ * Zeppelin Interpreter Configuration
  */
-public interface InterpreterOutputListener {
-  /**
-   * TODO 用于触发通过WebSocket输出结果到Web端
-   * update all message outputs
-   */
-  public void onUpdateAll(InterpreterOutput out);
+public interface InterpreterConfiguration {
 
-  /**
-   * TODO 用于触发通过WebSocket输出结果到Web端
-   * called when newline is detected
-   * @param index
-   * @param out
-   * @param line
-   */
-  public void onAppend(int index, InterpreterResultMessageOutput out, byte[] line);
+  String ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE  = "zeppelin.thrift.client.pool.max-idle";
 
-  /**
-   * TODO 用于触发通过WebSocket输出结果到Web端
-   * when entire output is updated. eg) after detecting new display system
-   * @param index
-   * @param out
-   */
-  public void onUpdate(int index, InterpreterResultMessageOutput out);
+  String ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE  = "zeppelin.thrift.client.pool.min-idle";
+
+  String ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL = "zeppelin.thrift.client.pool.max-total";
+
+  int DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL = 8;
+  int DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE = 8;
+  int DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE = 0;
 }

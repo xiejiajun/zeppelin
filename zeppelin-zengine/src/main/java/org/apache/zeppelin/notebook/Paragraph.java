@@ -312,6 +312,7 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
   public int progress() {
     try {
       if (this.interpreter != null) {
+        // TODO 获取作业进度
         return this.interpreter.getProgress(getInterpreterContext(null));
       } else {
         return 0;
@@ -388,9 +389,11 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
     InterpreterSetting interpreterSetting = ((ManagedInterpreterGroup)
         interpreter.getInterpreterGroup()).getInterpreterSetting();
     if (interpreterSetting != null) {
+      // TODO 等待下载依赖包
       interpreterSetting.waitForReady();
     }
     if (this.hasUser() && this.note.hasInterpreterBinded()) {
+      // TODO 检查有无权限
       if (interpreterSetting != null && interpreterHasUser(interpreterSetting)
           && isUserAuthorizedToAccessInterpreter(interpreterSetting.getOption()) == false) {
         logger.error("{} has no permission for {} ", authenticationInfo.getUser(), intpText);
@@ -462,6 +465,7 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
       List<InterpreterResultMessage> resultMessages = context.out.toInterpreterResultMessage();
       resultMessages.addAll(ret.message());
 
+      // TODO 执行结果：在这个方法里面可以做拦截执行代码、执行用户，开始时间、结束时间以及执行结果或者执行错误等信息的审计
       InterpreterResult res = new InterpreterResult(ret.code(), resultMessages);
 
       Paragraph p = getUserParagraph(getUser());
@@ -519,11 +523,13 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
     return getInterpreterContext(new InterpreterOutput(new InterpreterOutputListener() {
       @Override
       public void onAppend(int index, InterpreterResultMessageOutput out, byte[] line) {
+        // TODO 用于触发通过WebSocket输出结果到Web端
         ((ParagraphJobListener) getListener()).onOutputAppend(self, index, new String(line));
       }
 
       @Override
       public void onUpdate(int index, InterpreterResultMessageOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端
         try {
           ((ParagraphJobListener) getListener())
               .onOutputUpdate(self, index, out.toInterpreterResultMessage());
@@ -534,6 +540,7 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
 
       @Override
       public void onUpdateAll(InterpreterOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端
         try {
           List<InterpreterResultMessage> messages = out.toInterpreterResultMessage();
           ((ParagraphJobListener) getListener()).onOutputUpdateAll(self, messages);

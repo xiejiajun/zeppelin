@@ -52,15 +52,7 @@ import org.apache.zeppelin.interpreter.InterpreterSettingManager;
 import org.apache.zeppelin.notebook.Notebook;
 import org.apache.zeppelin.notebook.NotebookAuthorization;
 import org.apache.zeppelin.notebook.repo.NotebookRepoSync;
-import org.apache.zeppelin.rest.ConfigurationsRestApi;
-import org.apache.zeppelin.rest.CredentialRestApi;
-import org.apache.zeppelin.rest.HeliumRestApi;
-import org.apache.zeppelin.rest.InterpreterRestApi;
-import org.apache.zeppelin.rest.LoginRestApi;
-import org.apache.zeppelin.rest.NotebookRepoRestApi;
-import org.apache.zeppelin.rest.NotebookRestApi;
-import org.apache.zeppelin.rest.SecurityRestApi;
-import org.apache.zeppelin.rest.ZeppelinRestApi;
+import org.apache.zeppelin.rest.*;
 import org.apache.zeppelin.scheduler.SchedulerFactory;
 import org.apache.zeppelin.search.LuceneSearch;
 import org.apache.zeppelin.search.SearchService;
@@ -101,6 +93,8 @@ public class ZeppelinServer extends Application {
   private NotebookAuthorization notebookAuthorization;
   private Credentials credentials;
 
+  private final String auditLogPath;
+
   public ZeppelinServer() throws Exception {
     ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     if (conf.getShiroPath().length() > 0) {
@@ -110,6 +104,7 @@ public class ZeppelinServer extends Application {
         if (realms.size() > 1) {
           Boolean isIniRealmEnabled = false;
           for (Object realm : realms) {
+            // TODO Shiro Realm校验，额外配置了realm时禁止使用[users]配置用户名密码（IniRealm是默认就有的）
             if (realm instanceof IniRealm && ((IniRealm) realm).getIni().get("users") != null) {
               isIniRealmEnabled = true;
               break;
@@ -170,6 +165,8 @@ public class ZeppelinServer extends Application {
             noteSearchService, notebookAuthorization, credentials);
     this.configStorage = ConfigStorage.getInstance(conf);
 
+    this.auditLogPath = conf.getString(ConfVars.ZEPPELIN_PARAGRAPH_RESULT_EXPORT_AUDIT_PATH);
+
     ZeppelinServer.helium = new Helium(
         conf.getHeliumConfPath(),
         conf.getHeliumRegistry(),
@@ -219,6 +216,7 @@ public class ZeppelinServer extends Application {
     final ZeppelinConfiguration conf = ZeppelinConfiguration.create();
     conf.setProperty("args", args);
 
+    // TODO 配置Jetty
     jettyWebServer = setupJettyServer(conf);
 
     ContextHandlerCollection contexts = new ContextHandlerCollection();
@@ -377,6 +375,11 @@ public class ZeppelinServer extends Application {
     final ServletHolder servletHolder = new ServletHolder(
             new org.glassfish.jersey.servlet.ServletContainer());
 
+    // javax.ws.rs实现Restful: https://blog.csdn.net/flowingflying/article/details/52212389
+    // https://stackoverflow.com/questions/25418684/when-to-use-javax-ws-rs-core-application-to-create-restful-web-services
+    // java – JAX-RS：如何扩展Application类来扫描包？:http://www.voidcn.com/article/p-nsqmlirm-buh.html
+    // TODO 将ZeppelinServer配置为Jetty服务ServletHolder的Application(ZeppelinServer实现了javax.ws.rs.Application接口）
+    //  详情搜索 "基于jersery协议实现RestApi" 或者 "jetty开发RestApi"
     servletHolder.setInitParameter("javax.ws.rs.Application", ZeppelinServer.class.getName());
     servletHolder.setName("rest");
     servletHolder.setForcedPath("rest");
@@ -385,6 +388,7 @@ public class ZeppelinServer extends Application {
     webapp.addServlet(servletHolder, "/api/*");
 
     String shiroIniPath = conf.getShiroPath();
+    // TODO 配置Shiro权限认证
     if (!StringUtils.isBlank(shiroIniPath)) {
       webapp.setInitParameter("shiroConfigLocations", new File(shiroIniPath).toURI().toString());
       SecurityUtils.setIsEnabled(true);
@@ -436,7 +440,7 @@ public class ZeppelinServer extends Application {
   @Override
   public Set<Object> getSingletons() {
     Set<Object> singletons = new HashSet<>();
-
+    //  TODO Zeppelin RestApi 对应的处理器配置
     /** Rest-api root endpoint */
     ZeppelinRestApi root = new ZeppelinRestApi();
     singletons.add(root);
@@ -466,6 +470,10 @@ public class ZeppelinServer extends Application {
 
     ConfigurationsRestApi settingsApi = new ConfigurationsRestApi(notebook);
     singletons.add(settingsApi);
+
+    // TODO 新增用于处理导出行为埋点请求的的RestAPI
+    ResultExportHookRestApi resultExportHook = new ResultExportHookRestApi(auditLogPath);
+    singletons.add(resultExportHook);
 
     return singletons;
   }

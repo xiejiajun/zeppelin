@@ -204,6 +204,90 @@ Or using the following setting in **zeppelin-site.xml**:
 ```
 
 </br>
+
+## Notebook Storage in OSS <a name="OSS"></a>
+
+Notebooks may be stored in OSS.  
+
+</br>
+The following folder structure will be created in OSS:
+
+```
+oss://bucket-name/username/notebook-id/
+```
+
+Configure by setting environment variables in the file **zeppelin-env.sh**:
+
+```bash
+export ZEPPELIN_NOTEBOOK_OSS_BUCKET=bucket_name
+export ZEPPELIN_NOTEBOOK_OSS_USER=username
+export ZEPPELIN_NOTEBOOK_OSS_ENDPOINT=oss_endpoint
+export ZEPPELIN_NOTEBOOK_OSS_ACCESS_KEY_ID=oss-access-key-id
+export ZEPPELIN_NOTEBOOK_OSS_ACCESS_KEY_SECRET=oss-access-key-secret
+#export ZEPPELIN_NOTEBOOK_OSS_STS_TOKEN=aliyun-sts-token
+
+```
+
+Or using the file **zeppelin-site.xml** uncomment and complete the OSS settings:
+
+```xml
+<property>
+  <name>zeppelin.notebook.oss.bucket</name>
+  <value>bucket_name</value>
+  <description>bucket name for notebook storage</description>
+</property>
+<property>
+  <name>zeppelin.notebook.oss.user</name>
+  <value>username</value>
+  <description>user name for OSS folder structure</description>
+</property>
+<property>
+  <name>zeppelin.notebook.oss.endpoint</name>
+  <value>oss_endpoint</value>
+  <description>endpoint for oss</description>
+</property>
+<property>
+  <name>zeppelin.notebook.oss.access-key-id</name>
+  <value>oss_access_key_id</value>
+  <description>accessKeyId for OSS</description>
+</property>
+<property>
+  <name>zeppelin.notebook.oss.access-key-secret</name>
+  <value>oss_access_key_secret</value>
+  <description>accessKeySecret for OSS</description>
+</property>
+<!--
+<property>
+  <name>zeppelin.notebook.oss.securityToken</name>
+  <value>sts-token</value>
+  <description>通过临时授权服务方式才需要这个值</description>
+</property>
+-->
+
+```
+
+Uncomment the next property for use OSSNotebookRepo class:
+
+```xml
+<property>
+  <name>zeppelin.notebook.storage</name>
+  <value>org.apache.zeppelin.notebook.repo.OSSNotebookRepo</value>
+  <description>notebook persistence layer implementation</description>
+</property>
+```
+
+Comment out the next property to disable local git notebook storage (the default):
+
+```xml
+<property>
+  <name>zeppelin.notebook.storage</name>
+  <value>org.apache.zeppelin.notebook.repo.GitNotebookRepo</value>
+  <description>versioned notebook persistence layer implementation</description>
+</property>
+```
+
+
+</br>
 ## Notebook Storage in Azure <a name="Azure"></a>
 
 Using `AzureNotebookRepo` you can connect your Zeppelin with your Azure account for notebook storage.

@@ -44,7 +44,7 @@ import org.sonatype.aether.util.filter.PatternExclusionsDependencyFilter;
 
 
 /**
- *
+ * TODO 这里是%spark.dep 类型脚本的处理逻辑
  */
 public class SparkDependencyContext {
   List<Dependency> dependencies = new LinkedList<>();
@@ -87,6 +87,10 @@ public class SparkDependencyContext {
     filesDist = new LinkedList<>();
   }
 
+  /**
+   * TODO 用于初始化默认仓库
+   * @param listOfRepo
+   */
   private void addRepoFromProperty(String listOfRepo) {
     if (listOfRepo != null) {
       String[] repos = listOfRepo.split(";");

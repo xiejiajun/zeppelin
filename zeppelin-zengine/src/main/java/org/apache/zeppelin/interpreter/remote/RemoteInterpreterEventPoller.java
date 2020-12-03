@@ -263,7 +263,6 @@ public class RemoteInterpreterEventPoller extends Thread {
       appendFuture.cancel(true);
       //Close thread pool
       appendService.shutdown();
-
     }
   }
 
@@ -464,6 +463,7 @@ public class RemoteInterpreterEventPoller extends Thread {
     }
 
     RemoteInterpreterProcess remoteInterpreterProcess = intpGroup.getRemoteInterpreterProcess();
+    // TODO 对应于不需要启动远程进程的解释器（如shell、confInterpreter等）
     if (remoteInterpreterProcess == null) {
       ResourcePool localPool = intpGroup.getResourcePool();
       if (localPool != null) {

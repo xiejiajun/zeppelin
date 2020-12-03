@@ -21,6 +21,11 @@ package org.apache.zeppelin.scheduler;
  * TODO(moon) : add description.
  */
 public interface JobListener {
+  /**
+   * TODO 更新作业进度
+   * @param job
+   * @param progress
+   */
   public void onProgressUpdate(Job job, int progress);
 
   public void beforeStatusChange(Job job, Job.Status before, Job.Status after);

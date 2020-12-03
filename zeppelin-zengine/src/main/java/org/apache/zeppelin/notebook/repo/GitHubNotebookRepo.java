@@ -17,13 +17,14 @@
 
 package org.apache.zeppelin.notebook.repo;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
+import org.apache.zeppelin.notebook.Note;
 import org.apache.zeppelin.user.AuthenticationInfo;
-import org.eclipse.jgit.api.Git;
-import org.eclipse.jgit.api.PullCommand;
-import org.eclipse.jgit.api.PushCommand;
-import org.eclipse.jgit.api.RemoteAddCommand;
+import org.eclipse.jgit.api.*;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.dircache.DirCache;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 import org.slf4j.Logger;
@@ -31,8 +32,17 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * TODO GitHubNotebookRepo是GitNotebookRepo的子类，只重写了用于做版本管理的checkpoint方法，所以zeppelin上新建的notebook只有
+ *  手动commit后git仓库才看得到
+ *  由于没有重写remove方法，所以删除操作只是删除本地的文件 并没有同步删掉git上的
+ *
+ *  TODO 下面的save和remove方法是我二开加上去的
  * GitHub integration to store notebooks in a GitHub repository.
  * It uses the same simple logic implemented in @see
  * {@link org.apache.zeppelin.notebook.repo.GitNotebookRepo}
@@ -45,15 +55,31 @@ import java.net.URISyntaxException;
  * - When commit the changes (saving the notebook)
  */
 public class GitHubNotebookRepo extends GitNotebookRepo {
+
+  private final String ASTERISK = "*";
+
+  private final String POINT = ".";
+
   private static final Logger LOG = LoggerFactory.getLogger(GitNotebookRepo.class);
   private ZeppelinConfiguration zeppelinConfiguration;
   private Git git;
+
+  private AtomicInteger removedNotebookCnt = new AtomicInteger(0);
+  private AtomicInteger saveNotebookCnt =  new AtomicInteger(0);
+
+  private Integer batchSaveThreshold = 10 * 2;
+  private Integer batchRemoveThreshold = 50;
+
+  private ScheduledExecutorService executors;
 
   public GitHubNotebookRepo(ZeppelinConfiguration conf) throws IOException {
     super(conf);
 
     this.git = super.getGit();
     this.zeppelinConfiguration = conf;
+
+    this.executors = Executors.newSingleThreadScheduledExecutor();
+    remoteRepoRefresher();
 
     configureRemoteStream();
     pullFromRemoteStream();
@@ -123,4 +149,162 @@ public class GitHubNotebookRepo extends GitNotebookRepo {
       LOG.error("Error when pushing latest changes from remote repository", e);
     }
   }
+
+
+  @Override
+  public synchronized void save(Note note, AuthenticationInfo subject) throws IOException {
+    LOG.info("save note {} to git origin repo",note.getId());
+    super.save(note, subject);
+//    updateRemoteRepo(note.getId());
+    batchSaveNoteToRemoteRepo(note.getId());
+  }
+
+  @Override
+  public void remove(String noteId, AuthenticationInfo subject) throws IOException {
+    LOG.info("remove note {} from git origin repo",noteId);
+    super.remove(noteId,subject);
+    try {
+//      deleteFileFromRemoteRepo(noteId);
+      batchRemoveNoteFromRemoteRepo(noteId);
+    } catch (GitAPIException e) {
+      LOG.error(e.getMessage(),e);
+    }
+  }
+
+  @Override
+  public void close() {
+    super.close();
+    this.executors.shutdownNow();
+  }
+
+
+
+    /**
+     * 将本地改动更新到远程仓库
+     * @param noteId
+     */
+  private void updateRemoteRepo(String noteId){
+    LOG.debug("git add {}", noteId);
+    try {
+      String commitMessage = add(noteId);
+      // TODO git commit命令
+      git.commit().setMessage(commitMessage).call();
+      // TODO push到远程仓库
+      pushToRemoteSteam();
+    } catch (GitAPIException e) {
+      LOG.error(e.getMessage(),e);
+    }
+  }
+
+  /**
+   * TODO 考虑换成batch方式进行批量删除，不然效率太低，git服务也扛不住
+   * 确保能完全删除远程仓库上对应文件
+   * @param noteId
+   */
+  private void deleteFileFromRemoteRepo(String noteId) throws GitAPIException {
+    if (StringUtils.isNotBlank(noteId) && !noteId.contains(POINT) && !noteId.contains(ASTERISK)){
+      git.rm().addFilepattern(noteId).call();
+    }
+    updateRemoteRepo(noteId);
+  }
+
+  /**
+   * 添加改动
+   * @param noteId
+   * @return
+   */
+  private String add(String noteId) throws GitAPIException {
+    if (StringUtils.isBlank(noteId)){
+      return  "no change";
+    }
+    // TODO git add命令
+    DirCache added = git.add().addFilepattern(noteId).call();
+    String commitMessage = String.format("sync notebook %s to origin",noteId);
+    LOG.debug("git commit -m '{}' :{} changes are about to be commited", commitMessage, added.getEntryCount());
+    return commitMessage;
+
+  }
+
+
+  /**
+   * 批量更新远程仓库
+   * @param commitMsg
+   */
+  private void batchUpdateRemoteRepo(String commitMsg){
+    try {
+//      Status status = git.status().call();
+//      if (CollectionUtils.isNotEmpty(status.getChanged())
+//              || CollectionUtils.isNotEmpty(status.getAdded())
+//              || CollectionUtils.isNotEmpty(status.getRemoved())) {
+      git.commit().setMessage(commitMsg).call();
+      pushToRemoteSteam();
+//      }
+    } catch (GitAPIException e) {
+      LOG.error(e.getMessage(),e);
+    }
+  }
+
+
+  /**
+   * 批量触发保存note方法实现
+   * @param noteId
+   */
+  private void batchSaveNoteToRemoteRepo(String noteId){
+    try {
+      add(noteId);
+      // 每5分钟或者批次到达batchSaveThreshold时触发一次提交
+      int addSize = saveNotebookCnt.incrementAndGet();
+      if ( addSize >= batchSaveThreshold){
+        batchUpdateRemoteRepo("batch save notebook to origin");
+        saveNotebookCnt.addAndGet(-1 * addSize);
+      }
+    } catch (GitAPIException e) {
+      LOG.error(e.getMessage(),e);
+    }
+  }
+
+  /**
+   * 批量从远程仓库删除note
+   * @param noteId
+   */
+  private void batchRemoveNoteFromRemoteRepo(String noteId) throws GitAPIException {
+    if (StringUtils.isNotBlank(noteId) && !noteId.contains(POINT) && !noteId.contains(ASTERISK)){
+      git.rm().addFilepattern(noteId).call();
+    }
+    add(noteId);
+    int removeSize = removedNotebookCnt.incrementAndGet();
+    if ( removeSize >= batchRemoveThreshold){
+      batchUpdateRemoteRepo("batch remove notebook from origin");
+      removedNotebookCnt.addAndGet(-1 * removeSize);
+    }
+
+  }
+
+  /**
+   * 自动推送逻辑
+   */
+  private void autoPushNotebooksToRemote(){
+    int removeSize = removedNotebookCnt.get();
+    int saveSize = saveNotebookCnt.get();
+    if ( removeSize > 0 ||  saveSize > 0){
+      LOG.info("正在定时刷新本地改动到远程仓库...");
+      this.batchUpdateRemoteRepo("定时推送");
+      if (removeSize > 0){
+        removedNotebookCnt.addAndGet(-1 * removeSize);
+      }
+      if (saveSize > 0){
+        saveNotebookCnt.addAndGet(-1 * saveSize);
+      }
+    }
+  }
+
+  /**
+   * 定时推送本地仓库变动到远程仓库线程启动
+   */
+  private void remoteRepoRefresher(){
+    // TODO 5分钟尝试往远程仓库推一次代码
+    this.executors.scheduleWithFixedDelay(this::autoPushNotebooksToRemote,5, 5,TimeUnit.MINUTES);
+  }
+
 }
+

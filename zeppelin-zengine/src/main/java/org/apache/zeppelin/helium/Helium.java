@@ -358,6 +358,7 @@ public class Helium {
         allResources = resourcePool.getAll();
       }
     } else {
+      // TODO 这里需要改造，放在开启图表库后高并发时卡死
       allResources = interpreterSettingManager.getAllResources();
     }
 

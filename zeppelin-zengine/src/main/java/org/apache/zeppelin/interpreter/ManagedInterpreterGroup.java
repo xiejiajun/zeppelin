@@ -54,6 +54,13 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     return interpreterSetting;
   }
 
+  /**
+   * TODO 获取RemoteInterpreterProcess（这里面保存了连接远程解释器服务的相关参数），没有就创建（即启动解释器服务）
+   * @param userName
+   * @param properties
+   * @return
+   * @throws IOException
+   */
   public synchronized RemoteInterpreterProcess getOrCreateInterpreterProcess(String userName,
                                                                              Properties properties)
       throws IOException {
@@ -61,6 +68,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
       LOGGER.info("Create InterpreterProcess for InterpreterGroup: " + getId());
       remoteInterpreterProcess = interpreterSetting.createInterpreterProcess(id, userName,
           properties);
+      // TODO 启动解释器进程
       remoteInterpreterProcess.start(userName);
       interpreterSetting.getLifecycleManager().onInterpreterProcessStarted(this);
       remoteInterpreterProcess.getRemoteInterpreterEventPoller()
@@ -93,12 +101,14 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
   }
 
   /**
+   * TODO 关闭当前session的所有解释器实例: per user模式其实一个sessionId只对应一个Interpreter
    * Close all interpreter instances in this session
    * @param sessionId
    */
   public synchronized void close(String sessionId) {
     LOGGER.info("Close Session: " + sessionId + " for interpreter setting: " +
         interpreterSetting.getName());
+    // TODO 关闭所有解释器实例
     close(sessions.remove(sessionId));
     //TODO(zjffdu) whether close InterpreterGroup if there's no session left in Zeppelin Server
     if (sessions.isEmpty() && interpreterSetting != null) {
@@ -117,6 +127,10 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     }
   }
 
+  /**
+   * TODO 关闭所有解释器实例
+   * @param interpreters
+   */
   private void close(Collection<Interpreter> interpreters) {
     if (interpreters == null) {
       return;
@@ -124,6 +138,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
 
     for (Interpreter interpreter : interpreters) {
       Scheduler scheduler = interpreter.getScheduler();
+      // TODO 先终止所有Job
       for (Job job : scheduler.getJobsRunning()) {
         job.abort();
         job.setStatus(Job.Status.ABORT);
@@ -136,6 +151,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
       }
 
       try {
+        // TODO 关闭解释器：通过RemoteInterpreter RPC客户端发送请求调用各个解释器自己实现的close方法
         interpreter.close();
       } catch (InterpreterException e) {
         LOGGER.warn("Fail to close interpreter " + interpreter.getClassName(), e);
@@ -147,10 +163,19 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     }
   }
 
+  /**
+   * TODO 虽然这个方法里面用到的共享变量都是并发容器，但是这个方法还是需要加锁，因为若不加锁，两个线程同时访问这个方法时
+   *   sessions.containsKey(sessionId)都会为false，然后两个线程会分别创建两个interpreters列表分别存到sessions，这可能会有问题
+   *   加锁后，第一个线程创建完，第二个线程就直接在sessions.containsKey(sessionId)取现成的来用来
+   * @param user
+   * @param sessionId
+   * @return
+   */
   public synchronized List<Interpreter> getOrCreateSession(String user, String sessionId) {
     if (sessions.containsKey(sessionId)) {
       return sessions.get(sessionId);
     } else {
+      // TODO 创建解释器(这里只是返回一个解释器客户端，还未真正启动解释器，当该sessionID对应的解释器open时才启动解释器进程）
       List<Interpreter> interpreters = interpreterSetting.createInterpreters(user, id, sessionId);
       for (Interpreter interpreter : interpreters) {
         interpreter.setInterpreterGroup(this);

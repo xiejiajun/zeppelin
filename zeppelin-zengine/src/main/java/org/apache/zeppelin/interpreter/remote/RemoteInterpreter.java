@@ -108,6 +108,24 @@ public class RemoteInterpreter extends Interpreter {
       return this.interpreterProcess;
     }
     ManagedInterpreterGroup intpGroup = getInterpreterGroup();
+    // TODO 解释器启动进程: 由于这里的properties是直接引用成员变量，没有调用父亲类的getProperties()方法进行过替换：
+    //   修正一下:这里使用getProperties()也没用，宏变量不会被替换，因为不满足replaceContextParameters方法中interpreterContext != null
+    //   的条件
+
+    // TODO
+    //  所以spark 解释器cluster模式没法绑定用户名到yarn application,因为cluster模式的Driver(同时也是AM)一起来就运行到yarn上面了，
+    //  这时候其实Driver里面运行的还不是SparkInterpreter，而是RemoteInterpreterServer,所以用户名宏变量还没被替换,就保持
+    //  原来的spark.app.name把AM运行起来了；再来看Client模式，一开始Driver里面运行的还是RemoteInterpreterServer,因为Yarn Client
+    //  模式下Driver是先启动在本地，然后再向RM申请容器启动AM的，所以最终是RemoteInterpreterServer运行在本地，然后再启动Spark解释器时
+    //  替换掉spark.app.name中的宏变量再在yarn中启动spark解释器的真正的Driver，替换掉原来RemoteInterpreterServer的appName
+    //  说明了Spark解释器其实是分两阶段的，第一步将RemoteInterpreterServer作为Spark App提交到Yarn上，真正的作业到达后再在yarn上通过
+    //  RemoteInterpreterServer对真正的spark解释器进行实例化并提交作业
+    //  那又是怎么将Spark作业提交配置传递给真正的Spark解释器对RemoteInterpreterServer的spark配置进行更新的呢：通过RemoteInterpreter
+    //  的internal_create方法通过hrift Client调用createInterpreter进行传递的
+    //  对应为啥client模式能刷新appName，而cluster模式不能刷新，原因应该是client模式的Driver启动在RemoteInterpreterServer作业对应的
+    //  AM中，而cluster模式Driver又再次启动到了其他节点上？（这个待验证）
+    //
+
     this.interpreterProcess = intpGroup.getOrCreateInterpreterProcess(getUserName(), properties);
     return interpreterProcess;
   }
@@ -129,6 +147,7 @@ public class RemoteInterpreter extends Interpreter {
                                         .getOrCreateSession(this.getUserName(), sessionId)) {
           try {
             if (!(interpreter instanceof ConfInterpreter)) {
+              // TODO 启动解释器进程入口
               ((RemoteInterpreter) interpreter).internal_create();
             }
           } catch (IOException e) {
@@ -139,6 +158,24 @@ public class RemoteInterpreter extends Interpreter {
         interpreterProcess.callRemoteFunction(new RemoteInterpreterProcess.RemoteFunction<Void>() {
           @Override
           public Void call(Client client) throws Exception {
+            /**
+             * TODO 看这段日志，无需跑起来debug就能知道RemoteInterpreter是用于连接各个具体解释器的RPC代理：
+             *  INFO [2020-02-05 13:19:30,857] ({pool-2-thread-24} ManagedInterpreterGroup.java[getOrCreateInterpreterProcess]:61) - Create InterpreterProcess for InterpreterGroup: sh:shared_process
+             *  INFO [2020-02-05 13:19:30,857] ({pool-2-thread-24} ShellScriptLauncher.java[launch]:48) - Launching Interpreter: sh
+             *  INFO [2020-02-05 13:19:30,859] ({pool-2-thread-24} RemoteInterpreterManagedProcess.java[start]:115) - Thrift server for callback will start. Port: 43637
+             *  INFO [2020-02-05 13:19:31,360] ({pool-2-thread-24} RemoteInterpreterManagedProcess.java[start]:190) - Run interpreter process [/usr/lib/zeppelin/bin/interpreter.sh, -d, /usr/lib/zeppelin/interpreter/sh, -c, 172.31.31.13, -p, 43637, -r, :, -l, /usr/lib/zeppelin/local-repo/sh, -g, sh]
+             *  INFO [2020-02-05 13:19:32,839] ({pool-18-thread-1} RemoteInterpreterManagedProcess.java[callback]:123) - RemoteInterpreterServer Registered: CallbackInfo(host:172.31.31.13, port:35431)
+             *  INFO [2020-02-05 13:19:32,839] ({pool-2-thread-24} TimeoutLifecycleManager.java[onInterpreterProcessStarted]:68) - Process of InterpreterGroup sh:shared_process is started
+             *  INFO [2020-02-05 13:19:32,841] ({pool-2-thread-24} RemoteInterpreter.java[call]:172) - Create RemoteInterpreter org.apache.zeppelin.shell.ShellInterpreter
+             *  INFO [2020-02-05 13:19:32,951] ({pool-2-thread-24} RemoteInterpreter.java[call]:146) - Open RemoteInterpreter org.apache.zeppelin.shell.ShellInterpreter
+             *  INFO [2020-02-05 13:19:32,951] ({pool-2-thread-24} RemoteInterpreter.java[pushAngularObjectRegistryToRemote]:449) - Push local angular object registry from ZeppelinServer to remote interpreter group sh:shared_process
+             *  INFO [2020-02-05 13:19:34,365] ({pool-2-thread-24} NotebookServer.java[afterStatusChange]:2314) - Job 20200205-074503_1029817251 is finished successfully, status: FINISHED
+             */
+
+              // TODO 而且可以根据下面这行日志判断执行某个段落的是哪个解释器:这个地方对于通过日志查询执行指定段落用到的解释器非常有用，找到对应解释器后就方便定位Zeppelin服务的问题了
+              //  例如：RemoteInterpreter.java[call]:146) - Open RemoteInterpreter org.apache.zeppelin.spark.DepInterpreter
+              //       根据上面这行日志，定位到执行%spark.dep段落的是DepInterpreter(0.8分支有该解释器，新分支还未细跟换成了哪个)
+
             LOGGER.info("Open RemoteInterpreter {}", getClassName());
             // open interpreter here instead of in the jobRun method in RemoteInterpreterServer
             // client.open(sessionId, className);
@@ -161,11 +198,13 @@ public class RemoteInterpreter extends Interpreter {
   private void internal_create() throws IOException {
     synchronized (this) {
       if (!isCreated) {
+        // TODO 创建解释器进程（入口是RemoteInterpreterServer)
         this.interpreterProcess = getOrCreateInterpreterProcess();
         interpreterProcess.callRemoteFunction(new RemoteInterpreterProcess.RemoteFunction<Void>() {
           @Override
           public Void call(Client client) throws Exception {
             LOGGER.info("Create RemoteInterpreter {}", getClassName());
+            // TODO 使用Thrift客户端和解释器进程交互，加载对应的解释器逻辑实现类
             client.createInterpreter(getInterpreterGroup().getId(), sessionId,
                 className, (Map) getProperties(), getUserName());
             return null;
@@ -177,6 +216,10 @@ public class RemoteInterpreter extends Interpreter {
   }
 
 
+  /**
+   * TODO 用于向远程RemoteInterpreterServer启动的解释器服务发送close请求，对应解释器收到请求后再调用自己的close方法kill -2杀掉进程
+   * @throws InterpreterException
+   */
   @Override
   public void close() throws InterpreterException {
     if (isOpened) {

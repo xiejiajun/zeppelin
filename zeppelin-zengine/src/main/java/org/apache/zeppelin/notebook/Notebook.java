@@ -385,6 +385,7 @@ public class Notebook implements NoteEventListener {
     fireNoteRemoveEvent(note);
 
     try {
+      // TODO 删除note
       note.unpersist(subject);
     } catch (IOException e) {
       logger.error(e.toString(), e);
@@ -394,6 +395,7 @@ public class Notebook implements NoteEventListener {
   public Revision checkpointNote(String noteId, String checkpointMessage,
       AuthenticationInfo subject) throws IOException {
     if (((NotebookRepoSync) notebookRepo).isRevisionSupportedInDefaultRepo()) {
+      // TODO 若当前Repo支持版本管理，便执行checkpoint
       return ((NotebookRepoWithVersionControl) notebookRepo)
           .checkpoint(noteId, checkpointMessage, subject);
     } else {
@@ -404,6 +406,7 @@ public class Notebook implements NoteEventListener {
 
   public List<Revision> listRevisionHistory(String noteId, AuthenticationInfo subject) {
     if (((NotebookRepoSync) notebookRepo).isRevisionSupportedInDefaultRepo()) {
+      // TODO 若当前Repo支持版本管理，便列出版本列表
       return ((NotebookRepoWithVersionControl) notebookRepo).revisionHistory(noteId, subject);
     } else {
       return null;
@@ -413,6 +416,7 @@ public class Notebook implements NoteEventListener {
   public Note setNoteRevision(String noteId, String revisionId, AuthenticationInfo subject)
       throws IOException {
     if (((NotebookRepoSync) notebookRepo).isRevisionSupportedInDefaultRepo()) {
+      // TODO 若当前Repo支持版本管理，便设置版本
       return ((NotebookRepoWithVersionControl) notebookRepo)
           .setNoteRevision(noteId, revisionId, subject);
     } else {
@@ -423,6 +427,7 @@ public class Notebook implements NoteEventListener {
   public Note getNoteByRevision(String noteId, String revisionId, AuthenticationInfo subject)
       throws IOException {
     if (((NotebookRepoSync) notebookRepo).isRevisionSupportedInDefaultRepo()) {
+      // TODO 若当前Repo支持版本管理，返回当前版本对应的note
       return ((NotebookRepoWithVersionControl) notebookRepo).get(noteId, revisionId, subject);
     } else {
       return null;
@@ -430,6 +435,7 @@ public class Notebook implements NoteEventListener {
   }
 
   public void convertFromSingleResultToMultipleResultsFormat(Note note) {
+    // TODO 将json转换成Note
     for (Paragraph p : note.paragraphs) {
       Object ret = p.getPreviousResultFormat();
       if (ret != null && p.results != null) {
@@ -499,10 +505,27 @@ public class Notebook implements NoteEventListener {
     }
   }
 
+  /**
+   * TODO loadAllNotes和reloadAllNotes需要参考createNode和getNote方法改造成懒加载模式
+   *      调用这个方法进行预加载会导致冷数据占用大量内存，10GB的Note信息全加载进来，再加上
+   *      Lucene 索引这些数据结构，ZeppelinServer设置20G的堆内存都不够。
+   *      懒加载方案：
+   *      1. loadNote时只拉取权限、NoteID、NoteName等元信息(由于没有获取段落，对于RBAC的Notebook列表不好控制
+   *         [NotebookServer.generateNotesInfo中]，需要另想解决方案）
+   *      2. 真正调用getNote方法时, 先从notes Map里面找，找不到在从RemoteRepo读取，
+   *         读取后仿照createNote方法添加到notes Map(但要注意权限信息处理)
+   *         调用folders.putNote建立文件夹索引
+   *      3. 列出文件夹下的所有note这块逻辑需要仔细研究，然后适配懒加载方案
+   *
+   * @param id
+   * @param subject
+   * @return
+   */
   @SuppressWarnings("rawtypes")
   public Note loadNoteFromRepo(String id, AuthenticationInfo subject) {
     Note note = null;
     try {
+      // TODO subject只有ZeppelinHubRepo会用到
       note = notebookRepo.get(id, subject);
     } catch (IOException e) {
       logger.error("Failed to load " + id, e);
@@ -688,6 +711,10 @@ public class Notebook implements NoteEventListener {
       return FluentIterable.from(notes.values()).filter(new Predicate<Note>() {
         @Override
         public boolean apply(Note input) {
+          // TODO 开启基于RBAC的访问控制时，列出note列表不再使用zeppelin自带的读权限检查,保证管理员可以列出所有notes
+          if (conf.getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_AUTHC_RBAC_ENABLED)){
+            return input != null;
+          }
           return input != null && notebookAuthorization.isReader(input.getId(), entities);
         }
       }).toSortedList(new Comparator<Note>() {

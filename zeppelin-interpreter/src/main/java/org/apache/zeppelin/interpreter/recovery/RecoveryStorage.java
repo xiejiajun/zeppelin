@@ -25,6 +25,7 @@ import java.util.Map;
 
 
 /**
+ * TODO 用于存储解释器进程的元数据，方便可以手动通过stop-interpreter.sh脚本杀解释器
  * Interface for storing interpreter process recovery metadata.
  *
  */

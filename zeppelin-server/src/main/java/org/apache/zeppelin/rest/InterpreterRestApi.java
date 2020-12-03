@@ -104,7 +104,7 @@ public class InterpreterRestApi {
 
   /**
    * Add new interpreter setting
-   *
+   * TODO 页面新建解释器
    * @param message NewInterpreterSettingRequest
    */
   @POST
@@ -130,6 +130,12 @@ public class InterpreterRestApi {
     }
   }
 
+  /**
+   * TODO 更新解释器配置
+   * @param message
+   * @param settingId
+   * @return
+   */
   @PUT
   @Path("setting/{settingId}")
   @ZeppelinApi
@@ -171,6 +177,7 @@ public class InterpreterRestApi {
   }
 
   /**
+   * TODO 重启解释器入口，settingId用于判断解释器类别
    * Restart interpreter setting
    */
   @PUT
@@ -185,8 +192,10 @@ public class InterpreterRestApi {
 
       String noteId = request == null ? null : request.getNoteId();
       if (null == noteId) {
+        // TODO 对应于通过解释器配置页面的restart按钮重启解释器的请求处理
         interpreterSettingManager.close(settingId);
       } else {
+        // TODO 对应于用户在自己的notebook上调集重启图标重启自己对应类型的解释器实例的请求处理
         interpreterSettingManager.restart(settingId, noteId, SecurityUtils.getPrincipal());
       }
       notebookServer.clearParagraphRuntimeInfo(setting);

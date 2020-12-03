@@ -326,6 +326,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
          * 2. Register it from interpreter-setting.json in classpath
          *    {ZEPPELIN_HOME}/interpreter/{interpreter_name}
          */
+        // TODO 先加载解释器列表
         if (!registerInterpreterFromPath(interpreterDirString, interpreterJson)) {
           if (!registerInterpreterFromResource(cl, interpreterDirString, interpreterJson)) {
             LOGGER.warn("No interpreter-setting.json found in " + interpreterDirString);
@@ -517,6 +518,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
 
   private ResourceSet getAllResourcesExcept(String interpreterGroupExcludsion) {
     ResourceSet resourceSet = new ResourceSet();
+    // TODO 获取所有解释器组，若所有请求都到这里竞争同一个解释器组的锁，会卡住
     for (ManagedInterpreterGroup intpGroup : getAllInterpreterGroup()) {
       if (interpreterGroupExcludsion != null &&
           intpGroup.getId().equals(interpreterGroupExcludsion)) {
@@ -530,6 +532,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
           resourceSet.addAll(localPool.getAll());
         }
       } else if (remoteInterpreterProcess.isRunning()) {
+        // TODO 获取所有解释器组，若所有请求都到这里getClient竞争同一个解释器组的锁，会卡住
         List<String> resourceList = remoteInterpreterProcess.callRemoteFunction(
             new RemoteInterpreterProcess.RemoteFunction<List<String>>() {
               @Override
@@ -553,8 +556,10 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     for (ManagedInterpreterGroup intpGroup : getAllInterpreterGroup()) {
       ResourceSet resourceSet = new ResourceSet();
       RemoteInterpreterProcess remoteInterpreterProcess = intpGroup.getRemoteInterpreterProcess();
+      // TODO 若该解释器还未启动解释器进程还未启动或者本身就不需要启动远程解释器进程（如confInterperter)，即还未开始启动解释器并将段落（job)发送到Worker进行提交
       if (remoteInterpreterProcess == null) {
         ResourcePool localPool = intpGroup.getResourcePool();
+        // TODO 其实这种情况localPool永远为null???
         if (localPool != null) {
           resourceSet.addAll(localPool.getAll());
         }
@@ -571,7 +576,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
               r.getResourceId().getParagraphId(),
               r.getResourceId().getName());
         }
-      } else if (remoteInterpreterProcess.isRunning()) {
+      } else if (remoteInterpreterProcess.isRunning()) { // TODO 解释器进程启动成功且未调用stop/complete方法
         List<String> resourceList = remoteInterpreterProcess.callRemoteFunction(
             new RemoteInterpreterProcess.RemoteFunction<List<String>>() {
               @Override
@@ -590,20 +595,26 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
           resourceSet = resourceSet.filterByParagraphId(paragraphId);
         }
 
-        for (final Resource r : resourceSet) {
-          remoteInterpreterProcess.callRemoteFunction(
-              new RemoteInterpreterProcess.RemoteFunction<Void>() {
+        try {
+          for (final Resource r : resourceSet) {
+            // TODO 通知远程解释器可以移除即将废弃的资源了
+            remoteInterpreterProcess.callRemoteFunction(
+                    new RemoteInterpreterProcess.RemoteFunction<Void>() {
 
-                @Override
-                public Void call(RemoteInterpreterService.Client client) throws Exception {
-                  client.resourceRemove(
-                      r.getResourceId().getNoteId(),
-                      r.getResourceId().getParagraphId(),
-                      r.getResourceId().getName());
-                  return null;
-                }
-              });
+                      @Override
+                      public Void call(RemoteInterpreterService.Client client) throws Exception {
+                        client.resourceRemove(
+                                r.getResourceId().getNoteId(),
+                                r.getResourceId().getParagraphId(),
+                                r.getResourceId().getName());
+                        return null;
+                      }
+                    });
+          }
+        }catch (Exception e){
+          LOGGER.error(e.getMessage());
         }
+
       }
     }
   }
@@ -663,6 +674,16 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     return settingIdList;
   }
 
+  /**
+   * TODO 新增解释器配置
+   * @param name
+   * @param group
+   * @param dependencies
+   * @param option
+   * @param p
+   * @return
+   * @throws IOException
+   */
   public InterpreterSetting createNewSetting(String name, String group,
       List<Dependency> dependencies, InterpreterOption option, Map<String, InterpreterProperty> p)
       throws IOException {
@@ -685,6 +706,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     setting.setProperties(p);
     initInterpreterSetting(setting);
     interpreterSettings.put(setting.getId(), setting);
+    // TODO 保存到持久化存储
     saveToFile();
     return setting;
   }
@@ -786,7 +808,11 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     interpreterBindings.remove(noteId);
   }
 
-  /** Change interpreter properties and restart */
+  /**
+   * TODO 解释器配置更新请求处理逻辑
+   * Change interpreter properties and restart
+   *
+   * */
   public void setPropertyAndRestart(
       String id,
       InterpreterOption option,
@@ -796,6 +822,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     InterpreterSetting intpSetting = interpreterSettings.get(id);
     if (intpSetting != null) {
       try {
+        // TODO 关闭解释器
         intpSetting.close();
         intpSetting.setOption(option);
         intpSetting.setProperties(properties);
@@ -811,10 +838,19 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
     }
   }
 
+  /**
+   * TODO 处理notebook页面的重启解释器请求
+   * @param settingId
+   * @param noteId
+   * @param user
+   * @throws InterpreterException
+   */
   // restart in note page
   public void restart(String settingId, String noteId, String user) throws InterpreterException {
+    // TODO 获取对应解释器类型的所有解释器
     InterpreterSetting intpSetting = interpreterSettings.get(settingId);
     Preconditions.checkNotNull(intpSetting);
+    // TODO 获取对应解释器类型的所有解释器
     intpSetting = interpreterSettings.get(settingId);
     // Check if dependency in specified path is changed
     // If it did, overwrite old dependency jar with new one
@@ -822,6 +858,7 @@ public class InterpreterSettingManager implements InterpreterSettingManagerMBean
       // clean up metaInfos
       intpSetting.setInfos(null);
       copyDependenciesFromLocalPath(intpSetting);
+      // TODO 到这里的InterpreterSetting已经是和用户要重启的类型一致了
       intpSetting.closeInterpreters(user, noteId);
     } else {
       throw new InterpreterException("Interpreter setting id " + settingId + " not found");

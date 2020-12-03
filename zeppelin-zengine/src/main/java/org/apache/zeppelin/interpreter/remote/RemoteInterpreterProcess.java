@@ -17,6 +17,8 @@
 package org.apache.zeppelin.interpreter.remote;
 
 import com.google.gson.Gson;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.thrift.TException;
 import org.apache.zeppelin.interpreter.launcher.InterpreterClient;
@@ -24,6 +26,9 @@ import org.apache.zeppelin.interpreter.thrift.RemoteInterpreterService.Client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Map;
+
+import static org.apache.zeppelin.conf.InterpreterConfiguration.*;
 
 /**
  * Abstract class for interpreter process
@@ -36,12 +41,44 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
   private final InterpreterContextRunnerPool interpreterContextRunnerPool;
   private int connectTimeout;
   private ClientFactory clientFactory = null;
+  protected Map<String, String> env;
 
   public RemoteInterpreterProcess(
-      int connectTimeout) {
+      int connectTimeout,Map<String, String> env) {
     this.interpreterContextRunnerPool = new InterpreterContextRunnerPool();
     this.connectTimeout = connectTimeout;
+    this.env = env;
+    // TODO 不能在构造方法里面初始化，因为这个时候解释器的端口和host都还为null
+//    this.createClientPool();
   }
+
+
+  /**
+   * create thrift client pool
+   */
+  private synchronized void createClientPool(){
+    int maxIdle = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE;
+    int minIdle = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE;
+    int maxTotal = DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL;
+    if (MapUtils.isNotEmpty(this.env)) {
+      maxTotal = formatInteger(env.get(ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL),
+              DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_TOTAL);
+      minIdle = formatInteger(env.get(ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE),
+              DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MIN_IDLE);
+      maxIdle = formatInteger(env.get(ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE),
+              DEFAULT_ZEPPELIN_THRIFT_CLIENT_POOL_MAX_IDLE);
+    }
+    if (clientPool == null || clientPool.isClosed()) {
+      clientFactory = new ClientFactory(getHost(), getPort());
+      clientPool = new GenericObjectPool<>(clientFactory);
+      clientPool.setMaxIdle(maxIdle);
+      clientPool.setMinIdle(minIdle);
+      clientPool.setMaxTotal(maxTotal);
+      // TODO 这里加上获取Thrift客户端2秒超时，否则默认-1永不超时，手动kill -9强制杀掉解释器进程后可能会导致无法重启对应解释器（一直阻塞转圈）
+      clientPool.setMaxWaitMillis(2000);
+    }
+  }
+
 
   public RemoteInterpreterEventPoller getRemoteInterpreterEventPoller() {
     return remoteInterpreterEventPoller;
@@ -63,10 +100,18 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
     return connectTimeout;
   }
 
-  public synchronized Client getClient() throws Exception {
-    if (clientPool == null || clientPool.isClosed()) {
-      clientFactory = new ClientFactory(getHost(), getPort());
-      clientPool = new GenericObjectPool<>(clientFactory);
+  // TODO 这种写法如果某个解释器的option为globally shared，同时又有大量用户在用这个解释器的话，会造成大量线程BLOCKED在这里，从而导致服务卡顿
+//  public synchronized Client getClient() throws Exception {
+//    if (clientPool == null || clientPool.isClosed()) {
+//      clientPool = new GenericObjectPool<>(new ClientFactory(getHost(), getPort()));
+//    }
+//    return clientPool.borrowObject();
+//  }
+
+
+  public Client getClient() throws Exception {
+    if (clientPool == null || clientPool.isClosed()){
+      createClientPool();
     }
     return clientPool.borrowObject();
   }
@@ -154,6 +199,21 @@ public abstract class RemoteInterpreterProcess implements InterpreterClient {
       }
     }
     return null;
+  }
+
+  /**
+   * OpenJDK int不能自动转为Integer
+   * String to Integer
+   * @param intString
+   * @param defaultValue
+   * @return
+   */
+  private int formatInteger(String intString, int defaultValue){
+    try {
+      return NumberUtils.createInteger(intString);
+    } catch (Exception e){
+      return defaultValue;
+    }
   }
 
   /**

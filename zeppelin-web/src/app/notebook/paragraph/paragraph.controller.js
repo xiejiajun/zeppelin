@@ -1431,6 +1431,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
           $scope.dirtyText = undefined;
           $scope.originalText = angular.copy(newPara.text);
         } else { // if there're local update, keep it.
+          // TODO 如果注释掉这里是否可以降低网络抖动导致代码被刷掉的问题? 待测试，看看是否会导致其他问题
           $scope.paragraph.text = newPara.text;
         }
       } else {
@@ -1496,6 +1497,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
        (newPara.status === ParagraphStatus.FINISHED && statusChanged);
 
      // 3. update texts managed by $scope
+     // TODO 更新所有作用域的代码
     $scope.updateAllScopeTexts(oldPara, newPara);
 
      // 4. execute callback to update result
@@ -1534,6 +1536,10 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
     $scope.updateParagraph(oldPara, newPara, updateCallback);
   });
 
+  /**
+   * TODO websocket-event.factory.js的websocketCalls.ws.onMessage里面的$rootScope.$broadcast('updateParagraph', data)
+   *  会调用到这里
+   */
   $scope.$on('updateParagraph', function(event, data) {
     const oldPara = $scope.paragraph;
     const newPara = data.paragraph;
@@ -1561,6 +1567,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
       }
     };
 
+    // TODO 调用段落更新函数
     $scope.updateParagraph(oldPara, newPara, updateCallback);
   });
 

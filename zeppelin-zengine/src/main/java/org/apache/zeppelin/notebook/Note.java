@@ -432,22 +432,48 @@ public class Note implements ParagraphJobListener, JsonSerializable {
    * @return a paragraph that was deleted, or <code>null</code> otherwise
    */
   public Paragraph removeParagraph(String user, String paragraphId) {
+//    removeAllAngularObjectInParagraph(user, paragraphId);
+//    interpreterSettingManager.removeResourcesBelongsToParagraph(getId(), paragraphId);
+//    synchronized (paragraphs) {
+//      Iterator<Paragraph> i = paragraphs.iterator();
+//      while (i.hasNext()) {
+//        Paragraph p = i.next();
+//        if (p.getId().equals(paragraphId)) {
+//          index.deleteIndexDoc(this, p);
+//          i.remove();
+//
+//          if (noteEventListener != null) {
+//            noteEventListener.onParagraphRemove(p);
+//          }
+//          return p;
+//        }
+//      }
+//    }
+//    return null;
+
     removeAllAngularObjectInParagraph(user, paragraphId);
-    interpreterSettingManager.removeResourcesBelongsToParagraph(getId(), paragraphId);
+    try {
+      // TODO 移除段落前，先移除所有解释器中对应的用于运行该段落时交换数据和状态的资源对象
+      interpreterSettingManager.removeResourcesBelongsToParagraph(getId(), paragraphId);
+    }catch (Exception e){
+      logger.error(e.getMessage());
+    }
+    Paragraph removedParagraph = null;
     synchronized (paragraphs) {
       Iterator<Paragraph> i = paragraphs.iterator();
       while (i.hasNext()) {
         Paragraph p = i.next();
         if (p.getId().equals(paragraphId)) {
+          removedParagraph = p;
           index.deleteIndexDoc(this, p);
           i.remove();
-
-          if (noteEventListener != null) {
-            noteEventListener.onParagraphRemove(p);
-          }
-          return p;
+          break;
         }
       }
+    }
+    if (removedParagraph != null && noteEventListener != null) {
+      noteEventListener.onParagraphRemove(removedParagraph);
+      return removedParagraph;
     }
     return null;
   }
@@ -747,9 +773,10 @@ public class Note implements ParagraphJobListener, JsonSerializable {
   }
 
   public List<Paragraph> getParagraphs() {
-    synchronized (paragraphs) {
-      return new LinkedList<>(paragraphs);
-    }
+//    synchronized (paragraphs) {
+//      return new LinkedList<>(paragraphs);
+//    }
+    return this.paragraphs;
   }
 
   private void snapshotAngularObjectRegistry(String user) {

@@ -164,6 +164,11 @@
                 </executions>
                 <configuration>
                     <scalaVersion>${scala.compile.version}</scalaVersion>
+<!--                    <javacArgs></javacArgs>-->
+<!--                    <addJavacArgs>-->
+<!--&lt;!&ndash;                        -source:1.8&ndash;&gt;-->
+<!--                        -target:jvm-1.8-->
+<!--                    </addJavacArgs>-->
                     <args>
                         <arg>-unchecked</arg>
                         <arg>-deprecation</arg>
@@ -182,6 +187,8 @@
                         <javacArg>${java.version}</javacArg>
                         <javacArg>-Xlint:all,-serial,-path,-options</javacArg>
                     </javacArgs>
+<!--                    <source>1.8</source>-->
+<!--                    <target>1.8</target>-->
                 </configuration>
             </plugin>
 

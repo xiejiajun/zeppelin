@@ -45,6 +45,7 @@ public class SparkInterpreter extends AbstractSparkInterpreter {
 
   public SparkInterpreter(Properties properties) {
     super(properties);
+    // TODO 这里配置选用哪个Spark解释器实现, 若NewSparkInterpreter无法加载%spark.dep导入的依赖的bug未修复，最好用OldSparkInterpreter
     if (Boolean.parseBoolean(properties.getProperty("zeppelin.spark.useNew", "false"))) {
       delegation = new NewSparkInterpreter(properties);
     } else {
@@ -93,6 +94,7 @@ public class SparkInterpreter extends AbstractSparkInterpreter {
 
   @Override
   public int getProgress(InterpreterContext context) throws InterpreterException {
+    // TODO Spark 作业获取作业进度的具体实现入口
     return delegation.getProgress(context);
   }
 

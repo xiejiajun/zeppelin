@@ -437,6 +437,7 @@ public class NotebookRepoSync implements NotebookRepoWithVersionControl {
 
   public Boolean isRevisionSupportedInRepo(int repoIndex) {
     try {
+      // TODO 检查当前notebook repo支不支持版本管理
       if (getRepo(repoIndex) instanceof NotebookRepoWithVersionControl) {
         return true;
       }

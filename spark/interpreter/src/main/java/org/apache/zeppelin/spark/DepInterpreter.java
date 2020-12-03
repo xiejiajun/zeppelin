@@ -65,6 +65,8 @@ import scala.tools.nsc.settings.MutableSettings.PathSetting;
 
 
 /**
+ *
+ * TODO 用于处理%spark.dep 动态添加Spark依赖
  * DepInterpreter downloads dependencies and pass them when SparkInterpreter initialized.
  * It extends SparkInterpreter but does not create sparkcontext
  *

@@ -226,9 +226,11 @@ public class NotebookServer extends WebSocketServlet
           createNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case DEL_NOTE:
+          // TODO 删除Note
           removeNote(conn, userAndRoles, notebook, messagereceived);
           break;
         case REMOVE_FOLDER:
+          // TODO 删除文件夹
           removeFolder(conn, userAndRoles, notebook, messagereceived);
           break;
         case MOVE_NOTE_TO_TRASH:
@@ -484,6 +486,12 @@ public class NotebookServer extends WebSocketServlet
   }
 
 
+  /**
+   * TODO 这个方法是往Web端websocket客户端发送响应数据的方法:发送响应结果对应的op=Message.OP.PARAGRAPH_APPEND_OUTPUT
+   *  Message.OP.PARAGRAPH_APPEND_OUTPUT具体是哪个上有方法发起的需要debug
+   * @param noteId
+   * @param m
+   */
   private void broadcast(String noteId, Message m) {
     List<NotebookSocket> socketsToBroadcast = Collections.emptyList();
     synchronized (noteSocketMap) {
@@ -623,13 +631,45 @@ public class NotebookServer extends WebSocketServlet
       }
     }
 
+    // TODO 获取所有满足条件的note
     List<Note> notes = notebook.getAllNotes(userAndRoles);
     List<Map<String, String>> notesInfo = new LinkedList<>();
+
+    boolean rbacEnabled = conf.getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_AUTHC_RBAC_ENABLED);
+    NotebookAuthorization authorization = null;
+    String adminRole = null;
+    List<String> userRoles = null;
+    String currentUser = null;
+    if (rbacEnabled){
+      authorization = NotebookAuthorization.getInstance();
+      adminRole = conf.getString(ConfVars.ZEPPELIN_OWNER_ROLE);
+      userRoles = subject.getRoles();
+      currentUser = subject.getUser();
+    }
     for (Note note : notes) {
       Map<String, String> info = new HashMap<>();
 
       if (hideHomeScreenNotebookFromList && note.getId().equals(homescreenNoteId)) {
         continue;
+      }
+      // TODO 控制每个人只能列出自己的notes,管理员可以列出所有notes
+      if (rbacEnabled) {
+        Set<String> noteOwners = authorization.getOwners(note.getId());
+        if (!"anonymous".equals(currentUser)) {
+          if (noteOwners != null) {
+            if (StringUtils.isBlank(currentUser)) {
+              continue;
+            }
+            if (!noteOwners.contains(currentUser)) {
+              if (userRoles == null) {
+                continue;
+              }
+              if (!userRoles.contains(adminRole)) {
+                continue;
+              }
+            }
+          }
+        }
       }
 
       info.put("id", note.getId());
@@ -756,7 +796,9 @@ public class NotebookServer extends WebSocketServlet
       throws IOException {
 
     NotebookAuthorization notebookAuthorization = notebook.getNotebookAuthorization();
-    if (!notebookAuthorization.isReader(noteId, userAndRoles)) {
+    ZeppelinConfiguration conf = notebook.getConf();
+    boolean isRBACMode = conf.isRBACMode();
+    if (!isRBACMode && !notebookAuthorization.isReader(noteId, userAndRoles)) {
       permissionError(conn, op, principal, userAndRoles,
           notebookAuthorization.getOwners(noteId));
       return false;
@@ -1088,6 +1130,7 @@ public class NotebookServer extends WebSocketServlet
     }
 
     AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    // TODO 删除Note
     notebook.removeNote(noteId, subject);
     removeNote(noteId);
     broadcastNoteList(subject, userAndRoles);
@@ -1112,6 +1155,7 @@ public class NotebookServer extends WebSocketServlet
     }
 
     AuthenticationInfo subject = new AuthenticationInfo(fromMessage.principal);
+    // TODO 删除文件夹时批量删除Note
     for (Note note : notes) {
       notebook.removeNote(note.getId(), subject);
       removeNote(note.getId());
@@ -1805,6 +1849,14 @@ public class NotebookServer extends WebSocketServlet
         new Message(OP.RUN_PARAGRAPH_USING_SPELL).put("paragraph", p), conn);
   }
 
+  /**
+   * TODO https://github.com/xiejiajun/zeppelin.git有基于0.9.x代码的Zeppelin结果响应到页面的流程分析
+   * @param conn
+   * @param userAndRoles
+   * @param notebook
+   * @param fromMessage
+   * @throws IOException
+   */
   private void runParagraph(NotebookSocket conn, HashSet<String> userAndRoles, Notebook notebook,
                             Message fromMessage) throws IOException {
     final String paragraphId = (String) fromMessage.get("id");
@@ -2028,7 +2080,7 @@ public class NotebookServer extends WebSocketServlet
 
   /**
    * This callback is for the paragraph that runs on ZeppelinServer
-   *
+   * TODO 通过websocket发送数据到web端
    * @param output output to append
    */
   @Override
@@ -2337,6 +2389,7 @@ public class NotebookServer extends WebSocketServlet
     }
 
     /**
+     * TODO 通过websocket发送数据到web端
      * This callback is for paragraph that runs on RemoteInterpreterProcess
      */
     @Override

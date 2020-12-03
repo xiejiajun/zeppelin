@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Polls job progress with given interval
- *
+ * TODO 用于拉取作业进度并更新到Web端
  * @see Job#progress()
  * @see JobListener#onProgressUpdate(org.apache.zeppelin.scheduler.Job, int)
  *
@@ -52,6 +52,7 @@ public class JobProgressPoller extends Thread {
         if (listener != null) {
           try {
             if (job.isRunning()) {
+              // TODO job.progress()获取作业进度，listener.onProgressUpdate将进度推送到web端
               listener.onProgressUpdate(job, job.progress());
             }
           } catch (Exception e) {

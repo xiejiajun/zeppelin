@@ -82,11 +82,17 @@ public class InterpreterOption {
     return isUserImpersonate;
   }
 
+  /**
+   * 设置以当前用户启动解释器进程
+   * @param userImpersonate
+   */
   public void setUserImpersonate(boolean userImpersonate) {
     isUserImpersonate = userImpersonate;
   }
 
   public InterpreterOption() {
+    // TODO 这样做也可以做到能区分各个解释器进程是哪个用户启动的
+//    setUserImpersonate(true);
   }
 
   public InterpreterOption(String perUser, String perNote) {

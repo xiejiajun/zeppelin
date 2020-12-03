@@ -281,6 +281,7 @@ public class InterpreterSetting {
    */
   public InterpreterSetting(InterpreterSetting o) {
     this();
+    // TODO interpreter name (直接从interpreter-setting.json得到）
     this.id = o.name;
     this.name = o.name;
     this.group = o.group;
@@ -380,31 +381,58 @@ public class InterpreterSetting {
     return group;
   }
 
+  /**
+   * TODO 用于根据解释器绑定模式生成解释器Group ID（组ID用于进程隔离）
+   *    http://zeppelin.apache.org/docs/0.8.1/usage/interpreter/interpreter_binding_mode.html
+   * @param user
+   * @param noteId
+   * @return
+   */
   private String getInterpreterGroupId(String user, String noteId) {
     String key;
     if (option.isExistingProcess) {
+      // TODO 用于连接预先手动启动的解释器进程
       key = Constants.EXISTING_PROCESS;
     } else if (getOption().isProcess()) {
+      // TODO 按用户或者NoteId来设置解释器组（Per-user isolated 或者 Per-note isolated)
       key = (option.perUserIsolated() ? user : "") + ":" + (option.perNoteIsolated() ? noteId : "");
     } else {
+      // TODO globally shared 、 per-user scope和per-note scope都是共享一个JVM进程的
       key = SHARED_PROCESS;
     }
 
     //TODO(zjffdu) we encode interpreter setting id into groupId, this is not a good design
+    // TODO 解释器ID + 解释器进程模式的组合作为解释器组ID，用于隔离进程
+    //  id从interpreter-setting.json文件中反序列化得到的name而来
     return id + ":" + key;
   }
 
+  /**
+   * TODO 用于根据解释器绑定模式生成解释器Session ID  SESSION ID用于隔离连接解释器进程的会话
+   *  http://zeppelin.apache.org/docs/0.8.1/usage/interpreter/interpreter_binding_mode.html
+   * @param user
+   * @param noteId
+   * @return
+   */
   private String getInterpreterSessionId(String user, String noteId) {
     String key;
     if (option.isExistingProcess()) {
+      // TODO 用于处理连接已经手动启动的解释器
       key = Constants.EXISTING_PROCESS;
     } else if (option.perNoteScoped() && option.perUserScoped()) {
+      // TODO 这个条件永远不会满足，页面上per-note 和per-user是互斥选项
       key = user + ":" + noteId;
     } else if (option.perUserScoped()) {
+      // TODO per-user scope时 连接共享解释器进程的sessionId为用户名称，这会出现同一个解释器进程有多个user连接
       key = user;
     } else if (option.perNoteScoped()) {
+      // TODO per-note scope时 连接共享解释器进程的sessionId为noteId，这会出现同一个解释器进程有多个Note连接
       key = noteId;
     } else {
+      // TODO 对于Globally shared 、per-user isolated以及per-note isolated模式，sessionId都为shared_session
+      //   Globally shared: 所有用户的相同类型的段落都共用一个会话去和同一个对应类型的解释器JVM进程进行交互
+      //   per-user isolated:一个用户一个解释器对应一个进程，这个用户的所有和解释器类型对应的段落都是通过一个会话去和对应的解释器进程进行交互
+      //   per-note isolated: 一个note按note对应的解释器类型独享一个进程，这个note中所有和这个解释器进程类型相同的段落都通过同一个会话器和这个解释器进程交互
       key = SHARED_SESSION;
     }
 
@@ -412,6 +440,7 @@ public class InterpreterSetting {
   }
 
   public ManagedInterpreterGroup getOrCreateInterpreterGroup(String user, String noteId) {
+    // TODO 获取解释器组ID（会根据解释器绑定模式生成组ID) 组ID用于解释器进程隔
     String groupId = getInterpreterGroupId(user, noteId);
     try {
       interpreterGroupWriteLock.lock();
@@ -423,7 +452,7 @@ public class InterpreterSetting {
       }
       return interpreterGroups.get(groupId);
     } finally {
-      interpreterGroupWriteLock.unlock();;
+      interpreterGroupWriteLock.unlock();
     }
   }
 
@@ -437,12 +466,13 @@ public class InterpreterSetting {
   }
 
   public ManagedInterpreterGroup getInterpreterGroup(String user, String noteId) {
+    // TODO 获取解释器组ID
     String groupId = getInterpreterGroupId(user, noteId);
     try {
       interpreterGroupReadLock.lock();
       return interpreterGroups.get(groupId);
     } finally {
-      interpreterGroupReadLock.unlock();;
+      interpreterGroupReadLock.unlock();
     }
   }
 
@@ -471,14 +501,27 @@ public class InterpreterSetting {
     return DEFAULT_EDITOR;
   }
 
+  /**
+   * TODO 处理notebook页面的重启解释器请求
+   * @param user
+   * @param noteId
+   */
   void closeInterpreters(String user, String noteId) {
+    // TODO 到这里的InterpreterSetting已经是和用户要重启的类型一致了
+    //  获取解释器组
     ManagedInterpreterGroup interpreterGroup = getInterpreterGroup(user, noteId);
     if (interpreterGroup != null) {
+      // TODO 获取用户ID以及noteId对应的哪个解释器sessionId（这里的session不是用户和ZeppelinServer之间的Session，而是
+      //  ZeppelinServer和各个解释器实例之间维护的Session，所以一个用户可能会对应很多个Session，需要加上InterpreterSetting和
+      //  NoteId来唯一确定用户的对应类型的解释器和ZeppelinServer之间的Session）
       String sessionId = getInterpreterSessionId(user, noteId);
       interpreterGroup.close(sessionId);
     }
   }
 
+  /**
+   * TODO 停止解释器
+   */
   public void close() {
     LOGGER.info("Close InterpreterSetting: " + name);
     for (ManagedInterpreterGroup intpGroup : interpreterGroups.values()) {
@@ -671,7 +714,29 @@ public class InterpreterSetting {
 
   //////////////////////////// IMPORTANT ////////////////////////////////////////////////
   ///////////////////////////////////////////////////////////////////////////////////////
+  // TODO WARN [2020-03-16 02:12:32,859] ({qtp1231156911-16} InterpreterSettingManager.java[compare]:892) - InterpreterGroup sap is not specified in zeppelin.interpreter.group.order
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[getOrCreateInterpreterGroup]:419) - Create InterpreterGroup with groupId: spark:shared_process for user: user1 and note: 2F2H12WSQ
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.SparkInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.SparkSqlInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.DepInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.PySparkInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.IPySparkInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} InterpreterSetting.java[createInterpreters]:689) - Interpreter org.apache.zeppelin.spark.SparkRInterpreter created for user: user1, sessionId: shared_session
+  //  INFO [2020-03-16 02:12:33,513] ({qtp1231156911-92} ManagedInterpreterGroup.java[getOrCreateSession]:158) - Create Session: shared_session in InterpreterGroup: spark:shared_process for user: user1
+  //  INFO [2020-03-16 02:12:36,444] ({qtp1231156911-16} VFSNotebookRepo.java[save]:196) - Saving note:2F2H12WSQ
+  //  INFO [2020-03-16 02:12:36,447] ({pool-2-thread-6} SchedulerFactory.java[jobStarted]:114) - Job 20200311-132458_1167144774 started by scheduler org.apache.zeppelin.interpreter.remote.RemoteInterpreter-spark:shared_process-shared_session
   ///////////////////////////////////////////////////////////////////////////////////////
+  // TODO  INFO [2020-03-16 02:12:39,533] ({pool-2-thread-6} TimeoutLifecycleManager.java[onInterpreterProcessStarted]:62) - Process of InterpreterGroup spark:shared_process is started
+  //  INFO [2020-03-16 02:12:39,536] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.SparkInterpreter
+  //  INFO [2020-03-16 02:12:39,596] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.SparkSqlInterpreter
+  //  INFO [2020-03-16 02:12:39,597] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.DepInterpreter
+  //  INFO [2020-03-16 02:12:39,601] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.PySparkInterpreter
+  //  INFO [2020-03-16 02:12:39,606] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.IPySparkInterpreter
+  //  INFO [2020-03-16 02:12:39,609] ({pool-2-thread-6} RemoteInterpreter.java[call]:168) - Create RemoteInterpreter org.apache.zeppelin.spark.SparkRInterpreter
+  //  INFO [2020-03-16 02:12:39,610] ({pool-2-thread-6} RemoteInterpreter.java[call]:142) - Open RemoteInterpreter org.apache.zeppelin.spark.PySparkInterpreter
+  ///////////////////////////////////////////////////////////////////////////////////////
+  // TODO 这里是根据所有注册的解释器列表一次性创建用户所有的解释器客户端，但只会通过客户端RemoteInterpreter的
+  //  internal_create中的call方法创建对应解释器进程(例如上面日志最终只open了PySparkInterpreter)
   // This is the only place to create interpreters. For now we always create multiple interpreter
   // together (one session). We don't support to create single interpreter yet.
   List<Interpreter> createInterpreters(String user, String interpreterGroupId, String sessionId) {
@@ -679,6 +744,7 @@ public class InterpreterSetting {
     List<InterpreterInfo> interpreterInfos = getInterpreterInfos();
     Properties intpProperties = getJavaProperties();
     for (InterpreterInfo info : interpreterInfos) {
+      // TODO 创建解释器客户端
       Interpreter interpreter = new RemoteInterpreter(intpProperties, sessionId,
           info.getClassName(), user, lifecycleManager);
       if (info.isDefaultInterpreter()) {
@@ -712,6 +778,7 @@ public class InterpreterSetting {
     InterpreterLaunchContext launchContext = new
         InterpreterLaunchContext(properties, option, interpreterRunner, userName,
         interpreterGroupId, id, group, name);
+    // TODO 解释器启动器构建入口
     RemoteInterpreterProcess process = (RemoteInterpreterProcess) launcher.launch(launchContext);
     process.setRemoteInterpreterEventPoller(
         new RemoteInterpreterEventPoller(remoteInterpreterProcessListener, appEventListener));
@@ -719,11 +786,27 @@ public class InterpreterSetting {
     return process;
   }
 
+  /**
+   * TODO 组ID隔离解释器进程
+   *  session隔离连接组ID对应的解释器进程的会话
+   *  所以除了per-user scope 、per-note scope模式是一个解释器进程对应多个session外
+   *  globally shared、per-user isolated和per-note isolated模式都是一个解释器进程一个Session,
+   *  globally shared模式是本身语义就是如此
+   *  per-user isolated和per-note isolated模式应该是不需要再拆分session了，否则资源占用情况会很严重
+   *  其实per-user isolated还可以拆成解释器进程对应的用户的每个对应类型的note或者段落一个session，
+   *  per-note isolated还可以拆成每个段落一个session，但是这样太细了的话，同一个note中多饿段落的数据会无法共享
+   * @param user
+   * @param noteId
+   * @return
+   */
   List<Interpreter> getOrCreateSession(String user, String noteId) {
+    // TODO 获取解释器组
     ManagedInterpreterGroup interpreterGroup = getOrCreateInterpreterGroup(user, noteId);
     Preconditions.checkNotNull(interpreterGroup, "No InterpreterGroup existed for user {}, " +
         "noteId {}", user, noteId);
+    // TODO 根据解释器绑定模式生成会话ID
     String sessionId = getInterpreterSessionId(user, noteId);
+    // TODO 有了解释器组ID和SessionId，下面就该获取或者创建对应的解释器进程了（所以这里是创建解释器进程的入口）
     return interpreterGroup.getOrCreateSession(user, sessionId);
   }
 

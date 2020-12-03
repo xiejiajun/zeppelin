@@ -416,6 +416,7 @@ public class NotebookRestApi {
     if (!(noteId.isEmpty())) {
       Note note = notebook.getNote(noteId);
       if (note != null) {
+        // TODO 删除note
         notebook.removeNote(noteId, subject);
       }
     }

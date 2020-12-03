@@ -94,6 +94,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
+ * TODO 这个class作为除了spark submit提交的作业外的所有解释器的启动入口（interpreter.sh脚本会调用这个类来启动解释器）
+ *   spark-submit启动的作业用到的spark解释器其实就是内部自己实现来监听回调端口等逻辑，实际上是通过spark-submit命令将spark-interpreter-*.jar
+ *   作为Spark Application提交，然后被提交的spark解释器Application（spark-interpreter-*.jar: *代表版本号，永远只允许存在一个Spark解释器jar，
+ *   否则spark-submit会报错）再监听客户端传递过去的通过Java/Scala/pySpark代码来动态执行（Spark解释器里面通过类似spark-shell底层的做法，通过repl类库动态编译代码进行交互式执行）。
+ *   不是通过之前所想的：先把用户写的scala/java/pySpark代码编译打包，再作为Spark Application提交的方式来做的。
+ *   更正一下：Spark解释器提交时指定的mainClass也是这个类,即Spark Driver端运行的哪个常驻服务入口是这个类
  * Entry point for Interpreter process.
  * Accepting thrift connections from ZeppelinServer.
  */
@@ -142,7 +148,9 @@ public class RemoteInterpreterServer extends Thread
   public RemoteInterpreterServer(String callbackHost, int callbackPort, String portRange,
                                  boolean isTest) throws TTransportException, IOException {
     if (null != callbackHost) {
+      // TODO Zeppelin Server主机
       this.callbackHost = callbackHost;
+      // TODO Zeppelin Server用于和当前解释器交互的端口
       this.callbackPort = callbackPort;
     } else {
       // DevInterpreter
@@ -175,6 +183,7 @@ public class RemoteInterpreterServer extends Thread
         boolean interrupted = false;
         @Override
         public void run() {
+          // TODO 等待解释器启动
           while (!interrupted && !server.isServing()) {
             try {
               Thread.sleep(1000);
@@ -186,6 +195,7 @@ public class RemoteInterpreterServer extends Thread
           if (!interrupted) {
             CallbackInfo callbackInfo = new CallbackInfo(host, port);
             try {
+              // TODO 将启动的解释器服务向Zeppelin Server注册
               RemoteInterpreterUtils
                   .registerInterpreter(callbackHost, callbackPort, callbackInfo);
             } catch (TException e) {
@@ -201,6 +211,7 @@ public class RemoteInterpreterServer extends Thread
       }).start();
     }
     logger.info("Starting remote interpreter server on port {}", port);
+    // TODO 监听作业执行请求
     server.serve();
   }
 
@@ -299,6 +310,8 @@ public class RemoteInterpreterServer extends Thread
     }
 
     try {
+      // TODO 根据Thrift客户端传过来的className创建对应的懒加载解释器(每个Session创建一个解释器实例，避免各个
+      //    Session直接相互影响
       Class<Interpreter> replClass = (Class<Interpreter>) Object.class.forName(className);
       Properties p = new Properties();
       p.putAll(properties);
@@ -312,6 +325,9 @@ public class RemoteInterpreterServer extends Thread
       repl.setInterpreterGroup(interpreterGroup);
       repl.setUserName(userName);
 
+      // TODO LazyOpenInterpreter是使用装饰器模式实现解释器的懒加载
+      //  装饰器模式：被装饰的对象从外部传入
+      //  代理模式：被代理的对象内部new出来
       interpreterGroup.addInterpreterToSession(new LazyOpenInterpreter(repl), sessionId);
     } catch (ClassNotFoundException | NoSuchMethodException | SecurityException
         | InstantiationException | IllegalAccessException
@@ -350,6 +366,7 @@ public class RemoteInterpreterServer extends Thread
           new InterpreterException("Interpreter instance " + className + " not created"));
     }
     synchronized (interpreterGroup) {
+      // TODO LazyOpenInterpreter类型
       List<Interpreter> interpreters = interpreterGroup.get(sessionId);
       if (interpreters == null) {
         throw new TException(
@@ -376,6 +393,12 @@ public class RemoteInterpreterServer extends Thread
     }
   }
 
+  /**
+   * TODO 用于接收并处理ZeppelinServer发送过来的close 解释器请求
+   * @param sessionId
+   * @param className
+   * @throws TException
+   */
   @Override
   public void close(String sessionId, String className) throws TException {
     // unload all applications
@@ -406,6 +429,7 @@ public class RemoteInterpreterServer extends Thread
         Interpreter inp = it.next();
         if (inp.getClassName().equals(className)) {
           try {
+            // TODO 接收到RemoteInterpreter的close方法发起的关闭解释器请求后，经过一系列处理，到这里执行真正的解释器close操作
             inp.close();
           } catch (InterpreterException e) {
             logger.warn("Fail to close interpreter", e);
@@ -428,6 +452,7 @@ public class RemoteInterpreterServer extends Thread
     InterpreterContext context = convert(interpreterContext);
     context.setClassName(intp.getClassName());
 
+    // TODO 根据具体的解释器构建或者获取已经创建好的调度器实现来调度任务
     Scheduler scheduler = intp.getScheduler();
     InterpretJobListener jobListener = new InterpretJobListener();
     InterpretJob job = new InterpretJob(
@@ -438,8 +463,10 @@ public class RemoteInterpreterServer extends Thread
         intp,
         st,
         context);
+    // TODO 提交任务
     scheduler.submit(job);
 
+    // TODO TThreadPoolServer每个监听任务提交请求的线程到这里都会阻塞等待自己接收的任务执行完成并返回结果
     while (!job.isTerminated()) {
       synchronized (jobListener) {
         try {
@@ -550,6 +577,7 @@ public class RemoteInterpreterServer extends Thread
 
     @Override
     public int progress() {
+      // TODO 这个作业比较特殊，无需实现进度获取方法
       return 0;
     }
 
@@ -633,6 +661,7 @@ public class RemoteInterpreterServer extends Thread
         }
 
         // data from context.out is prepended to InterpreterResult if both defined
+        // TODO 用于触发通过WebSocket输出结果到Web端
         context.out.flush();
         List<InterpreterResultMessage> resultMessages = context.out.toInterpreterResultMessage();
         resultMessages.addAll(result.message());
@@ -774,6 +803,7 @@ public class RemoteInterpreterServer extends Thread
     return new InterpreterOutput(new InterpreterOutputListener() {
       @Override
       public void onUpdateAll(InterpreterOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         try {
           eventClient.onInterpreterOutputUpdateAll(
               noteId, paragraphId, out.toInterpreterResultMessage());
@@ -784,6 +814,7 @@ public class RemoteInterpreterServer extends Thread
 
       @Override
       public void onAppend(int index, InterpreterResultMessageOutput out, byte[] line) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         String output = new String(line);
         logger.debug("Output Append: {}", output);
         eventClient.onInterpreterOutputAppend(
@@ -792,6 +823,7 @@ public class RemoteInterpreterServer extends Thread
 
       @Override
       public void onUpdate(int index, InterpreterResultMessageOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         String output;
         try {
           output = new String(out.toByteArray());
@@ -1215,11 +1247,13 @@ public class RemoteInterpreterServer extends Thread
 
       @Override
       public void onAppend(int index, InterpreterResultMessageOutput out, byte[] line) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         eventClient.onAppOutputAppend(noteId, paragraphId, index, appId, new String(line));
       }
 
       @Override
       public void onUpdate(int index, InterpreterResultMessageOutput out) {
+        // TODO 用于触发通过WebSocket输出结果到Web端(通过NotebookServer转发）
         try {
           eventClient.onAppOutputUpdate(noteId, paragraphId, index, appId,
               out.getType(), new String(out.toByteArray()));

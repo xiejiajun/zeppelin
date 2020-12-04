@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.HashMap;
 import java.util.List;
@@ -76,15 +77,7 @@ public class HiveUtils {
       long jobLastActiveTime = System.currentTimeMillis();
       while (!Thread.interrupted()) {
         try {
-          if (isCancelled(hiveStmt)) {
-            LOGGER.info("hiveStmt has been canceled, stop job execution monitor");
-            break;
-          }
-          // Sometimes, maybe hiveStmt was closed unnormally, hiveStmt.hasMoreLogs() will be true,
-          // this loop cannot jump out, and exceptions thrown.
-          // Add the below codes in case.
-          if (hiveStmt.isClosed()){
-            LOGGER.info("hiveStmt has been closed, stop job execution monitor");
+          if (isTerminated(hiveStmt)) {
             break;
           }
           if (!hiveStmt.hasMoreLogs()) {
@@ -197,7 +190,32 @@ public class HiveUtils {
   }
 
   /**
-   * 判断Hive Query是否已经被Cancel
+   * 判断HiveStatement是否为终止状态.
+   * @param hiveStmt
+   * @return
+   */
+  private static boolean isTerminated(HiveStatement hiveStmt) {
+    if (isCancelled(hiveStmt)) {
+      LOGGER.info("hiveStmt has been canceled, stop job execution monitor");
+      return true;
+    }
+
+    // Sometimes, maybe hiveStmt was closed unnormally, hiveStmt.hasMoreLogs() will be true,
+    // this loop cannot jump out, and exceptions thrown.
+    // Add the below codes in case.
+    try {
+      if (hiveStmt.isClosed()){
+        LOGGER.info("hiveStmt has been closed, stop job execution monitor");
+        return true;
+      }
+    } catch (SQLException e) {
+      LOGGER.info("fetch hiveStmt close state failed", e);
+    }
+    return false;
+  }
+
+  /**
+   * 判断Hive Query是否已经被Cancel.
    * @param hiveStmt
    * @return
    */

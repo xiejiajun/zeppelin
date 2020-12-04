@@ -143,6 +143,11 @@
                 <goal>resources</goal>
               </goals>
               <configuration>
+                <!-- 统一的资源打包配置，将打包好的文件拷贝到${project.build.directory}/../../interpreter/${interpreter.name}下
+                即${project.basedir}/interpreter/${interpreter.name}下，各个解释器实现都会定义自己的interpreter.name属性
+                ，而且都会通过<relativePath>标签修改原本的parent.relativePath(即父pom路径，默认为../pom.xml)为../zeppelin-interpreter-parent/pom.xml
+                从而继承这个打包配置将最终打好的包拷到${project.basedir}/interpreter/${interpreter.name}下，供zeppelin-distribution模块配置的
+                assembly插件进行最后的gz包打包（注意flink解释器是个打包配置有点例外，它是自己处理的，没有完全使用这里的配置)-->
                 <outputDirectory>${project.build.directory}/../../interpreter/${interpreter.name}</outputDirectory>
               </configuration>
             </execution>

@@ -25,6 +25,7 @@
     <!-- format>zip</format -->
   </formats>
   <includeBaseDirectory>true</includeBaseDirectory>
+  <!-- 生成打包输出的父目录 -->
   <baseDirectory>zeppelin-${project.version}</baseDirectory>
 
   <dependencySets>
@@ -84,6 +85,7 @@
       <directory>../interpreter</directory>
     </fileSet>
     <fileSet>
+      <!-- 将../notebook(${project.basedir}/notebook)下的文件拷贝到当前目录下的notebook目录 -->
       <directory>../notebook</directory>
     </fileSet>
     <fileSet>
@@ -93,6 +95,8 @@
       <directory>../k8s</directory>
     </fileSet>
     <fileSet>
+      <!-- 将../notebook(${project.basedir}/zeppelin-web/src/app/visualization)下的文件
+      拷贝到当前目录下(${baseDirectory})的/lib/node_modules/zeppelin-vis目录 -->
       <outputDirectory>/lib/node_modules/zeppelin-vis</outputDirectory>
       <directory>../zeppelin-web/src/app/visualization</directory>
     </fileSet>

@@ -292,6 +292,7 @@ export class NotebookParagraphComponent extends ParagraphBase implements OnInit,
     this.editorSetting.isOutputHidden = this.paragraph.config.editorSetting.editOnDblClick;
   }
 
+  // TODO 运行段落
   runParagraph(paragraphText?: string, propagated: boolean = false) {
     const text = paragraphText || this.paragraph.text;
     if (text && !this.isParagraphRunning) {
@@ -303,9 +304,11 @@ export class NotebookParagraphComponent extends ParagraphBase implements OnInit,
       } else {
         const check = this.ngTemplateAdapterService.preCheck(text);
         if (!check) {
+          // TODO 非%augular，交给后端解释器运行
           this.runParagraphUsingBackendInterpreter(text);
           this.runParagraphAfter(text);
         } else {
+          // TODO %angular解释器前端自己运行就行
           this.waitConfirmFromEdit = true;
           this.nzModalService
             .confirm({
@@ -493,6 +496,7 @@ export class NotebookParagraphComponent extends ParagraphBase implements OnInit,
     }>(...observables)
       .pipe(takeUntil(this.destroy$))
       .subscribe(({ action, event }) => {
+        // TODO 这里处理c-s的Action?
         if (this.mode === 'command') {
           switch (action) {
             case ParagraphActions.InsertAbove:

@@ -35,6 +35,9 @@ export type ReceiveArgumentsType<
   K extends keyof MessageReceiveDataTypeMap
 > = MessageReceiveDataTypeMap[K] extends undefined ? () => void : (data?: MessageReceiveDataTypeMap[K]) => void;
 
+/**
+ * TODO 新版本WebUI， websocket工具封装在这里，使用观察者模式封装成更优雅的api给上层业务方法使用
+ * */
 export class Message {
   public connectedStatus = false;
   public connectedStatus$ = new Subject<boolean>();

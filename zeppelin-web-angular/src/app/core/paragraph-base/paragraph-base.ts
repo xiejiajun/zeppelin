@@ -61,6 +61,7 @@ export abstract class ParagraphBase extends MessageListenersManager {
 
   abstract changeColWidth(needCommit: boolean, updateResult?: boolean): void;
 
+  // TODO PROGRESS: s-c
   @MessageListener(OP.PROGRESS)
   onProgress(data: MessageReceiveDataTypeMap[OP.PROGRESS]) {
     if (data.id === this.paragraph.id) {
@@ -77,12 +78,14 @@ export abstract class ParagraphBase extends MessageListenersManager {
     }
   }
 
+  // TODO NOTE_RUNNING_STATUS: s-c
   @MessageListener(OP.NOTE_RUNNING_STATUS)
   noteRunningStatusChange(data: MessageReceiveDataTypeMap[OP.NOTE_RUNNING_STATUS]) {
     this.isEntireNoteRunning = data.status;
     this.cdr.markForCheck();
   }
 
+  // TODO PARAS_INFO: s-c
   @MessageListener(OP.PARAS_INFO)
   updateParaInfos(data: MessageReceiveDataTypeMap[OP.PARAS_INFO]) {
     if (this.paragraph.id === data.id) {
@@ -91,6 +94,7 @@ export abstract class ParagraphBase extends MessageListenersManager {
     }
   }
 
+  // TODO EDITOR_SETTING: c-s
   @MessageListener(OP.EDITOR_SETTING)
   getEditorSetting(data: MessageReceiveDataTypeMap[OP.EDITOR_SETTING]) {
     if (this.paragraph.id === data.paragraphId) {
@@ -99,6 +103,8 @@ export abstract class ParagraphBase extends MessageListenersManager {
     }
   }
 
+  // TODO 新版UI使用监听器API处理websocket请求，websocket封装在@zeppelin/sdk模块的底层实现了？
+  //  OP.PARAGRAPH: s-c
   @MessageListener(OP.PARAGRAPH)
   paragraphData(data: MessageReceiveDataTypeMap[OP.PARAGRAPH]) {
     const oldPara = this.paragraph;
@@ -306,6 +312,7 @@ export abstract class ParagraphBase extends MessageListenersManager {
   }
 
   runParagraphUsingBackendInterpreter(paragraphText: string) {
+    // TODO 运行段落
     this.messageService.runParagraph(
       this.paragraph.id,
       this.paragraph.title,

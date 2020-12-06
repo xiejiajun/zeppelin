@@ -194,8 +194,9 @@ public class ZeppelinServer extends ResourceConfig {
           }
         });
 
-    // Multiple Web UI
+    // Multiple Web UI: TODO 老web ui根路径为/
     final WebAppContext defaultWebApp = setupWebAppContext(contexts, conf, conf.getString(ConfVars.ZEPPELIN_WAR), conf.getServerContextPath());
+    // TODO 新版web ui入口根路径为/next
     final WebAppContext nextWebApp = setupWebAppContext(contexts, conf, conf.getString(ConfVars.ZEPPELIN_ANGULAR_WAR), WEB_APP_CONTEXT_NEXT);
 
     initWebApp(defaultWebApp);

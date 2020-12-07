@@ -665,6 +665,7 @@ public class ZeppelinConfiguration extends XMLConfiguration {
   }
 
   public boolean isNotebookPublic() {
+    // TODO(Luffy): zeppelin.notebook.public用户控制权限开关
     return getBoolean(ConfVars.ZEPPELIN_NOTEBOOK_PUBLIC);
   }
 

@@ -270,6 +270,12 @@ public class AuthorizationService implements ClusterEventListener {
             isAdmin(entities);
   }
 
+  /**
+   * TODO 检查是否拥有Reader权限
+   * @param noteId
+   * @param entities
+   * @return
+   */
   public boolean isReader(String noteId, Set<String> entities) {
     return isMember(entities, getReaders(noteId)) ||
             isMember(entities, getOwners(noteId)) ||
@@ -286,6 +292,7 @@ public class AuthorizationService implements ClusterEventListener {
   }
 
   private boolean isAdmin(Set<String> entities) {
+    // TODO zeppelin.notebook.default.owner.username用户配置管理员角色
     String adminRole = conf.getString(ZeppelinConfiguration.ConfVars.ZEPPELIN_OWNER_ROLE);
     if (StringUtils.isBlank(adminRole)) {
       return false;

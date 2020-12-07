@@ -66,6 +66,7 @@ public class NoteAuth {
         // add current user to owners - can be public
         this.owners.add(checkCaseAndConvert(subject.getUser()));
       } else {
+        // TODO 根据配置生成Note权限，创建Note时生成，后期可手动修改
         // add current user to owners, readers, runners, writers - private note
         this.owners.add(checkCaseAndConvert(subject.getUser()));
         this.readers.add(checkCaseAndConvert(subject.getUser()));

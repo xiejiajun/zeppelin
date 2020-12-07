@@ -49,7 +49,6 @@ import org.apache.zeppelin.notebook.AuthorizationService;
 import org.apache.zeppelin.notebook.repo.NotebookRepoWithVersionControl;
 import org.apache.zeppelin.notebook.scheduler.SchedulerService;
 import org.apache.zeppelin.common.Message;
-import org.apache.zeppelin.rest.SessionManager;
 import org.apache.zeppelin.rest.exception.BadRequestException;
 import org.apache.zeppelin.rest.exception.ForbiddenException;
 import org.apache.zeppelin.rest.exception.NoteNotFoundException;
@@ -224,6 +223,7 @@ public class NotebookService {
         LOGGER.error("Fail to reload notes from repository", e);
       }
     }
+    // TODO(Luffy): 过滤出有Reader权限的展示给用户
     List<NoteInfo> notesInfo = notebook.getNotesInfo(
             noteId -> authorizationService.isReader(noteId, context.getUserAndRoles()));
     callback.onSuccess(notesInfo, context);
@@ -1266,7 +1266,7 @@ public class NotebookService {
   /**
    * Return null when it is allowed, otherwise return the error message which could be
    * propagated to frontend
-   *
+   * TODO(Luffy): 检查权限
    * @param noteId
    * @param context
    * @param permission

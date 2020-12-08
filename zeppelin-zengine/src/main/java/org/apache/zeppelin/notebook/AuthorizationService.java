@@ -304,6 +304,8 @@ public class AuthorizationService implements ClusterEventListener {
   private boolean isMember(Set<String> a, Set<String> b) {
     Set<String> intersection = new HashSet<>(b);
     intersection.retainAll(a);
+    // TODO 也就是清空note的owner/reader/writer或者将用户添加到note的owner/reader/writer列表都可以实现授权
+    //  清空操作是将note置为公共note，所有人都有权访问
     return (b.isEmpty() || (intersection.size() > 0));
   }
 

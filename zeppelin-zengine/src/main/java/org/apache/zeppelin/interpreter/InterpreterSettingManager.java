@@ -121,6 +121,26 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
   /**
    * This is used by creating and running Interpreters
    * id --> InterpreterSetting
+   * TODO(Luffy) settingId(其实就是解释器名称) => InterpreterSetting的映射，
+   *    页面上可以看到的一个解释器就有一个InterpreterSetting对象保存它的解释器全局配置，具体配置项保存在该对象的properties字段中。
+   *  创建解释器时配置生成流程：(0.8.x) InterpreterRestApi#newSettings(String message)
+   *    -> InterpreterSettingManager#createNewSetting(tring name, String group,
+   *         List<Dependency> dependencies,InterpreterOption option,
+   *         Map<String, InterpreterProperty> p)
+   *    -> InterpreterSetting setting = new InterpreterSetting(
+   *         interpreterSettingTemplates.get(group)): 根据解释group获取解释器模版配置信息
+   *         setting.setName(name);
+   *         setting.setGroup(group);
+   *         setting.setInterpreterOption(option);
+   *         setting.setProperties(p);
+   *         initInterpreterSetting(setting);
+   *         interpreterSettings.put(setting.getId(), setting): 将新建的解释器保存到映射关系
+   *         saveToFile();
+   *   (0.9.x): InterpreterRestApi#newSettings(String message)
+   *      -> InterpreterSettingManager#createNewSetting
+   *      -> InterpreterSettingManager#inlineCreateNewSetting
+   *      -> InterpreterSetting setting = new InterpreterSetting ...
+   *    : 一个解释器使用一个InterpreterSetting对象、像spark解释器这种spark.r spark.sql和spark共用一个对象
    * TODO(zjffdu) change it to name --> InterpreterSetting
    */
   private final Map<String, InterpreterSetting> interpreterSettings =
@@ -950,9 +970,15 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
     return interpreterSettings.get(id);
   }
 
+  /**
+   * TODO(Luffy) 根据解释器名称获取解释器全局配置对象
+   * @param name: 解释器名称(解释器只要一级时,例如hive,sh)/解释器前缀名称(解释器为二级时,例如spark.sql中的spark)
+   * @return
+   */
   @VisibleForTesting
   public InterpreterSetting getByName(String name) {
     for (InterpreterSetting interpreterSetting : interpreterSettings.values()) {
+      // TODO(Luffy) 如果该解释器配置的名称和解释器名name(如hive、presto或者spark.sql解释器的前半部份spark）相同
       if (interpreterSetting.getName().equals(name)) {
         return interpreterSetting;
       }

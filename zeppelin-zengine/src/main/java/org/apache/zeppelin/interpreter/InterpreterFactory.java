@@ -52,8 +52,11 @@ public class InterpreterFactory implements InterpreterFactoryInterface {
 
     String[] replNameSplits = replName.split("\\.");
     if (replNameSplits.length == 2) {
+      // TODO(Luffy) 如spark.sql saprk.r、spark.pyspark等
       String group = replNameSplits[0];
       String name = replNameSplits[1];
+      // TODO(Luffy) 根据解释器name获取对应的解释器配置对象InterpreterSetting,
+      //  解释器相关的即诶生气配置页面上配置的全局配置都在这里
       InterpreterSetting setting = interpreterSettingManager.getByName(group);
       if (null != setting) {
         Interpreter interpreter = setting.getInterpreter(executionContext, name);
@@ -66,6 +69,7 @@ public class InterpreterFactory implements InterpreterFactoryInterface {
 
     } else if (replNameSplits.length == 1){
       // first assume group is omitted
+      // TODO(Luffy) 根据note默认解释器获取setting: 对应note默认解释器为spark,内部通过pyspark、sql等指定解释器的情况
       InterpreterSetting setting =
           interpreterSettingManager.getByName(executionContext.getDefaultInterpreterGroup());
       if (setting != null) {
@@ -76,6 +80,7 @@ public class InterpreterFactory implements InterpreterFactoryInterface {
       }
 
       // then assume interpreter name is omitted
+      // TODO(Luffy) 对应解释器名称只要一级的情况: 如hive、sh、presto等
       setting = interpreterSettingManager.getByName(replName);
       if (null != setting) {
         return setting.getDefaultInterpreter(executionContext);

@@ -718,6 +718,7 @@ public class InterpreterSetting {
   }
 
   void setInterpreterOption(InterpreterOption interpreterOption) {
+    // TODO(Luffy) 设置解释器模式：shared、scoped、isolated(共享、按作用域、隔离)
     this.option = interpreterOption;
   }
 
@@ -827,6 +828,9 @@ public class InterpreterSetting {
   List<Interpreter> createInterpreters(String user, String interpreterGroupId, String sessionId) {
     List<Interpreter> interpreters = new ArrayList<>();
     List<InterpreterInfo> interpreterInfos = getInterpreterInfos();
+    // TODO(Luffy) 获取InterpreterSetting中properties字段保存的解释器全局配置信息（因为每个解释器类型都有唯一一个
+    //  InterpreterSetting对象保存解释器配置，所以创建对应解释器的远程客户端时通过该解释器的InterpreterSetting类型
+    //  的配置对象就能获取到该解释器对应的全局配置
     Properties intpProperties = getJavaProperties();
     for (InterpreterInfo info : interpreterInfos) {
       Interpreter interpreter = new RemoteInterpreter(intpProperties, sessionId,
@@ -927,6 +931,8 @@ public class InterpreterSetting {
 
   private ManagedInterpreterGroup createInterpreterGroup(String groupId) {
     AngularObjectRegistry angularObjectRegistry;
+    // TODO(Luffy) 创建解释器管理组时将解释器对应的保存了全局配置信息的InterpreterSetting对象(this）传递给ManagedInterpreterGroup
+    //  方便它内部的ManagedInterpreterGroup.getOrCreateSession创建解释器进程的RemoteInterpreter代理对象时使用
     ManagedInterpreterGroup interpreterGroup = new ManagedInterpreterGroup(groupId, this);
     angularObjectRegistry =
         new RemoteAngularObjectRegistry(groupId, angularObjectRegistryListener, interpreterGroup);

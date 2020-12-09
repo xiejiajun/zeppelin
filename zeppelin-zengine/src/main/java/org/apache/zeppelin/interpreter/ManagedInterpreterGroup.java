@@ -173,6 +173,9 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     if (sessions.containsKey(sessionId)) {
       return sessions.get(sessionId);
     } else {
+      // TODO(Luffy) 这里的interpreterSetting对象就是InterpreterFactory.getInterpreter中根据解释器名称获取到
+      //  的和该解释器对应的配置信息，所以用来创建用于启动该解释器进程的Thrift调用方RemoteInterpreter，然后通过
+      //  该RemoteInterpreter就可以通过Thrift客户端和远程的解释器进程通过Rpc接口调用的方式进行交互了
       List<Interpreter> interpreters = interpreterSetting.createInterpreters(user, id, sessionId);
       for (Interpreter interpreter : interpreters) {
         interpreter.setInterpreterGroup(this);

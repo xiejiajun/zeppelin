@@ -127,34 +127,76 @@ public class InterpreterOption {
   }
 
 
+  /**
+   * 同一类型的Paragraph不分用户、也不分Note，都共享同一个解释器进程、一个Session
+   * @return
+   */
   public boolean perUserShared() {
     return SHARED.equals(perUser);
   }
 
+  /**
+   * 整个Notebook中相同解释器类型的所有Paragraph共用一个解释器进程，但是每个用户运行时都有自己专用的session(
+   *  即同一用户的所有相同类型的Paragraph共用一个session，哪怕它们不在同一个Note中)
+   * 这种模式下仍然可以使用基于ZeppelinContext的ResourcePool相互交换数据:z.put、z.get、z.show
+   * http://zeppelin.apache.org/docs/0.8.2/usage/other_features/zeppelin_context.html
+   * @return
+   */
   public boolean perUserScoped() {
     return SCOPED.equals(perUser);
   }
 
+  /**
+   * 每个用户的相同解释器类型的所有Paragraph共用一个解释器进程，哪怕它们在不同的Note中，(隔离模式都是一个解释器进程只有一个session）,
+   * 这种模式下仍然可以使用基于ZeppelinContext的ResourcePool相互交换数据:z.put、z.get、z.show
+   * 这种情况使用的是分布式资源池DistributedResourcePool
+   * @return
+   */
   public boolean perUserIsolated() {
     return ISOLATED.equals(perUser);
   }
 
+  /**
+   * 同一个Note下面的相同解释器类型的所有用户的所有Paragraph共享一个解释器进程、一个Session
+   * @return
+   */
   public boolean perNoteShared() {
     return SHARED.equals(perNote);
   }
 
+  /**
+   * 整个Notebook中相同解释器类型的所有Paragraph共用一个解释器进程，但每个Note运行时都有自己专用的session，即使是属于同一用户启动的，
+   *  也会有自己独立的session，这就是和perUserScoped模式的区别, perUserScoped模式每个用户的所有相同类型的paragraph都
+   *  共用一个Session，而perNoteScoped是每个Note下相同类型的Paragraph共用一个Session，同一用户有多个Note都有
+   *  对应类型的paragraph的话这个用户就会有多个Session
+   * 这种模式下仍然可以使用基于ZeppelinContext的ResourcePool相互交换数据:z.put、z.get、z.show
+   * @return
+   */
   public boolean perNoteScoped() {
     return SCOPED.equals(perNote);
   }
 
+  /**
+   * 同一个Note中的所有类型相同的paragraph共用一个解释器进程(隔离模式都是一个解释器进程只有一个session), 就算是同一用户启动的相同类型的paragraph
+   *  只要不在同一个Note里面就会使用不同的解释器进程，这是和perUserIsolated模式的区别，它比perUserIsolated模式隔离粒度更细
+   * 这种情况可以分布式资源池DistributedResourcePool进行数据交换: :z.put、z.get、z.show
+   * @return
+   */
   public boolean perNoteIsolated() {
     return ISOLATED.equals(perNote);
   }
 
+  /**
+   * 用于判断是否是隔离模式：perNoteIsolated或perUserIsolated
+   * @return
+   */
   public boolean isIsolated() {
     return perUserIsolated() || perNoteIsolated();
   }
 
+  /**
+   * @return
+   */
   public boolean isSession() {
     return perUserScoped() || perNoteScoped();
   }

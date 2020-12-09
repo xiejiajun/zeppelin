@@ -24,7 +24,8 @@ import com.google.gson.Gson;
 import org.apache.zeppelin.conf.ZeppelinConfiguration;
 
 /**
- *
+ * Interpreter Binding Mode：
+ *   http://zeppelin.apache.org/docs/0.8.2/usage/interpreter/interpreter_binding_mode.html
  */
 public class InterpreterOption {
   public static final transient String SHARED = "shared";

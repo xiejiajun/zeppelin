@@ -80,9 +80,11 @@ public class RemoteScheduler implements Scheduler {
       // run
       Scheduler scheduler = this;
       JobRunner jobRunner = new JobRunner(scheduler, job);
+      // TODO 将调度任务放到线程池等待执行
       executor.execute(jobRunner);
 
       // wait until it is submitted to the remote
+      // TODO 等待提交成功
       while (!jobRunner.isJobSubmittedInRemote()) {
         synchronized (queue) {
           try {
@@ -169,6 +171,7 @@ public class RemoteScheduler implements Scheduler {
   /**
    * Role of the class is get status info from remote process from PENDING to
    * RUNNING status.
+   * TODO 作业状态拉取器
    */
   private class JobStatusPoller extends Thread {
     private long initialPeriodMsec;
@@ -223,6 +226,7 @@ public class RemoteScheduler implements Scheduler {
 
         if (newStatus != Status.READY && newStatus != Status.PENDING) {
           // we don't need more
+          // TODO RUNNING起来后就不再拉取状态了
           break;
         }
       }
@@ -257,6 +261,7 @@ public class RemoteScheduler implements Scheduler {
       if (!remoteInterpreter.isOpened()) {
         return getLastStatus();
       }
+      // TODO 拉取作业运行状态
       Status status = Status.valueOf(remoteInterpreter.getStatus(job.getId()));
       if (status == Status.UNKNOWN) {
         // not found this job in the remote schedulers.
@@ -266,6 +271,7 @@ public class RemoteScheduler implements Scheduler {
         return job.getStatus();
       }
       lastStatus = status;
+      // TODO 更新状态到前端
       listener.afterStatusChange(job, null, status);
       return status;
     }
@@ -292,6 +298,7 @@ public class RemoteScheduler implements Scheduler {
 
     @Override
     public void run() {
+      // TODO 终止状态直接退出
       if (job.isAborted()) {
         synchronized (queue) {
           job.setStatus(Status.ABORT);
@@ -305,6 +312,7 @@ public class RemoteScheduler implements Scheduler {
         return;
       }
 
+      // TODO 初始化用于将任务状态PENDING 、READY更新到RUNNING的状态拉取线程，RUNNING后该线程退出
       JobStatusPoller jobStatusPoller = new JobStatusPoller(1500, 100, 500,
           job, this);
       jobStatusPoller.start();
@@ -325,6 +333,7 @@ public class RemoteScheduler implements Scheduler {
       }
 
       // set job status based on result.
+      // TODO 拉取作业运行结果
       Object jobResult = job.getReturn();
       if (job.isAborted()) {
         job.setStatus(Status.ABORT);
@@ -337,6 +346,7 @@ public class RemoteScheduler implements Scheduler {
         job.setStatus(Status.ERROR);
       } else {
         logger.debug("Job Finished, " + job.getId() + ", Result: " + job.getReturn());
+        // TODO 更新作业结束状态到前端，整个Job生命周期完成
         job.setStatus(Status.FINISHED);
       }
 

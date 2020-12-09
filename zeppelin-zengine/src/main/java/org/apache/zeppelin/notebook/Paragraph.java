@@ -436,6 +436,7 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
     }
     logger.debug("RUN : " + script);
     try {
+      // TODO 获取解释器上下文
       InterpreterContext context = getInterpreterContext();
       InterpreterContext.set(context);
       UserCredentials creds = context.getAuthenticationInfo().getUserCredentials();
@@ -463,6 +464,7 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
 
       context.out.flush();
       List<InterpreterResultMessage> resultMessages = context.out.toInterpreterResultMessage();
+      // TODO 将执行结果和解释器上下文的中的运行时信息合并
       resultMessages.addAll(ret.message());
 
       // TODO 执行结果：在这个方法里面可以做拦截执行代码、执行用户，开始时间、结束时间以及执行结果或者执行错误等信息的审计
@@ -470,6 +472,9 @@ public class Paragraph extends Job implements Cloneable, JsonSerializable {
 
       Paragraph p = getUserParagraph(getUser());
       if (null != p) {
+        // TODO 保存运行结果，然后最终由RemoteScheduler.JobRunner.run -> job.run ->  job.getReturn() -> Job.setStatus
+        //  -> NotebookServer.ParagraphListenerImpl.afterStatusChange -> NotebookServer.broadcastParagraph
+        //  -> NotebookServer.broadcast(String, Message): OP为OP.PARAGRAPH
         p.setResult(res);
         p.settings.setParams(settings.getParams());
       }

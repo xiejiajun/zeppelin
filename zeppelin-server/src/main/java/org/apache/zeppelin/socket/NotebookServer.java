@@ -708,8 +708,10 @@ public class NotebookServer extends WebSocketServlet
     broadcastNoteForms(note);
 
     if (note.isPersonalizedMode()) {
+      // TODO 私有模式，只更新用户自己打开的所有连接
       broadcastParagraphs(p.getUserParagraphMap(), p);
     } else {
+      // TODO 共享模式，广播给所有打开的连接
       broadcast(note.getId(), new Message(OP.PARAGRAPH).put("paragraph", p));
     }
   }
@@ -718,6 +720,7 @@ public class NotebookServer extends WebSocketServlet
       Paragraph defaultParagraph) {
     if (null != userParagraphMap) {
       for (String user : userParagraphMap.keySet()) {
+        // TODO 多播给指定用户
         multicastToUser(user,
             new Message(OP.PARAGRAPH).put("paragraph", userParagraphMap.get(user)));
       }
@@ -1925,6 +1928,7 @@ public class NotebookServer extends WebSocketServlet
                                                 Note note, Paragraph p,
                                                 boolean blocking) throws IOException {
     addNewParagraphIfLastParagraphIsExecuted(note, p);
+    // TODO 先保存一次运行的代码
     if (!persistNoteWithAuthInfo(conn, note, p)) {
       return false;
     }
@@ -2345,6 +2349,7 @@ public class NotebookServer extends WebSocketServlet
 
     @Override
     public void onProgressUpdate(Job job, int progress) {
+      // TODO 更新进度
       notebookServer.broadcast(note.getId(),
           new Message(OP.PROGRESS).put("id", job.getId()).put("progress", progress));
     }
@@ -2355,6 +2360,7 @@ public class NotebookServer extends WebSocketServlet
 
     @Override
     public void afterStatusChange(Job job, Status before, Status after) {
+      // TODO 更新运行状态
       if (after == Status.ERROR) {
         if (job.getException() != null) {
           LOG.error("Error", job.getException());
@@ -2371,6 +2377,7 @@ public class NotebookServer extends WebSocketServlet
 
         try {
           //TODO(khalid): may change interface for JobListener and pass subject from interpreter
+          // TODO 更新Note
           note.persist(job instanceof Paragraph ? ((Paragraph) job).getAuthenticationInfo() : null);
         } catch (IOException e) {
           LOG.error(e.toString(), e);
@@ -2379,6 +2386,7 @@ public class NotebookServer extends WebSocketServlet
       if (job instanceof Paragraph) {
         Paragraph p = (Paragraph) job;
         p.setStatusToUserParagraph(job.getStatus());
+        // TODO 将运行信息/结果同步到前端
         notebookServer.broadcastParagraph(note, p);
       }
       try {
@@ -2394,6 +2402,7 @@ public class NotebookServer extends WebSocketServlet
      */
     @Override
     public void onOutputAppend(Paragraph paragraph, int idx, String output) {
+      // TODO 追加运行日志 (&结果？）
       Message msg =
           new Message(OP.PARAGRAPH_APPEND_OUTPUT).put("noteId", paragraph.getNote().getId())
               .put("paragraphId", paragraph.getId()).put("data", output);
@@ -2406,6 +2415,7 @@ public class NotebookServer extends WebSocketServlet
      */
     @Override
     public void onOutputUpdate(Paragraph paragraph, int idx, InterpreterResultMessage result) {
+      // TODO 更新运行结果？
       String output = result.getData();
       Message msg =
           new Message(OP.PARAGRAPH_UPDATE_OUTPUT).put("noteId", paragraph.getNote().getId())

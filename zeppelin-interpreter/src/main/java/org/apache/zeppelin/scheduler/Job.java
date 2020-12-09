@@ -159,6 +159,7 @@ public abstract class Job {
     }
     this.status = status;
     if (listener != null) {
+      // TODO 更新作业运行信息 / 运行结果到前端
       listener.afterStatusChange(this, before, after);
     }
   }
@@ -202,6 +203,7 @@ public abstract class Job {
   }
 
   private synchronized void completeWithSuccess(Object result) {
+    // TODO 执行结果写入段落，保证前后端数据一致
     setResult(result);
     exception = null;
     errorMessage = null;

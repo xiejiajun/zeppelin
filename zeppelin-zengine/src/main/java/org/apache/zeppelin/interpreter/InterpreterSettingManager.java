@@ -850,6 +850,7 @@ public class InterpreterSettingManager implements NoteEventListener, ClusterEven
     setting.setInterpreterOption(option);
     setting.setProperties(properties);
     initInterpreterSetting(setting);
+    // TODO(Luffy) setting.getId()其实获取的是name, 详见initInterpreterSetting -> postProcessing
     interpreterSettings.put(setting.getId(), setting);
     saveToFile();
 

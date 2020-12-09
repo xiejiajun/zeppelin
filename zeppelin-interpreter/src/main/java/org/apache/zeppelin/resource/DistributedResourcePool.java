@@ -23,7 +23,9 @@ package org.apache.zeppelin.resource;
  *    - scala代码段定义变量: z.put("dataFileName", "members-list-003.parquet")
  *    - sh解释器使用变量(前提是zeppelin.shell.interpolation=true): echo {dataFileName}
  *    - jdbc解释器使用变量(前提是zeppelin.jdbc.interpolation为true):
- *        - select * from patents_list where df_name = '{dataFileName}' and filing_date like '2015-%'
+ *      - select * from patents_list where df_name = '{dataFileName}' and filing_date like '2015-%'
+ *    - ResourcePool的上层APIZeppelin-Context:
+ *      - http://zeppelin.apache.org/docs/0.8.2/usage/other_features/zeppelin_context.html
  * distributed resource pool
  */
 public class DistributedResourcePool extends LocalResourcePool {

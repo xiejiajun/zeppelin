@@ -259,6 +259,7 @@ public class LdapRealm extends JndiLdapRealm {
   @Override
   protected AuthenticationInfo queryForAuthenticationInfo(AuthenticationToken token,
       LdapContextFactory ldapContextFactory) throws NamingException {
+    // TODO(Luffy）这是Shiro身份认证相关的方法，由父类的doGetAuthenticationInfo调用
     AuthenticationInfo info = super.queryForAuthenticationInfo(token, ldapContextFactory);
     // Credentials were verified. Verify that the principal has all allowedRulesForAuthentication
     if (!hasAllowedAuthenticationRules(info.getPrincipals(), ldapContextFactory)) {
@@ -283,6 +284,7 @@ public class LdapRealm extends JndiLdapRealm {
   @Override
   public AuthorizationInfo queryForAuthorizationInfo(final PrincipalCollection principals,
       final LdapContextFactory ldapContextFactory) throws NamingException {
+    // TODO(Luffy）这是Shiro权限校验相关的方法，由父类的doGetAuthorizationInfo调用
     if (!isAuthorizationEnabled()) {
       return null;
     }
@@ -386,11 +388,14 @@ public class LdapRealm extends JndiLdapRealm {
               }
             }
           } else {
+            // TODO(Luffy) shiro.ini中的ldapRealm.groupSearchEnableMatchingRuleInChain = false时进入这里
             // Default group search filter
             String searchFilter = String.format("(objectclass=%1$s)", groupObjectClass);
 
             // If group search filter is defined in Shiro config, then use it
             if (groupSearchFilter != null) {
+              // TODO(Luffy) 可以通过ldapRealm.groupSearchFilter配置，OpenLdap一般配置为配置
+              //  (&(objectClass=posixGroup)(memberuid={0}))
               searchFilter = expandTemplate(groupSearchFilter, userName);
               //searchFilter = String.format("%1$s", groupSearchFilter);
             }
@@ -406,6 +411,7 @@ public class LdapRealm extends JndiLdapRealm {
               // searchResults contains all the groups in search scope
               numResults++;
               final SearchResult group = searchResultEnum.next();
+              // TODO(Luffy) 进行一系列校验通过后添加到用户角色列表
               addRoleIfMember(userDn, group, roleNames, groupNames, ldapContextFactory);
             }
           }
@@ -462,6 +468,8 @@ public class LdapRealm extends JndiLdapRealm {
       attributeEnum = group.getAttributes().getAll();
       while (attributeEnum.hasMore()) {
         final Attribute attr = attributeEnum.next();
+        // TODO(Luffy) 查找memberAttribute对应的属性，openLdap一般为memberuid，若这里配置不正确
+        //  会导致groupDn用户列表属性查找不到校验不通过而无法进行角色添加
         if (!memberAttribute.equalsIgnoreCase(attr.getID())) {
           continue;
         }
@@ -482,11 +490,13 @@ public class LdapRealm extends JndiLdapRealm {
             }
           } else {
             // posix groups' members don' include the entire dn
+            // TODO(Luffy) 使用posixGroup配置用户组时进入这里
             if (groupObjectClass.equalsIgnoreCase(POSIX_GROUP)) {
               attrValue = memberDn(attrValue);
             }
             if (userLdapDn.equals(new LdapName(attrValue))) {
               groupNames.add(groupName);
+              // TODO(Luffy) 获取角色添加到roleNames列表
               String roleName = roleNameFor(groupName);
               if (roleName != null) {
                 roleNames.add(roleName);

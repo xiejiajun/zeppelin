@@ -92,10 +92,11 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess {
 
   @Override
   public void start(String userName) throws IOException {
+    // TODO(Luffy) 调用bin/interpreter.sh启动解释器进程: 解释器进程mainClass为RemoteInterpreterServer
     // start server process
     CommandLine cmdLine = CommandLine.parse(interpreterRunner);
     cmdLine.addArgument("-d", false);
-    // TODO 传递解释器所在的文件夹名称
+    // TODO(Luffy) 传递解释器实现类jar包所在的文件夹名称
     cmdLine.addArgument(interpreterDir, false);
     cmdLine.addArgument("-c", false);
     cmdLine.addArgument(intpEventServerHost, false);
@@ -115,7 +116,15 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess {
     cmdLine.addArgument(interpreterSettingName, false);
 
     interpreterProcessLauncher = new InterpreterProcessLauncher(cmdLine, env);
+    // TODO(Luffy) 运行解释器进程启动脚本
     interpreterProcessLauncher.launch();
+    // TODO(Luffy) 等待解释器进程启动成功后向RemoteInterpreterEventServer注册它的host和port信息
+    //  0.9.x版本是解释器进程主动向RemoteInterpreterEventServer.registerInterpreterProcess发起
+    //  Rpc调用注册连接信息(0.9.x版本ZeppelinServer内部启动了一个常驻的面向所有解释器进程提供Rpc调用服务的
+    //  RemoteInterpreterEventServer方便解释器和ZeppelinServer直接交互
+    //  0.8.x版本是每个管理解释器进程的RemoteInterpreterManagedProcess对象的start方法内部创建一个临时的
+    //  TThreadPoolServer用于等待解释器进程启动后注册host、port信息，等待超时或者解释器注册完毕后关闭这个
+    //  TThreadPoolServer
     interpreterProcessLauncher.waitForReady(getConnectTimeout());
     if (interpreterProcessLauncher.isLaunchTimeout()) {
       throw new IOException(String.format("Interpreter Process creation is time out in %d seconds",

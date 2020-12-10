@@ -56,6 +56,7 @@ public class StandardInterpreterLauncher extends InterpreterLauncher {
     int connectionPoolSize = getConnectPoolSize();
 
     if (option.isExistingProcess()) {
+      // TODO(Luffy) 创建用于连接到已经启动的远程解释器进程的解释器进程管理器
       return new RemoteInterpreterRunningProcess(
           context.getInterpreterSettingName(),
           context.getInterpreterGroupId(),
@@ -70,6 +71,7 @@ public class StandardInterpreterLauncher extends InterpreterLauncher {
       // create new remote process
       String localRepoPath = zConf.getInterpreterLocalRepoPath() + "/"
           + context.getInterpreterSettingId();
+      // TODO(Luffy) 创建用于启动和管理解释器进程的解释器进程管理器
       return new RemoteInterpreterManagedProcess(
           runner != null ? runner.getPath() : zConf.getInterpreterRemoteRunnerPath(),
           context.getIntpEventServerPort(), context.getIntpEventServerHost(), zConf.getInterpreterPortRange(),
@@ -79,6 +81,13 @@ public class StandardInterpreterLauncher extends InterpreterLauncher {
     }
   }
 
+  /**
+   * TODO(Luffy) 创建启动解释器进程时的环境变量
+   *  这里构建的env主要是给bin/interpreter.sh脚本使用的
+   * @param context
+   * @return
+   * @throws IOException
+   */
   public Map<String, String> buildEnvFromProperties(InterpreterLaunchContext context) throws IOException {
     Map<String, String> env = EnvironmentUtils.getProcEnvironment();
     for (Map.Entry entry : context.getProperties().entrySet()) {

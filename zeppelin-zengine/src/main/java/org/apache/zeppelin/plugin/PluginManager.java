@@ -151,6 +151,7 @@ public class PluginManager {
                                                                   RecoveryStorage recoveryStorage)
       throws IOException {
 
+    // TODO(Luffy) 加载启动器
     if (cachedLaunchers.containsKey(launcherPlugin)) {
       return cachedLaunchers.get(launcherPlugin);
     }

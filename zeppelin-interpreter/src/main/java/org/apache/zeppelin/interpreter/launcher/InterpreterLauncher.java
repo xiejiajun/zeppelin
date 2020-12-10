@@ -91,6 +91,7 @@ public abstract class InterpreterLauncher {
   public InterpreterClient launch(InterpreterLaunchContext context) throws IOException {
     // try to recover it first
     if (zConf.isRecoveryEnabled()) {
+      // TODO(Luffy) 先尝试从recoveryStorage恢复
       InterpreterClient recoveredClient =
               recoveryStorage.getInterpreterClient(context.getInterpreterGroupId());
       if (recoveredClient != null) {
@@ -100,6 +101,7 @@ public abstract class InterpreterLauncher {
                   recoveredClient.getInterpreterGroupId());
           return recoveredClient;
         } else {
+          // TODO(Luffy) 清理无用的恢复信息
           recoveryStorage.removeInterpreterClient(context.getInterpreterGroupId());
           LOGGER.warn("Unable to recover interpreter process: {}:{}, as it is already terminated.", recoveredClient.getHost(), recoveredClient.getPort());
         }
@@ -107,6 +109,7 @@ public abstract class InterpreterLauncher {
     }
 
     // launch it via sub class implementation without recovering.
+    // TODO(Luffy) 创建解释器进程生命周期管理器
     return launchDirectly(context);
   }
 

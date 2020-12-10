@@ -783,6 +783,7 @@ public class InterpreterSetting {
   }
 
   public String getLauncherPlugin(Properties properties) {
+    //TODO(Luffy) 根据不同的运行模式选择不同的启动器
     if (isRunningOnKubernetes()) {
       return "K8sStandardInterpreterLauncher";
     } else if (isRunningOnCluster()) {
@@ -873,11 +874,15 @@ public class InterpreterSetting {
                                                                  String userName,
                                                                  Properties properties)
       throws IOException {
+    // TODO(Luffy) 创建解释器进程Launcher
     InterpreterLauncher launcher = createLauncher(properties);
+    // TODO(Luffy) 创建包含启动信息的启动上下文对象
     InterpreterLaunchContext launchContext = new
         InterpreterLaunchContext(properties, option, interpreterRunner, userName,
         interpreterGroupId, id, group, name, interpreterEventServer.getPort(), interpreterEventServer.getHost());
+    // TODO(Luffy) 启动解释器进程
     RemoteInterpreterProcess process = (RemoteInterpreterProcess) launcher.launch(launchContext);
+    // TODO(Luffy) 将解释器信息保存到持久化存储，方便ZeppelinServer挂掉重启后接管原有的解释器进程
     recoveryStorage.onInterpreterClientStart(process);
     return process;
   }

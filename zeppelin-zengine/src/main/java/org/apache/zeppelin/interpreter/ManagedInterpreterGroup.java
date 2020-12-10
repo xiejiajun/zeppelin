@@ -63,6 +63,7 @@ public class ManagedInterpreterGroup extends InterpreterGroup {
     synchronized (interpreterProcessCreationLock) {
       if (remoteInterpreterProcess == null) {
         LOGGER.info("Create InterpreterProcess for InterpreterGroup: " + getId());
+        // TODO(Luffy) 创建解释器进程
         remoteInterpreterProcess = interpreterSetting.createInterpreterProcess(id, userName,
                 properties);
         remoteInterpreterProcess.start(userName);

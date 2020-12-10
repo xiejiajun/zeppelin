@@ -150,6 +150,7 @@ public class RemoteInterpreter extends Interpreter {
   private void internal_create() throws IOException {
     synchronized (this) {
       if (!isCreated) {
+        // TODO(Luffy) 触发远程解释器进程启动的入口
         this.interpreterProcess = getOrCreateInterpreterProcess();
         if (!interpreterProcess.isRunning()) {
           throw new IOException("Interpreter process is not running\n" +

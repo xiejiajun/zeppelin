@@ -212,6 +212,8 @@ public class RemoteInterpreterServer extends Thread
             RegisterInfo registerInfo = new RegisterInfo(host, port, interpreterGroupId);
             try {
               LOGGER.info("Registering interpreter process");
+              // TODO(Luffy) 向RemoteInterpreterEventServer注册自己的host、port以及管理自己的对应的
+              //  解释器进程管理组的interpreterGroupId
               intpEventClient.registerInterpreterProcess(registerInfo);
               LOGGER.info("Registered interpreter process");
             } catch (Exception e) {

@@ -62,6 +62,7 @@ public class SparkInterpreterLauncher extends StandardInterpreterLauncher {
 
   @Override
   public Map<String, String> buildEnvFromProperties(InterpreterLaunchContext context) throws IOException {
+    // TODO(Luffy) 这里构建的env主要是给bin/interpreter.sh脚本使用的
     Map<String, String> env = super.buildEnvFromProperties(context);
     Properties sparkProperties = new Properties();
     String spMaster = getSparkMaster();
@@ -164,6 +165,7 @@ public class SparkInterpreterLauncher extends StandardInterpreterLauncher {
     }
 
     for (String name : sparkProperties.stringPropertyNames()) {
+      // TODO(Luffy) 通过%spark.conf配置的个性化配置是从这里拼接成spark-submit需要的格式的
       sparkConfBuilder.append(" --conf " + name + "=" + sparkProperties.getProperty(name));
     }
 
@@ -171,6 +173,7 @@ public class SparkInterpreterLauncher extends StandardInterpreterLauncher {
       sparkConfBuilder.append(" --proxy-user " + context.getUserName());
     }
 
+    // TODO(Luffy) 过%spark.conf配置的个性化配置最终是通过这里的ZEPPELIN_SPARK_CONF环境变量传递给bin/interpreter.sh脚本使用的
     env.put("ZEPPELIN_SPARK_CONF", escapeSpecialCharacter(sparkConfBuilder.toString()));
 
     // set these env in the order of

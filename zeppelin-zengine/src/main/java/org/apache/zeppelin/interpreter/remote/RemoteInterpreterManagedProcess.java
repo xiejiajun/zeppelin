@@ -153,6 +153,8 @@ public class RemoteInterpreterManagedProcess extends RemoteInterpreterProcess
         }
       }));
 
+      // TODO(Luffy) 循环等待callbackServer启动完成后才运行bin/interpreter.sh启动解释器进程
+      //  不然可能出现解释器进程启动后找不到注册服务而注册失败的问题
       while (!callbackServer.isServing()) {
         logger.debug("callbackServer is not serving");
         Thread.sleep(500);

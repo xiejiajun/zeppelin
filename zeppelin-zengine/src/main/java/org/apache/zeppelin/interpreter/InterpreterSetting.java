@@ -110,6 +110,11 @@ public class InterpreterSetting {
   private Status status = Status.READY;
   private String errorReason;
 
+  /**
+   * TODO(Luffy) 之所以用List存储解释器信息，是因为Spark解释器这种底层有多个子解释器
+   *  SparkInterpreter、SparkRInterpreter、SparkIRInterpreter、SparkShinyInterpreter、
+   *  SparkSqlInterpreter、IPySparkInterpreter、KotlinSparkInterpreter、PySparkInterpreter
+   */
   @SerializedName("interpreterGroup")
   private List<InterpreterInfo> interpreterInfos;
 
@@ -432,6 +437,9 @@ public class InterpreterSetting {
   }
 
   private String getInterpreterSessionId(ExecutionContext executionContext) {
+    // TODO(Luffy) getInterpreterGroupId和getInterpreterSessionId是实现解释器各种bind Mode语义的关键逻辑
+    //  getInterpreterGroupId决定是否是同一个解释器进程，getInterpreterSessionId决定在同一个解释器进程中使用的
+    //  是否是同一个session
     String key;
     if (option.isExistingProcess()) {
       key = Constants.EXISTING_PROCESS;
@@ -453,12 +461,14 @@ public class InterpreterSetting {
   }
 
   public ManagedInterpreterGroup getOrCreateInterpreterGroup(ExecutionContext executionContext) {
+    // TODO(Lufffy) 这里根据设置的解释器绑定模式来构建解释器组ID，j
     String groupId = getInterpreterGroupId(executionContext);
     try {
       interpreterGroupWriteLock.lock();
       if (!interpreterGroups.containsKey(groupId)) {
         LOGGER.info("Create InterpreterGroup with groupId: {} for {}",
             groupId, executionContext);
+        // TODO(Luffy) 根据组id构建解释器组
         ManagedInterpreterGroup intpGroup = createInterpreterGroup(groupId);
         interpreterGroups.put(groupId, intpGroup);
       }
@@ -827,6 +837,7 @@ public class InterpreterSetting {
   // together (one session). We don't support to create single interpreter yet.
   List<Interpreter> createInterpreters(String user, String interpreterGroupId, String sessionId) {
     List<Interpreter> interpreters = new ArrayList<>();
+    // TODO(Luffy) interpreterInfos为一个List的原因是spark解释器这类解释器有多个子解释器
     List<InterpreterInfo> interpreterInfos = getInterpreterInfos();
     // TODO(Luffy) 获取InterpreterSetting中properties字段保存的解释器全局配置信息（因为每个解释器类型都有唯一一个
     //  InterpreterSetting对象保存解释器配置，所以创建对应解释器的远程客户端时通过该解释器的InterpreterSetting类型
@@ -836,6 +847,7 @@ public class InterpreterSetting {
       Interpreter interpreter = new RemoteInterpreter(intpProperties, sessionId,
           info.getClassName(), user);
       if (info.isDefaultInterpreter()) {
+        // TODO(Luffy) 比如Spark解释器中%spark作为默认解释器，hive、presto这种就只有一个解释器的，直接就是默认解释器了
         interpreters.add(0, interpreter);
       } else {
         interpreters.add(interpreter);
@@ -851,6 +863,7 @@ public class InterpreterSetting {
       interpreters.add(
           new SessionConfInterpreter(intpProperties, sessionId, interpreterGroupId, this));
     } else {
+      // TODO(Luffy) 创建每个解释器时都会顺带创建一个ConfInterpreter
       interpreters.add(new ConfInterpreter(intpProperties, sessionId, interpreterGroupId, this));
     }
     return interpreters;
@@ -877,6 +890,7 @@ public class InterpreterSetting {
     ManagedInterpreterGroup interpreterGroup = getOrCreateInterpreterGroup(executionContext);
     Preconditions.checkNotNull(interpreterGroup, "No InterpreterGroup existed for {}", executionContext);
     String sessionId = getInterpreterSessionId(executionContext);
+    // TODO(Luffy) 一个解释器组对应一个解释器进程，一个解释器进程又包含一到多个解释器session
     return interpreterGroup.getOrCreateSession(executionContext.getUser(), sessionId);
   }
 
@@ -895,12 +909,20 @@ public class InterpreterSetting {
   public Interpreter getInterpreter(ExecutionContext executionContext, String replName) {
     Preconditions.checkNotNull(replName, "replName should be not null");
 
+    // TODO(Luffy) 根据子解释器名称获取解释器实现类名称（ConfInterpreter也是在这里获取)
     String className = getInterpreterClassFromInterpreterSetting(replName);
     if (className == null) {
       return null;
     }
+    // TODO(Luffy) 创建所有子解释器对应的RemoteInterpreter以及一个ConfInterpreter
+    //  (对于spark解释器这种有多个子解释器的才会创建多个RemoteInterpreter分别与之对应，
+    //  对于hive这种只有一个解释器的只会创建一个RemoteInterpreter)
     List<Interpreter> interpreters = getOrCreateSession(executionContext);
     for (Interpreter interpreter : interpreters) {
+      // TODO(Luffy) RemoteInterpreter保存了与之对应的解释器的className而且重写了Interpreter.getClassName方法
+      //  所以如果是远程解释器的话这里与之匹配的是相应的RemoteInterpreter，而ConfInterpreter的getClassName直接就是
+      //  ConfInterpreter。也就是InterpreterSetting.getInterpreter(ExecutionContext, String)返回的解释器可能是
+      //  RemoteInterpreter，也可能是ConfInterpreter或者SessionConfInterpreter
       if (className.equals(interpreter.getClassName())) {
         return interpreter;
       }
@@ -919,6 +941,7 @@ public class InterpreterSetting {
     }
     //TODO(zjffdu) It requires user can not create interpreter with name `conf`,
     // conf is a reserved word of interpreter name
+    // TODO(Luffy) 因为ConfInterpreter不在interpreterInfos列表中，所以单独判断
     if (replName.equals("conf")) {
       if (group.equals("livy")) {
         return SessionConfInterpreter.class.getName();
@@ -949,15 +972,21 @@ public class InterpreterSetting {
    */
   public void setInterpreterGroupProperties(String interpreterGroupId, Properties properties)
       throws IOException {
+    // TODO(Luffy) 一个ManagedInterpreterGroup对应一个解释器进程
     ManagedInterpreterGroup interpreterGroup = this.interpreterGroups.get(interpreterGroupId);
+    // TODO(Luffy) 遍历该解释器进程(解释器管理组)下的所有session下的所有解释器实例的代理实例(RemoteInterpreter)列表
+    //  依次修改这些代理解释器的配置RemoteInterpreter.properties, 将配置应用上去
     for (List<Interpreter> session : interpreterGroup.sessions.values()) {
       for (Interpreter intp : session) {
         if (!intp.getProperties().equals(properties) &&
             interpreterGroup.getRemoteInterpreterProcess() != null &&
             interpreterGroup.getRemoteInterpreterProcess().isRunning()) {
+          // TODO(Luffy) 不支持修改已经启动了远程解释器进程的RemoteInterpreter解释器的配置
           throw new IOException("Can not change interpreter properties when interpreter process " +
               "has already been launched");
         }
+        // TODO(Luffy) 最终更新的是Interpreter(其实是RemoteInterpreter)中的properties, 不是修改InterpreterSetting中的
+        //  所有解释器共享的全局配置interpreterSetting.properties，因为那样会造成用户间的配置相互影响
         intp.setProperties(properties);
       }
     }

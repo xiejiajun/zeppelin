@@ -392,6 +392,7 @@ public class NotebookServer extends WebSocketServlet
           updatePersonalizedMode(conn, messagereceived);
           break;
         case COMPLETION:
+          // 代码补全？
           completion(conn, messagereceived);
           break;
         case PING:

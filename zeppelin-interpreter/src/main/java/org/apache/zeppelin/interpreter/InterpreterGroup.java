@@ -48,6 +48,7 @@ public class InterpreterGroup {
 
   protected String id;
   private String webUrl;
+  // TODO(Luffy) 用于保存session -> 其对应的解释器列表的映射，方便进行个性化配置隔离
   // sessionId --> interpreters
   protected Map<String, List<Interpreter>> sessions = new ConcurrentHashMap();
   private AngularObjectRegistry angularObjectRegistry;

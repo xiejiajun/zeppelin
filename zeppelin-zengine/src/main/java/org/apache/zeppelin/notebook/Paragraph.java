@@ -253,6 +253,9 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
             .setInterpreterGroupId(interpreterGroupId)
             .createExecutionContext();
 
+    // TODO(Luffy) 分析InterpreterSetting.getInterpreter源码得知：如果这里的intpText为xxx.conf或者
+    //  conf时返回的是ConfInterpreter或者SessionConfInterpreter，其他情况才是intpText对应的解释器实现类
+    //  的代理RemoteInterpreter
     return this.note.getInterpreterFactory().getInterpreter(intpText, executionContext);
   }
 
@@ -277,6 +280,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
     InterpreterContext interpreterContext = getInterpreterContext();
 
     try {
+      // TODO(Luffy) 获取代码补全提示，这也会触发解释器进程的创建(RemoteInterpreter.open)
       return this.interpreter.completion(this.scriptText, cursor, interpreterContext);
     } catch (InterpreterException e) {
       LOGGER.warn("Fail to get completion", e);
@@ -409,6 +413,8 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
       if (localProperties.getOrDefault("isRecover", "false").equals("false")) {
         this.runtimeInfos.clear();
       }
+      // TODO(Luffy) %xxx.conf或者%conf情况下这里得到的是ConfInterpreter或者SessionConfInterpreter
+      //  其他情况为具体解释器实现类对应的RemoteInterpreter
       this.interpreter = getBindedInterpreter();
       if (this.interpreter == null) {
         LOGGER.error("Can not find interpreter name " + intpText);
@@ -438,6 +444,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
 
       // inject form
       String script = this.scriptText;
+      // TODO(Luffy) interpreter.getFormType()会触发RemoteInterpreter.open / ConfInterpreter.open
       String form = localProperties.getOrDefault("form", interpreter.getFormType().name());
       if (form.equalsIgnoreCase("simple")) {
         // inputs will be built from script body
@@ -481,9 +488,11 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
           UserCredentials creds = context.getAuthenticationInfo().getUserCredentials();
           CredentialInjector credinjector = new CredentialInjector(creds);
           String code = credinjector.replaceCredentials(script);
+          // TODO(Luffy) RemoteInterpreter.interpret / ConfInterpreter.interpret
           ret = interpreter.interpret(code, context);
           ret = credinjector.hidePasswords(ret);
         } else {
+          // TODO(Luffy) RemoteInterpreter.interpret / ConfInterpreter.interpret
           ret = interpreter.interpret(script, context);
         }
 

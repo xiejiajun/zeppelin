@@ -66,9 +66,14 @@ public class ConfInterpreter extends Interpreter {
       Properties finalProperties = new Properties();
       finalProperties.putAll(getProperties());
       Properties newProperties = new Properties();
+      // TODO(Luffy) 解析并读取以=、:、空格、\t、\f等分隔的K V配置
       newProperties.load(new StringReader(st));
       finalProperties.putAll(newProperties);
       LOGGER.debug("Properties for InterpreterGroup: {} is {}", interpreterGroupId, finalProperties);
+      // TODO(Luffy) 将新配置更新到interpreterGroupId(决定了对应的解释器进程是哪一个)对应的interpreterSetting中
+      //  分析InterpreterSetting.setInterpreterGroupProperties源码得知：这里更新的是已经创建但还未open的相应解释器的
+      //  RemoteInterpreter实例的properties字段，不是修改interpreterSetting.properties字段，因为那样修改的是整个解释器
+      //  组的全局配置，会影响到所有使用该解释器类型的解释器实例，肯定是不对的，这里的做法是一种巧妙的用户自定义配置隔离
       interpreterSetting.setInterpreterGroupProperties(interpreterGroupId, finalProperties);
       return new InterpreterResult(InterpreterResult.Code.SUCCESS);
     } catch (IOException e) {

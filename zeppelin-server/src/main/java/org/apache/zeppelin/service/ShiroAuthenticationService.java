@@ -220,6 +220,8 @@ public class ShiroAuthenticationService implements AuthenticationService {
     if (subject.isAuthenticated()) {
       Collection<Realm> realmsList = getRealmsList();
       for (Realm realm : realmsList) {
+        // TODO(Luffy) 从这里可以看到，使用LdapGroupRealm作为Realm实现时是不会使用他的
+        //  LdapGroupRealm.queryForAuthorizationInfo方法获取角色的
         String name = realm.getClass().getName();
         if (name.equals("org.apache.shiro.realm.text.IniRealm")) {
           allRoles = ((IniRealm) realm).getIni().get("roles");

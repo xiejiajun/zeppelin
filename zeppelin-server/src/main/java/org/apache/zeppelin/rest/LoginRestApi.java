@@ -176,6 +176,7 @@ public class LoginRestApi {
       currentUser.getSession(true);
       currentUser.login(token);
 
+      // TODO(Luffy) 获取登陆用户的角色
       Set<String> roles = authenticationService.getAssociatedRoles();
       String principal = authenticationService.getPrincipal();
       String ticket = "anonymous".equals(principal) ? "anonymous" : TicketContainer.instance.getTicket(principal);
@@ -231,6 +232,7 @@ public class LoginRestApi {
       response = new JsonResponse<>(Response.Status.FORBIDDEN, "", null);
     }
 
+    // 打印登陆信息
     LOG.info(response.toString());
     return response.build();
   }

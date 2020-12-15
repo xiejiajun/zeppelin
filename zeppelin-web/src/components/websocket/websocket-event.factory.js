@@ -53,6 +53,9 @@ function WebsocketEventFactory($rootScope, $websocket, $location, baseUrlSrv, sa
     return (websocketCalls.ws.socket.readyState === 1);
   };
 
+  /**
+   * TODO(Luffy) 接收Server端的消息
+   */
   websocketCalls.ws.onMessage(function(event) {
     let payload;
     if (event.data) {

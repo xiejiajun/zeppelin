@@ -243,6 +243,7 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
     }
   }
 
+  // TODO(Luffy) 更新段落结果
   $scope.$on('updateResult', function(event, result, newConfig, paragraphRef, index) {
     if (paragraph.id !== paragraphRef.id || index !== resultIndex) {
       return;
@@ -252,6 +253,7 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
       !angular.equals(result.type, $scope.type) ||
       !angular.equals(result.data, data);
 
+    // TODO(Luffy) 更新结果和配置
     updateData(result, newConfig, paragraph, resultIndex);
     renderResult($scope.type, refresh);
   });
@@ -320,7 +322,9 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
     enableHelium = (index === paragraphRef.results.msg.length - 1);
 
     if ($scope.type === 'TABLE' || $scope.type === 'NETWORK') {
+      // TODO(Luffy) 根据type构建Dataset
       tableData = new DatasetFactory().createDataset($scope.type);
+      // TODO(Luffy) TableData.loadParagraphResult / NetworkData.loadParagraphResult
       tableData.loadParagraphResult({type: $scope.type, msg: data});
       $scope.tableDataColumns = tableData.columns;
       $scope.tableDataComment = tableData.comment;

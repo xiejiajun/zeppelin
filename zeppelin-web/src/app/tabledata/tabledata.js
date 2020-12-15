@@ -24,6 +24,7 @@ export default class TableData extends Dataset {
     this.comment = comment || '';
   }
 
+  // TODO(Luffy) 加载段落结果
   loadParagraphResult(paragraphResult) {
     if (!paragraphResult || paragraphResult.type !== DatasetType.TABLE) {
       console.log('Can not load paragraph result');
@@ -60,9 +61,17 @@ export default class TableData extends Dataset {
         } else {
           let valueOfCol;
           if (!(col[0] === '0' || col[0] === '+' || col.length > float64MaxDigits)) {
+            // TODO(Luffy) 这里通过干掉valueOfCol = parseFloat(col)的parseFloat函数调用来解决精度丢失问题
+            //  是否太过暴力？
             if (!isNaN(valueOfCol = col) && isFinite(col)) {
               col = valueOfCol;
             }
+            // TODO(Luffy) 下面这种方式处理精度丢失问题是否更优雅: parseFloat和parseInt精度丢失原因主要是因为Js整型只支持15位10进制
+            //  因为Js整型范围为(-2^53+1, 2^53-1)，2^53为16位10进制，所以2^53-1为15位
+            //  参考资料: [【JavaScript】数值精度与数值范围](https://blog.csdn.net/weixin_45389633/article/details/108462073)
+            // if (!isNaN(valueOfCol = parseFloat(col)) && isFinite(col) && this.isSafeNumber(valueOfCol)) {
+            //   col = valueOfCol;
+            // }
           }
           cols.push(col);
         }
@@ -74,5 +83,9 @@ export default class TableData extends Dataset {
     this.comment = comment;
     this.columns = columnNames;
     this.rows = rows;
+  }
+
+  isSafeNumber(numberVal) {
+    return (numberVal >= Math.pow(-2, 53) + 1) && (numberVal <= Math.pow(2, 53) -1);
   }
 }

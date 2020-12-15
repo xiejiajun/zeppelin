@@ -1581,6 +1581,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
     $scope.updateParagraph(oldPara, newPara, updateCallback);
   });
 
+  // TODO(Luffy) 处理服务端的OP.PARAGRAPH消息
   $scope.$on('updateParagraph', function(event, data) {
     const oldPara = $scope.paragraph;
     const newPara = data.paragraph;
@@ -1601,6 +1602,7 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
             const oldConfig = oldPara.config.results ? oldPara.config.results[i] : {};
             if (!angular.equals(newResult, oldResult) ||
               !angular.equals(newConfig, oldConfig)) {
+              // TODO(Luffy) 调用result.controller.js中的$scope.$on('updateResult',xxx)更新段落结果
               $rootScope.$broadcast('updateResult', newResult, newConfig, newPara, parseInt(i));
             }
           }

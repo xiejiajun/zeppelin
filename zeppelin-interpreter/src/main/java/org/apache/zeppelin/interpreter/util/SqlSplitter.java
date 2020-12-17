@@ -150,6 +150,12 @@ public class SqlSplitter {
         // normal case, not in single line comment and not in multiple line comment
         query.append(character);
       } else if (character == '\n') {
+        // TODO(Luffy) ZEPPELIN-5138: 这个issue虽然解决了行号的问题，但是引入了新的bug，
+        //  Hive set语句前面拼接了\n后会导致语句执行后不能正常set session级别的配置。
+        //  这就导致了同一段落只能写一个set语句，而且必须是段落第一行，前面不能有任何内容，包括注释都不能有。
+        //  这里引入的问题不是不在set语句前面写注释就能解决的。
+        //  其他资料： HiveParser.g和org.apache.hadoop.hive.ql.parse.HiveParser.execStatement
+        //    的input.LA(1) -> case KW_SET
         query.append(character);
       }
     }

@@ -92,6 +92,8 @@ public class SqlSplitter {
       // end of single line comment
       if (singleLineComment && (character == '\n')) {
         singleLineComment = false;
+        // TODO(Luffy) 这里将单行注释的\n加到下一条SQL的开头会导致Hive的set语句出问题，hive对set语句的处理不是很严谨
+        //  前面多了一个\n后是不能正常地设置session级别的配置的， 这个bug要注意，可以通过强制不让在set语句前面写注释来规避
         query.append(character);
         continue;
       }

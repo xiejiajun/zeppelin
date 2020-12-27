@@ -176,7 +176,53 @@ export default class Nvd3ChartVisualization extends Visualization {
     let rowIndexValue = {};
 
     // TODO(Luffy) 遍历段落运行结果组装成图表数据
-    for (let k in rows) {
+    // for (let k in rows) {
+    //   if (rows.hasOwnProperty(k)) {
+    //     traverse(sKey, schema[sKey], k, rows[k], function(rowName, rowValue, colName, value) {
+    //       // console.log("RowName=%o, row=%o, col=%o, value=%o", rowName, rowValue, colName, value);
+    //       if (rowNameIndex[rowValue] === undefined) {
+    //         rowIndexValue[rowIdx] = rowValue;
+    //         rowNameIndex[rowValue] = rowIdx++;
+    //       }
+    //
+    //       if (colNameIndex[colName] === undefined) {
+    //         colNameIndex[colName] = colIdx++;
+    //       }
+    //       let i = colNameIndex[colName];
+    //       if (noKey && isMultiBarChart) {
+    //         i = 0;
+    //       }
+    //
+    //       if (!d3g[i]) {
+    //         d3g[i] = {
+    //           values: [],
+    //           key: (noKey && isMultiBarChart) ? 'values' : colName,
+    //         };
+    //       }
+    //
+    //       let xVar = isNaN(rowValue) ? ((allowTextXAxis) ? rowValue : rowNameIndex[rowValue]) : parseFloat(rowValue);
+    //       let yVar = self.defaultY();
+    //       if (xVar === undefined) {
+    //         xVar = colName;
+    //       }
+    //       if (value !== undefined) {
+    //         yVar = isNaN(value.value) ? self.defaultY() : parseFloat(value.value) / parseFloat(value.count);
+    //       }
+    //       d3g[i].values.push({
+    //         x: xVar,
+    //         y: yVar,
+    //       });
+    //     });
+    //   }
+    // }
+
+    // TODO(Luffy) 按key升序排序的方式
+    let sortedKeys = this.sortRowsAsc(rows);
+    for (let kIndex in sortedKeys) {
+      if (!sortedKeys.hasOwnProperty(kIndex)) {
+        continue;
+      }
+      let k = sortedKeys[kIndex];
       if (rows.hasOwnProperty(k)) {
         traverse(sKey, schema[sKey], k, rows[k], function(rowName, rowValue, colName, value) {
           // console.log("RowName=%o, row=%o, col=%o, value=%o", rowName, rowValue, colName, value);
@@ -267,6 +313,47 @@ export default class Nvd3ChartVisualization extends Visualization {
       xLabels: rowIndexValue,
       d3g: d3g,
     };
+  }
+
+  /**
+   * 获取Rows字典按key升序排序的key列表
+   * @param rows
+   * @returns {string[]}
+   */
+  sortRowsAsc(rows) {
+    if (this.isNumberTypeKey(rows)) {
+      const compareFn = function(k1, k2) {
+        return parseFloat(k1) - parseFloat(k2);
+      };
+      return Object.keys(rows).sort(compareFn);
+    }
+    return Object.keys(rows).sort();
+  }
+
+  /**
+   * 判断Rows中key的数据是否全都是数字类型
+   * @param rows
+   * @returns {boolean}
+   */
+  isNumberTypeKey(rows) {
+    for (let k in rows) {
+      if (rows.hasOwnProperty(k)) {
+        let valueOfCol;
+        if (isNaN(valueOfCol = parseFloat(k)) || !isFinite(k) || !this.isSafeNumber(valueOfCol)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * 判断数字字符串是否是JS能表达的数据类型，防止数字太长导致精度溢出
+   * @param numberVal
+   * @returns {boolean|boolean}
+   */
+  isSafeNumber(numberVal) {
+    return (numberVal >= Math.pow(-2, 53) + 1) && (numberVal <= Math.pow(2, 53) -1);
   }
 
   /**

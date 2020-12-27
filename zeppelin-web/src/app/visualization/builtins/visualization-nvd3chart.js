@@ -99,6 +99,18 @@ export default class Nvd3ChartVisualization extends Visualization {
     return this.groupedThousandsWith3DigitsFormatter(d);
   }
 
+  /**
+   * TODO(Luffy) 生成图表数据
+   * @param schema
+   * @param rows
+   * @param keys
+   * @param groups
+   * @param values
+   * @param allowTextXAxis
+   * @param fillMissingValues
+   * @param multiBarChart
+   * @returns {{xLabels: {}, d3g: []}}
+   */
   d3DataFromPivot(
     schema, rows, keys, groups, values, allowTextXAxis, fillMissingValues, multiBarChart) {
     let self = this;
@@ -163,6 +175,7 @@ export default class Nvd3ChartVisualization extends Visualization {
     let colIdx = 0;
     let rowIndexValue = {};
 
+    // TODO(Luffy) 遍历段落运行结果组装成图表数据
     for (let k in rows) {
       if (rows.hasOwnProperty(k)) {
         traverse(sKey, schema[sKey], k, rows[k], function(rowName, rowValue, colName, value) {

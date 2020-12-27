@@ -255,6 +255,7 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
 
     // TODO(Luffy) 更新结果和配置
     updateData(result, newConfig, paragraph, resultIndex);
+    // TODO(Luffy）展示结果、生成图表
     renderResult($scope.type, refresh);
   });
 
@@ -357,6 +358,7 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
   $scope.renderDefaultDisplay = function(targetElemId, type, data, refresh) {
     const afterLoaded = () => {
       if (type === DefaultDisplayType.TABLE || type === DefaultDisplayType.NETWORK) {
+        // TODO(Luffy) 生成图表：柱状图、饼图等
         renderGraph(targetElemId, $scope.graphMode, refresh);
       } else if (type === DefaultDisplayType.HTML) {
         renderHtml(targetElemId, data);
@@ -692,8 +694,10 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
           transformation._createNewScope = createNewScope;
 
           // render
+          // TODO(Luffy) 如pivot.js -> transform -> pivot
           const transformed = transformation.transform(tableData);
           transformation.renderSetting(transformationSettingTargetEl);
+          // TODO(Luffy) 如BarchartVisualization.render
           builtInViz.instance.render(transformed);
           builtInViz.instance.renderSetting(visualizationSettingTargetEl);
           builtInViz.instance.activate();
@@ -725,9 +729,11 @@ function ResultCtrl($scope, $rootScope, $route, $window, $routeParams, $location
         loadedElem.height(height);
         const transformation = builtInViz.instance.getTransformation();
         transformation.setConfig(config);
+        // TODO(Luffy) 如pivot.js -> transform -> pivot, 将段落执行results转换成图表渲染数据JSON对象
         const transformed = transformation.transform(tableData);
         transformation.renderSetting(transformationSettingTargetEl);
         builtInViz.instance.setConfig(config);
+        // TODO(Luffy) 如BarchartVisualization.render
         builtInViz.instance.render(transformed);
         builtInViz.instance.renderSetting(visualizationSettingTargetEl);
         builtInViz.instance.activate();

@@ -39,6 +39,10 @@ export default class BarchartVisualization extends Nvd3ChartVisualization {
     return this.pivot;
   }
 
+  /**
+   * TODO(Luffy) 渲染柱状图
+   * @param pivot
+   */
   render(pivot) {
     let d3Data = this.d3DataFromPivot(
       pivot.schema,

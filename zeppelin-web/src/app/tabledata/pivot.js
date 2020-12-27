@@ -135,6 +135,14 @@ export default class PivotTransformation extends Transformation {
     }
   }
 
+  /**
+   * TODO(Luffy) 组装图表展示使用的数据(比如柱状图)
+   * @param data
+   * @param keys
+   * @param groups
+   * @param values
+   * @returns {{schema: {}, keys: *, values: *, groups: *, rows: {}}}
+   */
   pivot(data, keys, groups, values) {
     let aggrFunc = {
       sum: function(a, b) {

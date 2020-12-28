@@ -1432,13 +1432,15 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
           $scope.originalText = angular.copy(newPara.text);
         } else { // if there're local update, keep it.
           // TODO 如果注释掉这里是否可以降低网络抖动导致代码被刷掉的问题? 待测试，看看是否会导致其他问题
-          //  修正：不应该是注释，而是修改成下面三行
+          //  修正：不应该是注释，而是修改成下面三行（这里只能解决写代码时被刷掉的情况）
           $scope.paragraph.text = newPara.text;
           // $scope.paragraph.text = $scope.dirtyText;
           // $scope.originalText = angular.copy($scope.dirtyText);
           // $scope.dirtyText = undefined;
         }
       } else {
+        // TODO(Luffy) 在网络环境比较差情况下这段代码应该是导致代码回滚的罪魁祸首：这里是页面未编辑代码，只是执行代码
+        //  出结果后代码被刷掉的情况（原因是网络环境太差，S->C的WebSocket请求被阻塞太多，代码更新前的请求不断刷掉新代码)
         $scope.paragraph.text = newPara.text;
         $scope.originalText = angular.copy(newPara.text);
       }

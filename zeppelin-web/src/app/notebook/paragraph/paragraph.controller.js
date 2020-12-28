@@ -1432,7 +1432,11 @@ function ParagraphCtrl($scope, $rootScope, $route, $window, $routeParams, $locat
           $scope.originalText = angular.copy(newPara.text);
         } else { // if there're local update, keep it.
           // TODO 如果注释掉这里是否可以降低网络抖动导致代码被刷掉的问题? 待测试，看看是否会导致其他问题
+          //  修正：不应该是注释，而是修改成下面三行
           $scope.paragraph.text = newPara.text;
+          // $scope.paragraph.text = $scope.dirtyText;
+          // $scope.originalText = angular.copy($scope.dirtyText);
+          // $scope.dirtyText = undefined;
         }
       } else {
         $scope.paragraph.text = newPara.text;

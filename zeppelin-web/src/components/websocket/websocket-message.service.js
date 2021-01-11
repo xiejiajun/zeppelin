@@ -235,6 +235,7 @@ function WebsocketMessageService($rootScope, websocketEvents) {
     },
 
     clearAllParagraphOutput: function(noteId) {
+      // TODO(Luffy) 发送清除所有段落输出的WS请求
       websocketEvents.sendNewEvent({op: 'PARAGRAPH_CLEAR_ALL_OUTPUT', data: {id: noteId}});
     },
 

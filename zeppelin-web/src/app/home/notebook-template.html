@@ -29,6 +29,7 @@ limitations under the License.
         </i>
       </a>
       <a ng-if="!node.isTrash" style="text-decoration: none;">
+        <!-- 通过WebSocket清除指定Note所有段落的输出 -->
         <i class="fa fa-eraser notebook-list-btn" ng-click="clearAllParagraphOutput(node.id)"
            tooltip-placement="bottom" uib-tooltip="Clear output">
         </i>

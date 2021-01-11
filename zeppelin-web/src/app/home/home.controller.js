@@ -131,6 +131,7 @@ function HomeCtrl($scope, noteListFactory, websocketMsgSrv, $rootScope, arrayOrd
   };
 
   $scope.clearAllParagraphOutput = function(noteId) {
+    // TODO(Luffy) 调用src/components/note-action/note-action.service.js的clearAllParagraphOutput
     vm.noteActionService.clearAllParagraphOutput(noteId);
   };
 

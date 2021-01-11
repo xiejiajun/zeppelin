@@ -421,6 +421,7 @@ function NotebookCtrl($scope, $route, $routeParams, $location, $rootScope,
   };
 
   $scope.clearAllParagraphOutput = function(noteId) {
+    // TODO(Luffy) 调用src/components/note-action/note-action.service.js的clearAllParagraphOutput
     noteActionService.clearAllParagraphOutput(noteId);
   };
 

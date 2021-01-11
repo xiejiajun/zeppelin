@@ -112,6 +112,7 @@ function noteActionService(websocketMsgSrv, $location, noteRenameService, noteLi
       message: 'Do you want to clear all output?',
       callback: function(result) {
         if (result) {
+          // TODO(Luffy) 调用src/components/websocket/websocket-message.service.js的clearAllParagraphOutput
           websocketMsgSrv.clearAllParagraphOutput(noteId);
         }
       },

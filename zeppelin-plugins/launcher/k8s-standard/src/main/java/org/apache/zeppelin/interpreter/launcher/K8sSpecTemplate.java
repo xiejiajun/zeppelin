@@ -41,6 +41,9 @@ public class K8sSpecTemplate extends HashMap<String, Object> {
       Thread.currentThread().setContextClassLoader(this.getClass().getClassLoader());
       JinjavaConfig config = JinjavaConfig.newBuilder().withLstripBlocks(true).withTrimBlocks(true).build();
       Jinjava jinja = new Jinjava(config);
+      // TODO(Luffy) 使用JinJava模版引擎渲染100-interpreter-spec.yaml中的变量，得到最终的解释器应用yaml
+      //  jinjava一个不错的java jinja2 模版引擎: https://www.cnblogs.com/rongfengliang/p/14174832.html
+      //  https://github.com/HubSpot/jinjava
       return jinja.render(template, this);
     } finally {
       Thread.currentThread().setContextClassLoader(oldCl);

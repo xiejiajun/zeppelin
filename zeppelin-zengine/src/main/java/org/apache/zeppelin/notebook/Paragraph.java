@@ -194,7 +194,9 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
       // clean localProperties, otherwise previous localProperties will be used for the next run
       ParagraphTextParser.ParseResult result = ParagraphTextParser.parse(this.text);
       localProperties = result.getLocalProperties();
+      // TODO(Luffy) 设置解释器名称
       setIntpText(result.getIntpText());
+      // TODO(Luffy) 分离出来的待运行的代码
       this.scriptText = result.getScriptText();
     }
   }
@@ -447,7 +449,9 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
       // TODO(Luffy) interpreter.getFormType()会触发RemoteInterpreter.open / ConfInterpreter.open
       String form = localProperties.getOrDefault("form", interpreter.getFormType().name());
       if (form.equalsIgnoreCase("simple")) {
+        // TODO(Luffy) 判断代码中是否存在`${xxx=xxx}`方式定义的变量
         // inputs will be built from script body
+        // TODO(Luffy) 提取变量名称
         LinkedHashMap<String, Input> inputs = Input.extractSimpleQueryForm(script, false);
         LinkedHashMap<String, Input> noteInputs = Input.extractSimpleQueryForm(script, true);
         final AngularObjectRegistry angularRegistry =
@@ -467,6 +471,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
             note.setNoteForms(noteInputs);
           }
         }
+        // TODO(Luffy) 将代码中的变量替换成表格中配置的
         script = Input.getSimpleQuery(note.getNoteParams(), scriptBody, true);
         script = Input.getSimpleQuery(settings.getParams(), script, false);
       } else {
@@ -485,6 +490,7 @@ public class Paragraph extends JobWithProgressPoller<InterpreterResult> implemen
 
         InterpreterResult ret = null;
         if (shouldInjectCredentials) {
+          // TODO(Luffy) 注入代码中引用的Credentials凭据信息
           UserCredentials creds = context.getAuthenticationInfo().getUserCredentials();
           CredentialInjector credinjector = new CredentialInjector(creds);
           String code = credinjector.replaceCredentials(script);

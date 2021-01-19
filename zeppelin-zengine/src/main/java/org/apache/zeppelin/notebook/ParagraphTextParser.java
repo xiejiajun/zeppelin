@@ -44,8 +44,11 @@ public class ParagraphTextParser {
   private static final Logger LOGGER = LoggerFactory.getLogger(ParagraphTextParser.class);
 
   public static class ParseResult {
+    // TODO(Luffy) 解释器名称
     private String intpText;
+    // TODO(Luffy) 代码脚本
     private String scriptText;
+    // TODO(Luffy) 段落级别配置
     private Map<String, String> localProperties;
 
     public ParseResult(String intpText, String scriptText, Map<String, String> localProperties) {
